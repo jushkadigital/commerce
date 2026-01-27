@@ -1,0 +1,31 @@
+{
+  "name": "Medusa",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend-server",
+  "workspaceFolder": "/home/node/app",
+  // CRÍTICO PARA CLI: Indica que debe levantar AMBOS servicios al iniciar.
+  "runServices": [
+    "postgres",
+    "redis",
+    "minio",
+    "zipkin"
+  ],
+  // Nos conectamos al contenedor como usuario 'node'
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    // Herramientas de terminal esenciales ya que no usas VS Code
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+      "packages": "git,wget,curl,ripgrep,python3,g++,xclip,iputils-ping,netcat-openbsd"
+    },
+    "ghcr.io/s1n7ax/devcontainer-features/neovim:2": {},
+    "ghcr.io/devcontainers-extra/features/claude-code:1": {}
+  },
+  // Ajuste de permisos y setup inicial
+  "postCreateCommand": "",
+  // Puertos que la CLI de devcontainers expondrá (si aplica en tu entorno)
+  "forwardPorts": [
+    9000
+  ]
+}

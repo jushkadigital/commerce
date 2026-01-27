@@ -1,0 +1,249 @@
+import { defineWidgetConfig } from "@medusajs/admin-sdk"
+import { Button, toast, clx } from "@medusajs/ui"
+import { useEffect, useState } from "react"
+
+// Asegúrate que apunte a tu backend (puerto 9000)
+const BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+
+// EL ID DEBE COINCIDIR CON MEDUSA-CONFIG (keycloak-admin)
+const AUTH_PROVIDER = "keycloak-admin"
+
+
+function decodeJwt(token: string): any {
+  try {
+    const base64Url = token.split(".")[1]
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    )
+    return JSON.parse(jsonPayload)
+  } catch {
+    return null
+  }
+}
+
+const KeycloakLoginWidget = () => {
+  const [status, setStatus] = useState<"idle" | "loading" | "processing">("idle")
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get("access_token")
+
+    if (token) {
+      // Canjeamos el token JWT por la Cookie de Sesión de Medusa
+      fetch(`${BACKEND_URL}/auth/session`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        credentials: "include" // <--- ESTO ES LO QUE TE LOGUEA
+      }).then(async (res) => {
+        if (res.ok) {
+          // ÉXITO: Limpiamos la URL y vamos a Pedidos
+          window.location.href = "/app/orders"
+        } else {
+          toast.error("Error al crear sesión")
+        }
+      })
+    }
+  }, [])
+
+  const handleCallback = async (code: string, state: string) => {
+    setStatus("processing")
+    const toastId = toast.loading("Validando credenciales...")
+
+    try {
+      // 1. Obtener Token de Identidad
+      const callbackUrl = `${BACKEND_URL}/auth/user/${AUTH_PROVIDER}/callback?code=${code}&state=${state}`
+
+      const callbackRes = await fetch(callbackUrl, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      })
+
+      if (!callbackRes.ok) {
+        const err = await callbackRes.json()
+        throw new Error(err.message || "Fallo en validación SSO")
+      }
+
+      const { token } = await callbackRes.json()
+      if (!token) throw new Error("No se recibió el token de sesión")
+
+      // 2. Crear la Sesión (Esto escribe la Cookie)
+      const sessionRes = await fetch(`${BACKEND_URL}/auth/session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        credentials: "include",
+      })
+
+      if (!sessionRes.ok) throw new Error("No se pudo establecer la sesión")
+
+      if (!sessionRes.ok) {
+        // If session endpoint doesn't exist, try storing token directly
+        localStorage.setItem("medusa_auth_token", token)
+        document.cookie = `auth_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+        alert("[DEBUG] Session failed, stored token directly. Length: " + token.length)
+      } else {
+        alert("[DEBUG] Session established successfully!")
+      }
+
+      // Decode the token to check if user exists
+      const decodedToken = decodeJwt(token)
+      alert("[DEBUG] Decoded token - actor_id: " + decodedToken?.actor_id)
+
+      const userExists = decodedToken?.actor_id && decodedToken.actor_id !== ""
+
+      if (!userExists) {
+        // Create the admin user
+        const email = decodedToken?.user_metadata?.email
+        const firstName = decodedToken?.user_metadata?.given_name
+        const lastName = decodedToken?.user_metadata?.family_name
+
+        if (!email) {
+          throw new Error("No email found in token")
+        }
+
+        const createUserRes = await fetch(
+          `${BACKEND_URL}/admin/keycloak-auth/users`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              first_name: firstName,
+              last_name: lastName,
+            }),
+          }
+        )
+
+        if (!createUserRes.ok && createUserRes.status !== 409) {
+          const errorData = await createUserRes.json()
+          throw new Error(errorData.message || "Failed to create user")
+        }
+
+        // Refresh token to get the new actor_id
+        await fetch(`${BACKEND_URL}/auth/token/refresh`, {
+          method: "POST",
+          credentials: "include",
+        })
+      }
+
+
+
+
+
+      // Éxito total
+      toast.dismiss(toastId)
+      toast.success("Bienvenido", { description: "Sesión iniciada correctamente" })
+
+      // Redirigir
+      window.location.href = "/app/orders"
+
+    } catch (error: any) {
+      console.error(error)
+      toast.dismiss(toastId)
+      toast.error("Error de Login", { description: error.message })
+      setStatus("idle")
+    }
+  }
+
+  const handleLogin = async () => {
+    setStatus("loading")
+    const returnUrl = `${window.location.origin}/app/login`
+    try {
+      // Call the auth endpoint to get the redirect URL
+      const res = await fetch(
+        `${BACKEND_URL}/auth/user/${AUTH_PROVIDER}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            callback_url: returnUrl
+          }),
+        }
+      )
+
+      const data = await res.json()
+      console.log(data)
+
+      if (data.location) {
+        // Redirect to Keycloak for authentication
+        window.location.href = data.location
+        return
+      }
+
+      if (data.token) {
+        // Already authenticated
+        toast.success("Bienvenido", {
+          description: "Ya estas autenticado",
+        })
+        window.location.href = "/app/orders"
+        return
+      }
+
+    } catch (error: any) {
+      console.error("Keycloak login error:", error)
+      toast.error("Error", {
+        description: error.message || "No se pudo iniciar sesion con Keycloak",
+      })
+    }
+
+
+  }
+
+  // Renderizado condicional simple
+  if (status === "processing") {
+    return (
+      <div className="flex flex-col items-center py-4 text-ui-fg-subtle text-sm" >
+        <div className="mb-2 h-4 w-4 animate-spin rounded-full border-2 border-ui-fg-interactive border-t-transparent" />
+        Configurando entorno...
+      </div>
+    )
+  }
+
+  // Ocultar widget si ya estamos procesando (aunque el useEffect limpia la URL, es preventivo)
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.get("code")) return null
+
+  return (
+    <div className="w-full" >
+      <div className="relative my-4" >
+        <div className="absolute inset-0 flex items-center" >
+          <div className="w-full border-t border-ui-border-base" />
+        </div>
+        < div className="relative flex justify-center text-xs uppercase" >
+          <span className="bg-ui-bg-base px-2 text-ui-fg-subtle" > SSO Corporativo </span>
+        </div>
+      </div>
+
+      < Button
+        variant="secondary"
+        className="w-full"
+        onClick={handleLogin}
+        isLoading={status === "loading"}
+      >
+        Ingresar con Keycloak
+      </Button>
+    </div>
+  )
+}
+
+export const config = defineWidgetConfig({
+  zone: "login.after",
+})
+
+export default KeycloakLoginWidget

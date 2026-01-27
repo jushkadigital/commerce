@@ -1,0 +1,183 @@
+import {
+  AbstractAuthModuleProvider,
+  MedusaError
+} from "@medusajs/framework/utils"
+import {
+  AuthIdentityProviderService,
+  AuthenticationInput,
+  AuthenticationResponse,
+  Logger,
+} from "@medusajs/framework/types"
+import crypto from "crypto"
+
+// Definimos las opciones que este provider ACEPTA
+export type KeycloakAuthOptions = {
+  keycloakUrl: string
+  realm: string
+  clientId: string      // <--- Esto cambiará según si es Admin o Store
+  clientSecret: string  // <--- Esto cambiará según si es Admin o Store
+  callbackUrl: string   // <--- La URL de retorno específica para cada caso
+  scope?: string
+}
+
+class KeycloakAuthProviderService extends AbstractAuthModuleProvider {
+  static identifier = "keycloak"
+  static DISPLAY_NAME = "Keycloak SSO"
+
+  protected logger_: Logger
+  protected options_: KeycloakAuthOptions
+
+  constructor(
+    { logger }: { logger: Logger },
+    options: KeycloakAuthOptions
+  ) {
+    // @ts-ignore
+    super(...arguments)
+    this.logger_ = logger
+    this.options_ = options
+  }
+
+  // Genera las URLs basadas en la configuración inyectada
+  private getEndpoints() {
+    const baseUrl = `${this.options_.keycloakUrl}/realms/${this.options_.realm}/protocol/openid-connect`
+    return {
+      authorization: `${baseUrl}/auth`,
+      token: `${baseUrl}/token`,
+      userinfo: `${baseUrl}/userinfo`,
+    }
+  }
+
+  async authenticate(
+    data: AuthenticationInput,
+    authIdentityProviderService: AuthIdentityProviderService
+  ): Promise<AuthenticationResponse> {
+    try {
+      const stateKey = crypto.randomBytes(32).toString("hex")
+
+      // Usamos el callback configurado en options (o uno dinámico si el front lo manda)
+      const callbackUrl = (data.body?.callback_url as string) || this.options_.callbackUrl
+
+      await authIdentityProviderService.setState(stateKey, {
+        callback_url: callbackUrl,
+      })
+
+      const endpoints = this.getEndpoints()
+      const scope = this.options_.scope || "openid profile email"
+
+      const authParams = new URLSearchParams({
+        client_id: this.options_.clientId, // USA EL CLIENTE CONFIGURADO
+        redirect_uri: callbackUrl,
+        response_type: "code",
+        scope: scope,
+        state: stateKey,
+      })
+
+      return {
+        success: true,
+        location: `${endpoints.authorization}?${authParams.toString()}`,
+      }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  }
+
+  async validateCallback(
+    data: AuthenticationInput,
+    authIdentityProviderService: AuthIdentityProviderService
+  ): Promise<AuthenticationResponse> {
+
+    const { query } = data
+    const code = query?.code as string
+    const stateKey = query?.state as string
+
+
+    // 1. Validaciones básicas
+    if (!code) {
+      console.error("[Keycloak Debug] Faltaba el 'code' en la query")
+      return { success: false, error: "Missing code" }
+    }
+    if (!stateKey) {
+      console.error("[Keycloak Debug] Faltaba el 'state' en la query")
+      return { success: false, error: "Missing state" }
+    }
+
+    const state = await authIdentityProviderService.getState(stateKey)
+    if (!state) {
+      console.error(`[Keycloak Debug] No se encontró el State para la key: ${stateKey}`)
+      console.error(`[Keycloak Debug] Esto pasa si el servidor se reinició o pasó mucho tiempo.`)
+      return { success: false, error: "State expired or not found" }
+    }
+
+    const callbackUrl = state.callback_url as string
+
+    try {
+      const endpoints = this.getEndpoints()
+
+      // 1. Intercambio de Token (Usando Client ID/Secret específicos de esta instancia)
+      const tokenParams = new URLSearchParams({
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: callbackUrl,
+        client_id: this.options_.clientId,         // <--- CLAVE
+        client_secret: this.options_.clientSecret, // <--- CLAVE
+      })
+
+      const tokenResponse = await fetch(endpoints.token, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: tokenParams.toString(),
+      })
+
+      if (!tokenResponse.ok) {
+        const err = await tokenResponse.text()
+        throw new Error(`Token exchange failed: ${err}`)
+      }
+
+      const tokenData = await tokenResponse.json()
+      const accessToken = tokenData.access_token
+
+      // 2. Obtener Info del Usuario
+      const userInfoResponse = await fetch(endpoints.userinfo, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const userInfo = await userInfoResponse.json()
+
+      const entityId = userInfo.email // O userInfo.sub
+      if (!entityId) return { success: false, error: "No email in token" }
+
+      // 3. Gestión de Identidad (Solo Auth Module)
+      // No tocamos Users ni Customers aquí. Solo creamos/recuperamos la identidad.
+      let authIdentity
+
+      try {
+        authIdentity = await authIdentityProviderService.retrieve({
+          entity_id: entityId,
+        })
+      } catch (e) {
+        // Si no existe, la creamos (pero SIN vincular a user/customer aún)
+        // Tu workflow se encargará de escuchar el evento y vincularlo.
+        authIdentity = await authIdentityProviderService.create({
+          entity_id: entityId,
+          user_metadata: {
+            email: userInfo.email,
+            keycloak_id: userInfo.sub,
+            given_name: userInfo.given_name,
+            family_name: userInfo.family_name,
+          },
+          // Dejamos app_metadata vacío o con datos mínimos porque tu workflow hará el link
+        })
+      }
+
+      return {
+        success: true,
+        authIdentity,
+      }
+
+    } catch (error) {
+      this.logger_.error("Keycloak validateCallback error:", error)
+      return { success: false, error: error.message }
+    }
+  }
+}
+
+export default KeycloakAuthProviderService

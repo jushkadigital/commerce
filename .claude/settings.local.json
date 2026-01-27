@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__medusa__ask_medusa_question",
+      "Bash(mkdir:*)",
+      "Bash(npx medusa:*)",
+      "Bash(npm run dev:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm list:*)",
+      "Bash(xargs:*)",
+      "WebFetch(domain:medium.com)",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(env)",
+      "Bash(rm:*)"
+    ]
+  }
+}
