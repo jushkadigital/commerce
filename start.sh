@@ -80,9 +80,7 @@ if [[ "${MEDUSA_CREATE_ADMIN_USER:-false}" == "true" ]]; then
   fi
 fi
 
-exec npx medusa exec src/scripts/setup-store.ts
-echo "izipay cargado"
-
+npx medusa exec src/scripts/setup-store.ts
 # Run Medusa backend application
 cd "${BUILD_FOLDER}" || exit 1
 exec npx medusa start --cluster
