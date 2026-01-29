@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: medusa-starter
       POSTGRES_PASSWORD: medusa-password
       POSTGRES_DB: medusa-starter
-    ports:
-      - 5436:5432
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
@@ -21,8 +19,6 @@ services:
 
   redis:
     image: redis:8
-    ports:
-      - 6379:6379
     volumes:
       - cache-backend-data:/data
     healthcheck:
@@ -36,8 +32,6 @@ services:
 
   meilisearch:
     image: getmeili/meilisearch:latest
-    ports:
-      - 7700:7700
     volumes:
       - meilisearch-data:/data.ms
     environment:
@@ -52,9 +46,6 @@ services:
 
   minio:
     image: minio/minio:latest
-    ports:
-      - 9001:9001
-      - 9002:9002
     volumes:
       - minio-data:/data
     environment:
@@ -89,8 +80,6 @@ services:
 
   zipkin:
     image: openzipkin/zipkin:latest
-    ports:
-      - 9411:9411
     environment:
       - STORAGE_TYPE=mem
     healthcheck:
