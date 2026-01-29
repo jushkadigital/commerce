@@ -3,7 +3,7 @@ import { Button, toast, clx } from "@medusajs/ui"
 import { useEffect, useState } from "react"
 
 // Asegúrate que apunte a tu backend (puerto 9000)
-const BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+const BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "https://commerce.patarutera.pe"
 
 // EL ID DEBE COINCIDIR CON MEDUSA-CONFIG (keycloak-admin)
 const AUTH_PROVIDER = "keycloak-admin"
