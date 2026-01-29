@@ -20,12 +20,19 @@
       "packages": "git,wget,curl,ripgrep,python3,g++,xclip,iputils-ping,netcat-openbsd"
     },
     "ghcr.io/s1n7ax/devcontainer-features/neovim:2": {},
-    "ghcr.io/devcontainers-extra/features/claude-code:1": {}
+    "ghcr.io/danzilberdan/devcontainers/opencode:0": {}
   },
   // Ajuste de permisos y setup inicial
   "postCreateCommand": "",
   // Puertos que la CLI de devcontainers expondrá (si aplica en tu entorno)
   "forwardPorts": [
     9000
+  ],
+  "mounts": [
+    {
+      "source": "${localWorkspaceFolder}/.opencode/auth.json",
+      "target": "/mnt/opencode-auth.json",
+      "type": "bind"
+    }
   ]
 }

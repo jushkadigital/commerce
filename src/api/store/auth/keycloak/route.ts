@@ -3,55 +3,143 @@ import { Modules } from "@medusajs/framework/utils"
 import jwt from "jsonwebtoken"
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const { accessToken } = req.body
-  // ... validaciones de token ...
-  const decoded: any = jwt.decode(accessToken)
-  const authModule = req.scope.resolve(Modules.AUTH)
+  console.log("=== Store Auth Keycloak Endpoint ===")
 
-  // 1. CORRECCIÓN: Buscamos en 'ProviderIdentities' 
-  // Aquí sí existen los campos 'provider' y 'entity_id'
-  const [providerIdentity] = await authModule.listProviderIdentities({
-    provider: "keycloak-store", // Debe coincidir con tu subscriber
-    entity_id: decoded.sub    // O decoded.sub si cambiaste la lógica
-  })
+  const { accessToken } = req.body as { accessToken: string }
+  console.log("Access token received:", !!accessToken)
+  console.log("Token length:", accessToken?.length)
 
-  // Si no existe la provider identity, el usuario no está sincronizado
-  if (!providerIdentity) {
-    return res.status(404).json({
-      message: "Usuario no encontrado. Espera un momento a que termine la sincronización.",
-      code: "NOT_SYNCED_YET"
-    })
-  }
-
-  // 2. Recuperamos la AuthIdentity padre (si necesitamos metadata de allí)
-  // Aunque para el login, lo vital es llegar al customer_id.
-  const authIdentity = await authModule.retrieveAuthIdentity(
-    providerIdentity.auth_identity_id!
-  )
-
-  // 3. Obtener el Customer ID
-  // Como guardaste el customer_id en 'app_metadata' en tu subscriber:
-  const customerId = authIdentity.app_metadata?.customer_id as string
-
-  if (!customerId) {
-    // Fallback: Si por alguna razón no está en metadata, búscalo por email en el módulo Customer
-    // (Esto es un plan B de seguridad)
-    const customerModule = req.scope.resolve(Modules.CUSTOMER)
-    const [customer] = await customerModule.listCustomers({ email: decoded.email })
-
-    if (customer) {
-      req.session.customer_id = customer.id
-      return res.json({ message: "Login ok (Fallback)", customer })
+  try {
+    if (!accessToken) {
+      return res.status(400).json({
+        message: "AccessToken is required",
+        code: "MISSING_TOKEN"
+      })
     }
 
-    return res.status(500).json({ message: "Inconsistencia de datos" })
+    const decoded: any = jwt.decode(accessToken, { complete: true })
+    const payload = decoded.payload
+
+    console.log("Decoded token payload sub:", payload?.sub)
+    console.log("Token email:", payload?.email)
+
+    if (!payload?.sub) {
+      return res.status(400).json({
+        message: "Invalid token: missing 'sub' claim",
+        code: "INVALID_TOKEN"
+      })
+    }
+
+    const authModule = req.scope.resolve(Modules.AUTH)
+    const customerModule = req.scope.resolve(Modules.CUSTOMER)
+
+    console.log("Searching for provider identity with sub:", payload.sub)
+    const [providerIdentity] = await authModule.listProviderIdentities({
+      provider: "keycloak-store",
+      entity_id: payload.sub
+    })
+
+    console.log("Provider identity found:", !!providerIdentity)
+
+    if (!providerIdentity) {
+      console.error("Provider identity not found for sub:", payload.sub)
+      return res.status(404).json({
+        message: "Usuario no encontrado. El subscriber aún no ha sincronizado este usuario.",
+        code: "NOT_SYNCED_YET",
+        suggestion: "Por favor espere unos segundos y reintente.",
+        sub: payload.sub,
+        email: payload?.email
+      })
+    }
+
+    console.log("Retrieving auth identity...")
+    const authIdentity = await authModule.retrieveAuthIdentity(
+      providerIdentity.auth_identity_id!
+    )
+
+    console.log("Auth identity found:", !!authIdentity)
+    console.log("Auth identity app_metadata:", JSON.stringify(authIdentity.app_metadata, null, 2))
+
+    let customerId = authIdentity.app_metadata?.customer_id as string
+    console.log("Customer ID from app_metadata:", customerId)
+
+    if (!customerId) {
+      console.warn("No customer_id in app_metadata, attempting fallback by email...")
+
+      const email = payload?.email || (authIdentity as any).user_metadata?.email
+      console.log("Searching customer by email:", email)
+
+      const [customer] = await customerModule.listCustomers({ email })
+
+      if (customer) {
+        console.log("Found customer via fallback:", customer.id)
+        customerId = customer.id
+
+        await authModule.updateAuthIdentities([{
+          id: authIdentity.id,
+          app_metadata: {
+            ...authIdentity.app_metadata,
+            customer_id: customerId
+          }
+        }])
+        console.log("Updated auth_identity with customer_id")
+      } else {
+        console.error("Customer not found for email:", email)
+        return res.status(404).json({
+          message: "Cliente no encontrado. El subscriber aún no ha creado la cuenta.",
+          code: "CUSTOMER_NOT_CREATED_YET",
+          suggestion: "Por favor espere unos segundos y reintente.",
+          email: email
+        })
+      }
+    }
+
+    console.log("Customer ID to use:", customerId)
+
+    const { jwtSecret } = req.scope.resolve("configModule").projectConfig.http
+
+    const token = jwt.sign(
+      {
+        actor_id: customerId,
+        actor_type: "customer",
+        auth_identity_id: authIdentity.id,
+        app_metadata: authIdentity.app_metadata
+      },
+      jwtSecret,
+      { expiresIn: "7d" }
+    )
+
+    console.log("Token generated successfully, length:", token.length)
+
+    req.session.customer_id = customerId
+
+    const cookieName = "_medusa_jwt"
+    const isProduction = process.env.NODE_ENV === "production"
+
+    console.log("Setting cookie:", cookieName, "production:", isProduction)
+
+    res.cookie(cookieName, token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/"
+    })
+
+    console.log("Login successful, returning response")
+
+    res.json({
+      message: "Login exitoso",
+      customer_id: customerId,
+      token: token
+    })
+  } catch (error: any) {
+    console.error("Error in store auth keycloak:", error)
+    console.error("Error stack:", error.stack)
+    res.status(500).json({
+      message: "Error interno del servidor",
+      code: "INTERNAL_ERROR",
+      error: error.message
+    })
   }
-
-  // 4. Establecer Sesión
-  req.session.customer_id = customerId
-
-  res.json({
-    message: "Login exitoso",
-    customer_id: customerId
-  })
 }

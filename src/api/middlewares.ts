@@ -64,6 +64,26 @@ export default defineMiddlewares({
     }
     ,
     {
+      matcher: "/admin/packages",
+      methods: ["POST"],
+      middlewares: [
+        validateAndTransformBody(CreateTourSchema),
+      ],
+    },
+    {
+      matcher: "/admin/packages",
+      methods: ["GET"],
+      middlewares: [
+        validateAndTransformQuery(createFindParams(), {
+          isList: true,
+          defaults: ["id", "product_id", "package_id", "destination", "description", "thumbnail",
+            "duration_days", "max_capacity", "available_dates", "variants.*", "variants.product_variant.price_set.*", // El set de precios
+            "variants.product_variant.price_set.prices.*"],
+        })
+      ],
+    }
+    ,
+    {
       matcher: "/admin/tours",
       methods: ["POST"],
       middlewares: [

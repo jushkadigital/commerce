@@ -2,7 +2,7 @@
 
 # Function to print usage instructions
 print_usage() {
-    cat << EOF
+  cat <<EOF
 Usage: ./start.sh [options]
 
 This script starts the Medusa server with optional database migration and admin user creation.
@@ -24,7 +24,7 @@ Examples:
   MEDUSA_ADMIN_EMAIL=admin@medusa-test.com \\
   MEDUSA_ADMIN_PASSWORD=supersecret ./start.sh   # Start and create admin user
 EOF
-    exit 0
+  exit 0
 }
 
 set -eu
@@ -35,23 +35,23 @@ ROOT_FOLDER=$(pwd)
 
 # Parse command line arguments
 while [ $# -gt 0 ]; do
-    case "$1" in
-        --help|-h)
-            print_usage
-            ;;
-        --build-folder=*)
-            BUILD_FOLDER="${1#*=}"
-            ;;
-        --build-folder)
-            BUILD_FOLDER="$2"
-            shift
-            ;;
-        *)
-            echo "Error: Unknown option: $1" >&2
-            print_usage
-            ;;
-    esac
+  case "$1" in
+  --help | -h)
+    print_usage
+    ;;
+  --build-folder=*)
+    BUILD_FOLDER="${1#*=}"
+    ;;
+  --build-folder)
+    BUILD_FOLDER="$2"
     shift
+    ;;
+  *)
+    echo "Error: Unknown option: $1" >&2
+    print_usage
+    ;;
+  esac
+  shift
 done
 
 # Run database migration
@@ -82,16 +82,19 @@ fi
 
 # Create symbolic link for node_modules if it doesn't exist in build folder
 if [ ! -e "$BUILD_FOLDER/node_modules" ]; then
-    echo "Creating symbolic link for node_modules in build folder..."
-    mkdir -p "${BUILD_FOLDER}"
-    if [ -d "$ROOT_FOLDER/node_modules" ]; then
-        ln -s "$ROOT_FOLDER/node_modules" "$BUILD_FOLDER/node_modules"
-        echo "Symbolic link created successfully"
-    else
-        echo "Error: node_modules not found in root folder" >&2
-        exit 1
-    fi
+  echo "Creating symbolic link for node_modules in build folder..."
+  mkdir -p "${BUILD_FOLDER}"
+  if [ -d "$ROOT_FOLDER/node_modules" ]; then
+    ln -s "$ROOT_FOLDER/node_modules" "$BUILD_FOLDER/node_modules"
+    echo "Symbolic link created successfully"
+  else
+    echo "Error: node_modules not found in root folder" >&2
+    exit 1
+  fi
 fi
+
+exec npx medusa exec src/scripts/setup-store.ts
+echo "izipay cargado"
 
 # Run Medusa backend application
 cd "${BUILD_FOLDER}" || exit 1

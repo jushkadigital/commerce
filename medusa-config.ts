@@ -253,6 +253,9 @@ module.exports = defineConfig({
     {
       resolve: './src/modules/tour-booking',
     },
+    {
+      resolve: './src/modules/package',
+    },
     // Auth Module with providers (emailpass + Keycloak if configured)
     {
       resolve: "@medusajs/medusa/auth",
@@ -278,7 +281,7 @@ module.exports = defineConfig({
             },
           },
           {
-            resolve: "./src/modules/keycloak-auth",
+            resolve: "./src/modules/keycloak-auth-store",
             id: "keycloak-store",
             options: {
               keycloakUrl: process.env.KEYCLOAK_URL,

@@ -6,21 +6,20 @@ import {
   when,
   transform
 } from "@medusajs/framework/workflows-sdk"
-import { TOUR_MODULE } from "../modules/tour-booking"
-import TourModuleService from "../modules/tour-booking/service"
+import { PACKAGE_MODULE } from "../modules/package"
+import PackageModuleService from "../modules/package/service"
 import { acquireLockStep, completeCartWorkflow, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
-import tourBookingOrderLink from "../links/tour-booking-order"
-import { CreateBookingsStepInput, createTourBookingsStep } from "./steps/create-booking-create"
+import packageBookingOrderLink from "../links/package-booking-order"
+import { CreatePackageBookingsStepInput, createPackageBookingsStep } from "./steps/create-package-booking-create"
 import { Modules } from "@medusajs/framework/utils"
 
-export type CompleteCartWithToursWorkflowInput = {
+export type CompleteCartWithPackagesWorkflowInput = {
   cart_id: string
 }
 
-
-export const completeCartWithToursWorkflow = createWorkflow(
-  "complete-cart-with-tours",
-  (input: CompleteCartWithToursWorkflowInput) => {
+export const completeCartWithPackagesWorkflow = createWorkflow(
+  "complete-cart-with-packages",
+  (input: CompleteCartWithPackagesWorkflowInput) => {
     acquireLockStep({
       key: input.cart_id,
       timeout: 2,
@@ -38,8 +37,8 @@ export const completeCartWithToursWorkflow = createWorkflow(
         "items.variant.*",
         "items.variant.options.*",
         "items.variant.options.option.*",
-        "items.variant.tour_variant.*",
-        "items.variant.tour_variant.tour.*",
+        "items.variant.package_variant.*",
+        "items.variant.package_variant.package.*",
         "items.metadata",
         "items.quantity",
       ],
@@ -51,26 +50,26 @@ export const completeCartWithToursWorkflow = createWorkflow(
       },
     })
     const { data: existingLinks } = useQueryGraphStep({
-      entity: tourBookingOrderLink.entryPoint,
-      fields: ["tour_booking.id"],
+      entity: packageBookingOrderLink.entryPoint,
+      fields: ["package_booking.id"],
       filters: { order_id: order.id },
     }).config({ name: "retrieve-existing-links" })
 
     when({ existingLinks }, (data) => data.existingLinks.length === 0)
       .then(() => {
-        const tourBookings = createTourBookingsStep({
+        const packageBookings = createPackageBookingsStep({
           order_id: order.id,
           cart: carts[0],
-        } as unknown as CreateBookingsStepInput)
+        } as unknown as CreatePackageBookingsStepInput)
 
 
         const linkData = transform({
           order,
-          tourBookings,
+          packageBookings,
         }, (data) => {
-          return data.tourBookings.map((purchase) => ({
-            [TOUR_MODULE]: {
-              tour_booking_id: purchase.id,
+          return data.packageBookings.map((purchase) => ({
+            [PACKAGE_MODULE]: {
+              package_booking_id: purchase.id,
             },
             [Modules.ORDER]: {
               order_id: data.order.id,
@@ -117,4 +116,4 @@ export const completeCartWithToursWorkflow = createWorkflow(
   }
 )
 
-export default completeCartWithToursWorkflow
+export default completeCartWithPackagesWorkflow

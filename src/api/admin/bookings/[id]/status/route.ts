@@ -1,14 +1,14 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import TourModuleService from "../../../../../modules/tour-booking/service"
 import { TOUR_MODULE } from "../../../../../modules/tour-booking"
+import PackageModuleService from "../../../../../modules/package/service"
+import { PACKAGE_MODULE } from "../../../../../modules/package"
 
-/**
- * PUT /admin/tour-bookings/:id/status
- * Update booking status
- */
+
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params
+    const { type } = req.query
     const body = req.body as {
       status: "pending" | "confirmed" | "cancelled" | "completed"
     }
@@ -26,32 +26,11 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
-    const tourModuleService: TourModuleService = req.scope.resolve(TOUR_MODULE)
-
-    // Get current booking
-    const currentBooking = await tourModuleService.retrieveTourBooking(id, {
-      relations: ["tour", "tour_variant"],
-    })
-
-    if (!currentBooking) {
-      return res.status(404).json({ message: "Booking not found" })
+    if (type === "package") {
+      return await updatePackageBookingStatus(req, res, id, body.status)
+    } else {
+      return await updateTourBookingStatus(req, res, id, body.status)
     }
-
-    // Update status
-    await tourModuleService.updateTourBookings(
-      { id },
-      { status: body.status }
-    )
-
-    // Retrieve updated booking
-    const updatedBooking = await tourModuleService.retrieveTourBooking(id, {
-      relations: ["tour", "tour_variant"],
-    })
-
-    res.json({
-      booking: updatedBooking,
-      message: `Booking status updated to ${body.status}`,
-    })
   } catch (error) {
     console.error("Error updating booking status:", error)
     res.status(500).json({
@@ -59,4 +38,58 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       error: error.message,
     })
   }
+}
+
+
+async function updateTourBookingStatus(req: MedusaRequest, res: MedusaResponse, id: string, status: string) {
+  const tourModuleService: TourModuleService = req.scope.resolve(TOUR_MODULE)
+
+  const currentBooking = await tourModuleService.retrieveTourBooking(id, {
+    relations: ["tour", "tour_variant"],
+  })
+
+  if (!currentBooking) {
+    return res.status(404).json({ message: "Booking not found" })
+  }
+
+  await tourModuleService.updateTourBookings(
+    { id },
+    { status }
+  )
+
+  const updatedBooking = await tourModuleService.retrieveTourBooking(id, {
+    relations: ["tour", "tour_variant"],
+  })
+
+  res.json({
+    booking: { ...updatedBooking, type: "tour" },
+    message: `Booking status updated to ${status}`,
+  })
+}
+
+
+async function updatePackageBookingStatus(req: MedusaRequest, res: MedusaResponse, id: string, status: string) {
+  const packageModuleService: PackageModuleService = req.scope.resolve(PACKAGE_MODULE)
+
+  const currentBooking = await packageModuleService.retrievePackageBooking(id, {
+    relations: ["package", "package_variant"],
+  })
+
+  if (!currentBooking) {
+    return res.status(404).json({ message: "Booking not found" })
+  }
+
+  await packageModuleService.updatePackageBookings(
+    { id },
+    { status }
+  )
+
+  const updatedBooking = await packageModuleService.retrievePackageBooking(id, {
+    relations: ["package", "package_variant"],
+  })
+
+  res.json({
+    booking: { ...updatedBooking, type: "package" },
+    message: `Booking status updated to ${status}`,
+  })
 }

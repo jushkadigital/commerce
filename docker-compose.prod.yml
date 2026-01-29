@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:18
+    container_name: postgres-medusa
     environment:
       POSTGRES_USER: medusa-starter
       POSTGRES_PASSWORD: medusa-password
@@ -15,7 +16,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - prod-network
+      - medusa-network
 
 
   redis:
@@ -30,7 +31,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - prod-network
+      - medusa-network
 
 
   meilisearch:
@@ -47,8 +48,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - prod-network
-
+      - medusa-network
 
   minio:
     image: minio/minio:latest
@@ -68,7 +68,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - prod-network
+      - medusa-network
 
 
   minio-setup:
@@ -84,7 +84,7 @@ services:
       echo 'MinIO bucket setup complete';
       "
     networks:
-      - prod-network
+      - medusa-network
 
 
   zipkin:
@@ -99,15 +99,13 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - prod-network
+      - medusa-network
 
 
   backend-server:
     image: urgosxd7/medusa-app:latest
     volumes:
       - backend-server-data:/data
-    working_dir: /home/node/app
-    command: sleep infinity
     expose:
       - "9000"
     depends_on:
@@ -128,8 +126,8 @@ services:
       EVENTS_REDIS_URL: redis://redis:6379
       WE_REDIS_URL: redis://redis:6379
       LOCKING_REDIS_URL: redis://redis:6379
-      DATABASE_URL: postgres://medusa-starter:medusa-password@postgres:5432/medusa-starter
-      POSTGRES_URL: postgres://medusa-starter:medusa-password@postgres:5432/medusa-starter
+      DATABASE_URL: postgres://medusa-starter:medusa-password@postgres-medusa:5432/medusa-starter
+      POSTGRES_URL: postgres://medusa-starter:medusa-password@postgres-medusa:5432/medusa-starter
       MEDUSA_CREATE_ADMIN_USER: true
       MEDUSA_ADMIN_EMAIL: admin@medusa-test.com
       MEDUSA_ADMIN_PASSWORD: supersecret
@@ -142,7 +140,6 @@ services:
       MINIO_REGION: us-east-1
       MINIO_BUCKET: medusa-bucket
       ZIPKIN_URL: http://zipkin:9411
-
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 10s
@@ -150,7 +147,7 @@ services:
       start_period: 10s
       retries: 5
     networks:
-      - prod-network
+      - medusa-network
       - red-compartida
       - proxiable
 
@@ -167,7 +164,7 @@ networks:
   proxiable:
     external: true
     name: proxiable # Asegúrate de que este nombre coincida exactamente con tu red externa
-  prod-network:
+  medusa-network:
     driver: bridge
   red-compartida:
     external: true      # <--- ¡ESTO ES LO IMPORTANTE!
