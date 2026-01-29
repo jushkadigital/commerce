@@ -7,9 +7,8 @@ console.log("CWD =", process.cwd())
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
 console.log(process.env.KEYCLOAK_CLIENT_ID)
-console.log(process.env.IZIPAY_HASH_KEY)
-console.log(process.env.IZIPAY_MERCHANT_CODE)
-console.log(process.env.STORE_CORS)
+console.log(process.env.BACKEND_URL)
+console.log(process.env.MEDUSA_BACKEND_URL)
 const DATABASE_URL = process.env.DATABASE_URL
 const REDIS_URL = process.env.REDIS_URL
 const DEPLOYMENT_TYPE = process.env.DEPLOYMENT_TYPE || 'local'
