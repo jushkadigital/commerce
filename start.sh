@@ -80,19 +80,6 @@ if [[ "${MEDUSA_CREATE_ADMIN_USER:-false}" == "true" ]]; then
   fi
 fi
 
-# Create symbolic link for node_modules if it doesn't exist in build folder
-if [ ! -e "$BUILD_FOLDER/node_modules" ]; then
-  echo "Creating symbolic link for node_modules in build folder..."
-  mkdir -p "${BUILD_FOLDER}"
-  if [ -d "$ROOT_FOLDER/node_modules" ]; then
-    ln -s "$ROOT_FOLDER/node_modules" "$BUILD_FOLDER/node_modules"
-    echo "Symbolic link created successfully"
-  else
-    echo "Error: node_modules not found in root folder" >&2
-    exit 1
-  fi
-fi
-
 exec npx medusa exec src/scripts/setup-store.ts
 echo "izipay cargado"
 
