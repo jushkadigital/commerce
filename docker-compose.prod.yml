@@ -103,6 +103,7 @@ services:
 
 
   backend-server:
+    container_name: medusa-app
     image: urgosxd7/medusa-app:latest
     volumes:
       - backend-server-data:/data
