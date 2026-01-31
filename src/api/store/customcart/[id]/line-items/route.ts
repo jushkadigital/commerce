@@ -4,7 +4,7 @@ import {
 } from "@medusajs/core-flows"
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { AdditionalData, HttpTypes } from "@medusajs/framework/types"
-import { Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules, remoteQueryObjectFromString } from "@medusajs/framework/utils"
 import { refetchCart } from "../../helpers"
 import { z } from "zod"
 
@@ -28,11 +28,24 @@ export const POST = async (
     },
   })
 
-  const cart = await refetchCart(
+  /**const cart = await refetchCart(
     req.params.id,
     req.scope,
     req.queryConfig.fields
   )
+  **/
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+
+  const query = remoteQueryObjectFromString({
+    entryPoint: "cart",
+    variables: {
+      filters: { id: req.params.id },
+    },
+    // Usamos los campos que ya pedía tu configuración, o defines los tuyos
+    fields: req.queryConfig.fields,
+  })
+
+  const [cart] = await remoteQuery(query)
 
   res.status(200).json({
     id: req.params.id,
