@@ -11,7 +11,6 @@ import {
 import { CreateTourSchema } from "./admin/tours/route"
 import { validateAndTransformBody, validateAndTransformQuery } from "@medusajs/framework"
 import { createFindParams } from "@medusajs/medusa/api/utils/validators"
-import { CartSchema } from "./store/customcart/[id]/line-items/route"
 import { createSelectParams } from "./validators"
 
 export const StoreGetCartsCart = createSelectParams()
@@ -88,19 +87,6 @@ export default defineMiddlewares({
       methods: ["POST"],
       middlewares: [
         validateAndTransformBody(CreateTourSchema),
-      ],
-    },
-    {
-      method: ["POST"],
-      matcher: "/store/customcart/:id/line-items",
-      middlewares: [
-        validateAndTransformBody(
-          CartSchema,
-        ),
-        validateAndTransformQuery(
-          StoreGetCartsCart,
-          QueryConfig.retrieveTransformQueryConfig
-        )
       ],
     }
   ]
