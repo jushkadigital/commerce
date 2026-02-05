@@ -1,27 +1,14 @@
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 
-// ========================================================================
-// 1. DETECCIÓN DE MODO BUILD (CRÍTICO PARA DOCKER)
-// ========================================================================
-// Si estamos compilando, esta variable será true.
-// Esto nos permitirá apagar conexiones a DB/Redis/RabbitMQ durante el build.
-const IS_BUILD = process.env.IS_BUILD === 'true' || process.env.npm_lifecycle_event === 'build';
 
 console.log("NODE_ENV =", process.env.NODE_ENV)
 console.log("CWD =", process.cwd())
-console.log("IS_BUILD MODE =", IS_BUILD) // Log para confirmar en consola
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
-// ========================================================================
-// 2. CARGA DE VARIABLES DE ENTORNO
-// ========================================================================
-
-// Logs de depuración (puedes quitarlos en prod si quieres)
-console.log("KEYCLOAK_CLIENT_ID:", process.env.KEYCLOAK_CLIENT_ID)
-console.log("BACKEND_URL:", process.env.BACKEND_URL)
-console.log("MEDUSA_BACKEND_URL:", process.env.MEDUSA_BACKEND_URL)
-
+console.log(process.env.KEYCLOAK_CLIENT_ID)
+console.log(process.env.BACKEND_URL)
+console.log(process.env.MEDUSA_BACKEND_URL)
 const DATABASE_URL = process.env.DATABASE_URL
 const REDIS_URL = process.env.REDIS_URL
 const DEPLOYMENT_TYPE = process.env.DEPLOYMENT_TYPE || 'local'
@@ -35,13 +22,11 @@ const COOKIE_SECRET = process.env.COOKIE_SECRET || 'supersecret'
 
 const IS_ADMIN_DISABLED = process.env.IS_ADMIN_DISABLED === 'true'
 
-// Redis URLs
 const CACHE_REDIS_URL = process.env.CACHE_REDIS_URL
 const EVENTS_REDIS_URL = process.env.EVENTS_REDIS_URL
 const WE_REDIS_URL = process.env.WE_REDIS_URL
 const LOCKING_REDIS_URL = process.env.LOCKING_REDIS_URL
 
-// MinIO / S3 Vars
 const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT
 const MINIO_ACCESS_KEY_ID = process.env.MINIO_ACCESS_KEY_ID
 const MINIO_SECRET_ACCESS_KEY = process.env.MINIO_SECRET_ACCESS_KEY
@@ -56,13 +41,12 @@ const S3_REGION = process.env.S3_REGION
 const S3_BUCKET = process.env.S3_BUCKET
 const S3_FILE_URL = process.env.S3_FILE_URL
 
-// Email providers
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL
 
-// Payment Providers
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 
@@ -73,7 +57,6 @@ const IZIPAY_HASH_KEY = process.env.IZIPAY_HASH_KEY
 const IZIPAY_API_ENDPOINT = process.env.IZIPAY_API_ENDPOINT
 const IZIPAY_SDK_URL = process.env.IZIPAY_SDK_URL
 
-// Search
 const MEILISEARCH_HOST = process.env.MEILISEARCH_HOST
 const MEILISEARCH_API_KEY = process.env.MEILISEARCH_API_KEY
 
@@ -83,13 +66,6 @@ const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM
 const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID
 const KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET
 const KEYCLOAK_CALLBACK_URL = process.env.KEYCLOAK_CALLBACK_URL || `${BACKEND_URL}/app/login`
-const KEYCLOAK_STORE_CLIENT_ID = process.env.KEYCLOAK_STORE_CLIENT_ID
-const KEYCLOAK_STORE_CLIENT_SECRET = process.env.KEYCLOAK_STORE_CLIENT_SECRET
-
-
-// ========================================================================
-// 3. EXPORTACIÓN DE LA CONFIGURACIÓN
-// ========================================================================
 
 module.exports = defineConfig({
   projectConfig: {
@@ -100,9 +76,7 @@ module.exports = defineConfig({
         sslmode: 'disable',
       },
     } : {}),
-    // FIX: Si es build, anulamos Redis global para evitar conexiones del core
-    redisUrl: IS_BUILD ? undefined : REDIS_URL,
-
+    redisUrl: REDIS_URL,
     http: {
       storeCors: STORE_CORS,
       adminCors: ADMIN_CORS,
@@ -110,6 +84,7 @@ module.exports = defineConfig({
       jwtSecret: JWT_SECRET,
       cookieSecret: COOKIE_SECRET,
       // Configure auth methods per actor type
+      // Keycloak is enabled for both admin users and customers
       ...(KEYCLOAK_URL && KEYCLOAK_CLIENT_ID ? {
         authMethodsPerActor: {
           user: ["emailpass", "keycloak-admin"],
@@ -123,55 +98,41 @@ module.exports = defineConfig({
     disable: IS_ADMIN_DISABLED,
   },
   modules: [
-    // --------------------------------------------------------------------
-    // CACHE MODULE (REDIS vs IN-MEMORY)
-    // --------------------------------------------------------------------
-    {
+    ...(CACHE_REDIS_URL ? [{
       key: Modules.CACHING,
-      // LOGICA: Si es Build -> In-Memory. Si no -> Redis (si hay URL) o In-Memory (default)
-      resolve: IS_BUILD
-        ? '@medusajs/medusa/cache-inmemory'
-        : (CACHE_REDIS_URL ? '@medusajs/medusa/cache-redis' : '@medusajs/medusa/cache-inmemory'),
+      resolve: '@medusajs/medusa/caching',
       options: {
-        // Si usamos cache-inmemory, esta opción se ignora, así que es seguro dejarla
-        redisUrl: CACHE_REDIS_URL,
+        providers: [
+          {
+            resolve: '@medusajs/caching-redis',
+            id: 'caching-redis',
+            // Optional, makes this the default caching provider
+            is_default: true,
+            options: {
+              redisUrl: CACHE_REDIS_URL,
+            },
+          },
+        ],
       },
-    },
-
-    // --------------------------------------------------------------------
-    // EVENT BUS (RABBITMQ vs LOCAL)
-    // --------------------------------------------------------------------
+    }] : []),
     {
       key: Modules.EVENT_BUS,
-      // LOGICA: Si es Build -> Local. Si no -> Tu RabbitMQ custom
-      resolve: IS_BUILD
-        ? "@medusajs/medusa/event-bus-local"
-        : "./src/modules/event-bus-rabbitmq",
+      resolve: "./src/modules/event-bus-rabbitmq",
       options: {
         url: process.env.RABBITMQ_URL || 'amqp://admin:admin123@172.17.0.1:5672',
         exchange: "tourism-exchange",
       },
     },
-
-    // --------------------------------------------------------------------
-    // WORKFLOW ENGINE (REDIS vs IN-MEMORY)
-    // --------------------------------------------------------------------
-    {
+    ...(WE_REDIS_URL ? [{
       key: Modules.WORKFLOW_ENGINE,
-      resolve: IS_BUILD
-        ? '@medusajs/medusa/workflow-engine-inmemory'
-        : (WE_REDIS_URL ? '@medusajs/medusa/workflow-engine-redis' : '@medusajs/medusa/workflow-engine-inmemory'),
+      resolve: '@medusajs/medusa/workflow-engine-redis',
       options: {
         redis: {
           url: WE_REDIS_URL,
         },
       },
-    },
-
-    // --------------------------------------------------------------------
-    // LOCKING (REDIS vs IN-MEMORY)
-    // --------------------------------------------------------------------
-    ...(LOCKING_REDIS_URL && !IS_BUILD ? [{
+    }] : []),
+    ...(LOCKING_REDIS_URL ? [{
       key: Modules.LOCKING,
       resolve: '@medusajs/medusa/locking',
       options: {
@@ -187,10 +148,6 @@ module.exports = defineConfig({
         ],
       },
     }] : []),
-
-    // --------------------------------------------------------------------
-    // FILE MODULE (MINIO / S3 / LOCAL)
-    // --------------------------------------------------------------------
     {
       resolve: '@medusajs/medusa/file',
       options: {
@@ -225,7 +182,6 @@ module.exports = defineConfig({
               },
             },
           }] : []),
-          // Fallback a local si no hay S3/MinIO
           ...(!MINIO_ENDPOINT && !S3_ENDPOINT ? [{
             resolve: '@medusajs/file-local',
             id: 'local',
@@ -237,10 +193,6 @@ module.exports = defineConfig({
         ],
       },
     },
-
-    // --------------------------------------------------------------------
-    // NOTIFICATIONS
-    // --------------------------------------------------------------------
     ...((SENDGRID_API_KEY && SENDGRID_FROM_EMAIL) || (RESEND_API_KEY && RESEND_FROM_EMAIL) ? [{
       key: Modules.NOTIFICATION,
       resolve: '@medusajs/notification',
@@ -267,10 +219,7 @@ module.exports = defineConfig({
         ]
       }
     }] : []),
-
-    // --------------------------------------------------------------------
-    // PAYMENTS
-    // --------------------------------------------------------------------
+    // Payment Module with providers
     ...((STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET) || IZIPAY_MERCHANT_CODE ? [{
       key: Modules.PAYMENT,
       resolve: '@medusajs/payment',
@@ -300,52 +249,45 @@ module.exports = defineConfig({
         ],
       },
     }] : []),
-
-    // --------------------------------------------------------------------
-    // CUSTOM MODULES
-    // --------------------------------------------------------------------
     {
       resolve: './src/modules/tour-booking',
     },
     {
       resolve: './src/modules/package',
     },
-
-    // --------------------------------------------------------------------
-    // AUTH MODULE
-    // --------------------------------------------------------------------
+    // Auth Module with providers (emailpass + Keycloak if configured)
     {
       resolve: "@medusajs/medusa/auth",
       options: {
         providers: [
-          // Default emailpass provider
+          // Default emailpass provider (always included)
           {
             resolve: "@medusajs/medusa/auth-emailpass",
             id: "emailpass",
           },
-          // Keycloak Admin
+          // Keycloak provider (only if configured)
           {
             resolve: "./src/modules/keycloak-auth",
             id: "keycloak-admin",
             options: {
-              keycloakUrl: KEYCLOAK_URL,
-              realm: KEYCLOAK_REALM,
-              clientId: KEYCLOAK_CLIENT_ID,
-              clientSecret: KEYCLOAK_CLIENT_SECRET,
-              callbackUrl: `${BACKEND_URL}/auth/user/keycloak-admin/callback`,
+              keycloakUrl: process.env.KEYCLOAK_URL,
+              realm: process.env.KEYCLOAK_REALM,
+              clientId: process.env.KEYCLOAK_CLIENT_ID,
+              clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+              callbackUrl: `${process.env.BACKEND_URL}/auth/user/keycloak-admin/callback`,
               scope: "openid profile email",
+
             },
           },
-          // Keycloak Store
           {
             resolve: "./src/modules/keycloak-auth-store",
             id: "keycloak-store",
             options: {
-              keycloakUrl: KEYCLOAK_URL,
-              realm: KEYCLOAK_REALM,
-              clientId: KEYCLOAK_STORE_CLIENT_ID,
-              clientSecret: KEYCLOAK_STORE_CLIENT_SECRET,
-              callbackUrl: `${BACKEND_URL}/auth/customer/keycloak-store/callback`,
+              keycloakUrl: process.env.KEYCLOAK_URL,
+              realm: process.env.KEYCLOAK_REALM,
+              clientId: process.env.KEYCLOAK_STORE_CLIENT_ID,
+              clientSecret: process.env.KEYCLOAK_STORE_CLIENT_SECRET,
+              callbackUrl: `${process.env.BACKEND_URL}/auth/customer/keycloak-store/callback`,
               scope: "openid profile email",
             },
           }

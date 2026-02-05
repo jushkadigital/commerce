@@ -3,36 +3,40 @@
   "dockerComposeFile": "../docker-compose.yml",
   "service": "backend-server",
   "workspaceFolder": "/home/node/app",
+  "remoteUser": "ubuntu",
   // CRÍTICO PARA CLI: Indica que debe levantar AMBOS servicios al iniciar.
   "runServices": [
     "postgres",
-    "redis",
-    "minio",
-    "zipkin"
+    "redis"
   ],
   // Nos conectamos al contenedor como usuario 'node'
   "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "ubuntu",
+      "userUid": "1000",
+      "userGid": "1000",
+      "installZsh": true,
+      "upgradePackages": false
+    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
     },
-    // Herramientas de terminal esenciales ya que no usas VS Code
     "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-      "packages": "git,wget,curl,ripgrep,python3,g++,xclip,iputils-ping,netcat-openbsd"
+      "packages": "git,wget,curl,ripgrep,xclip,sudo,iputils-ping,procps"
     },
-    "ghcr.io/s1n7ax/devcontainer-features/neovim:2": {},
-    "ghcr.io/danzilberdan/devcontainers/opencode:0": {}
+    "ghcr.io/danzilberdan/devcontainers/opencode:0": {},
+    "ghcr.io/s1n7ax/devcontainer-features/neovim:2": {}
   },
-  // Ajuste de permisos y setup inicial
-  "postCreateCommand": "",
-  // Puertos que la CLI de devcontainers expondrá (si aplica en tu entorno)
-  "forwardPorts": [
-    9000
-  ],
   "mounts": [
     {
       "source": "${localWorkspaceFolder}/.opencode/auth.json",
       "target": "/mnt/opencode-auth.json",
       "type": "bind"
     }
+  ],
+  "postCreateCommand": "sudo mkdir -p /home/node/app && sudo chown -R ubuntu:ubuntu /home/node && sudo chown ubuntu:ubuntu /mnt/opencode-auth.json",
+  // Puertos que la CLI de devcontainers expondrá (si aplica en tu entorno)
+  "forwardPorts": [
+    9000
   ]
 }

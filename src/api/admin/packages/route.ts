@@ -1,10 +1,9 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-import TourModuleService from "../../../modules/tour-booking/service"
-import { TOUR_MODULE } from "../../../modules/tour-booking"
-import createTourWorkflow from "../../../workflows/create-tour"
-import { z } from "zod"
+import PackageModuleService from "../../../modules/package/service"
+import { PACKAGE_MODULE } from "../../../modules/package"
 import createPackageWorkflow from "../../../workflows/create-package"
+import { z } from "zod"
 
 
 export async function GET(
