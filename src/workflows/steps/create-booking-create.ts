@@ -27,7 +27,7 @@ export const createTourBookingsStep = createStep(
     const tourBookingsToCreate: {
       order_id: string
       tour_id: string
-      tour_variant_id: string
+      line_items: Record<string, unknown>
       tour_date: Date
     }[] = []
 
@@ -37,34 +37,19 @@ export const createTourBookingsStep = createStep(
     }))
 
     logger.info(`${JSON.stringify(items)}`)
-    // Process each item in the cart
-    /**for (const item of cart.items) {
-      if (
-        !item?.variant?.tour_variant ||
-        !item?.metadata?.tour_date
-      ) { continue }
 
+    for (const item of items as { type: string; items: any[] }[]) {
+      const firstItem = item.items[0]
+      if (!firstItem?.variant?.tour_variant) continue
+      
       tourBookingsToCreate.push({
         order_id,
-        tour_id: item.variant.tour_variant.tour_id,
-        tour_variant_id: item.variant.tour_variant.id,
+        tour_id: firstItem.variant.tour_variant.tour_id,
+        line_items: { items: item.items.map(ele => ele.variant?.tour_variant) },
         tour_date: new Date(
-          item?.metadata.tour_date as string
-        ),
-
-      })
-    }
-    **/
-    for (const item of items) {
-      tourBookingsToCreate.push({
-        order_id,
-        tour_id: item.items[0].variant.tour_variant.tour_id,
-        line_items: item.items.map(ele => ele.variant.tour_variant),
-        tour_date: new Date(
-          item.items[0]?.metadata.tour_date as string
+          firstItem.metadata?.tour_date as string
         ),
       })
-
     }
 
     const tourBookings = await tourModuleService.createTourBookings(
