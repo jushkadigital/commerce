@@ -27,6 +27,7 @@
     "@medusajs/framework": "2.12.4",
     "@medusajs/medusa": "2.12.4",
     "amqplib": "^0.10.9",
+    "dayjs": "^1.11.19",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

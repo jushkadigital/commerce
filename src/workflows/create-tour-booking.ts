@@ -57,7 +57,7 @@ export const completeCartWithToursWorkflow = createWorkflow(
       }
 
       return Array.from(keys)
-    }).config({ name: "generate-lock-keys" })
+    })
 
     acquireLockStep({
       key: lockKeys,
@@ -117,7 +117,7 @@ export const completeCartWithToursWorkflow = createWorkflow(
               order_id: data.order.id,
             },
           }))
-        }).config({ name: "prepare-link-data" })
+        })
 
         createRemoteLinkStep(linkData)
           .config({ name: "create-order-links" })

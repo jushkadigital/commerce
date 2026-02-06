@@ -1,7 +1,6 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { Container, Heading, Text, Button, Badge, toast } from "@medusajs/ui"
-import { useAdminQuery } from "@medusajs/admin-sdk"
-import { useState, useEffect } from "react"
+import { Container, Heading, Text, Button, toast } from "@medusajs/ui"
+import { useEffect, useState } from "react"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 import "dayjs/locale/es"
@@ -68,49 +67,54 @@ function getAvailabilityColor(status: string): {
 const TourCalendarWidget = ({ data }: { data: any }) => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs())
   const [isLoading, setIsLoading] = useState(true)
+  const [availabilityData, setAvailabilityData] = useState<AvailabilityResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Load availability data
-  const { data: availabilityData, error, isLoading: dataLoading } = useAdminQuery(
-    `/admin/tours/${data?.id || ""}/availability`,
-    {
-      query: {
-        start_date: selectedMonth.startOf("month").format("YYYY-MM-DD"),
-        end_date: selectedMonth.endOf("month").format("YYYY-MM-DD"),
-      },
-    },
-    {
-      retry: false,
-      enabled: !!data?.id,
-    }
-  )
-
   useEffect(() => {
-    if (!dataLoading) {
+    if (!data?.id) {
       setIsLoading(false)
+      return
     }
-  }, [dataLoading])
 
-  useEffect(() => {
-    if (error) {
-      toast.error("Error al cargar disponibilidad", {
-        description: error.message || "No se pudieron obtener los datos de disponibilidad",
+    setIsLoading(true)
+    setError(null)
+
+    const startDate = selectedMonth.startOf("month").format("YYYY-MM-DD")
+    const endDate = selectedMonth.endOf("month").format("YYYY-MM-DD")
+
+    fetch(`/admin/tours/${data.id}/availability?start_date=${startDate}&end_date=${endDate}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`)
+        }
+        return response.json()
       })
-    }
-  }, [error])
+      .then((data) => {
+        setAvailabilityData(data)
+        setIsLoading(false)
+      })
+      .catch((err) => {
+        setError(err.message)
+        setIsLoading(false)
+      })
+  }, [data?.id, selectedMonth])
 
   const handlePreviousMonth = () => {
     setSelectedMonth((prev) => prev.subtract(1, "month"))
-    setIsLoading(true)
   }
 
   const handleNextMonth = () => {
     setSelectedMonth((prev) => prev.add(1, "month"))
-    setIsLoading(true)
   }
 
   const handleToday = () => {
     setSelectedMonth(dayjs())
-    setIsLoading(true)
   }
 
   const renderCalendarDays = () => {
@@ -121,7 +125,7 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
     const daysInMonth = dayjs(new Date(currentYear, currentMonth + 1, 0)).date()
     const startDayOfWeek = dayjs(new Date(currentYear, currentMonth, 1)).day()
 
-    const calendarDays = []
+    const calendarDays: React.ReactNode[] = []
 
     // Empty cells for days before the first day of the month
     for (let i = 0; i < startDayOfWeek; i++) {
@@ -178,13 +182,13 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
           </Text>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="small" onClick={handleToday}>
+          <Button variant="secondary" size="small" onClick={handleToday}>
             Hoy
           </Button>
-          <Button variant="ghost" size="small" onClick={handlePreviousMonth}>
+          <Button variant="secondary" size="small" onClick={handlePreviousMonth}>
             ←
           </Button>
-          <Button variant="ghost" size="small" onClick={handleNextMonth}>
+          <Button variant="secondary" size="small" onClick={handleNextMonth}>
             →
           </Button>
         </div>
@@ -228,14 +232,14 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
       </div>
 
       {/* Calendar Grid */}
-      {isLoading || dataLoading ? (
+      {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <ButtonSpinner />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-ui-fg-interactive border-t-transparent" />
         </div>
       ) : error ? (
         <div className="flex items-center justify-center py-12 text-ui-fg-subtle">
           <Text size="small" leading="compact">
-            No se pudo cargar la disponibilidad
+            No se pudo cargar la disponibilidad: {error}
           </Text>
         </div>
       ) : (
@@ -252,27 +256,27 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
       )}
 
       {/* Current status summary */}
-      {!dataLoading && availabilityData && (
+      {!isLoading && availabilityData && (
         <div className="mt-4 rounded-lg border border-ui-border-base p-4 bg-ui-bg-subtle">
           <Text size="small" leading="compact" className="font-medium mb-2">
             Resumen de {selectedMonth.format("MMMM YYYY")}
           </Text>
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <Badge variant="success" size="small" />
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <Text size="small" leading="compact" className="text-ui-fg-subtle">
                 Disponibles: {availabilityData.availability.filter((a) => a.available > 0).length} días
               </Text>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="warning" size="small" />
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
               <Text size="small" leading="compact" className="text-ui-fg-subtle">
                 Restringidos:{" "}
                 {availabilityData.availability.filter((a) => a.available > 0 && a.available < a.total * 0.2).length} días
               </Text>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="error" size="small" />
+              <span className="h-2 w-2 rounded-full bg-red-500" />
               <Text size="small" leading="compact" className="text-ui-fg-subtle">
                 Completos: {availabilityData.availability.filter((a) => a.available === 0).length} días
               </Text>
@@ -285,7 +289,7 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
 }
 
 export const config = defineWidgetConfig({
-  zone: "tour.details.side",
+  zone: "product.details.side.before",
 })
 
 export default TourCalendarWidget

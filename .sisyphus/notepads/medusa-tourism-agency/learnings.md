@@ -3,55 +3,66 @@
 ## Session Progress
 - **Date:** 2026-02-06
 - **Session ID:** ses_3cff6db3dffeLYPC18fehaUPQO
-- **Status:** Wave 1 in progress (3/5 tasks complete)
+- **Status:** Wave 3 Starting
 
-## Wave 1: Fundamentals - COMPLETED TASKS
+## ✅ COMPLETED
 
-### Task 1: Eliminar código muerto ✅
-- Removed `/src/api/store/customcart/` directory completely
-- Removed references from middlewares.ts
-- Committed: `b447855`, `6392bb5`
+### Wave 1: Fundamentals
+1. ✅ **Task 1:** Removed customcart/ directory
+2. ✅ **Task 2:** Created checkout validation hook
+3. ✅ **Task 2.5:** Modified cart endpoint for Single Line Item
+4. ✅ **Task 3:** Created availability API endpoint
+5. ✅ **Task 4:** Created locking utilities
 
-### Task 4: Setup locking infrastructure ✅
-- Created `src/utils/locking.ts` with:
-  - `generateTourLockKey(tourId, date)` → `tour:${tourId}:${date}`
-  - `generateCartLockKey(cartId)` → `cart:${cartId}`
-- Ready for Task 5
+### Wave 2: Core Features
+6. ✅ **Task 5:** Implemented tour-based distributed locking
+7. ✅ **Task 6:** Created calendar widget
+8. ✅ **Task 7:** Created reservations dashboard (needs type fixes)
 
-### Task 2.5: Modificar cart endpoint para Single Line Item ✅
-- Modified `/src/api/store/cart/tour-items/route.ts`
-- Changed from multiple items to single item with:
-  - `quantity: 1`
-  - `unit_price`: total calculated from Pricing Module
-  - `metadata`: complete structure with passengers, pricing_breakdown
-- Committed: `d034f47`
+### Commits
+- `b447855` - chore(cleanup): remove unused customcart directory
+- `6392bb5` - fix: remove customcart references from middlewares
+- `d034f47` - refactor: convert tour cart items to single line item
+- `c400206` - feat(tourism): add checkout validation hook and availability API
+- `89c7f1a` - feat(booking): implement tour-based distributed locking
+- `a8d1d4c` - feat(admin): add tour availability calendar widget
+- `0db2a2f` - feat(admin): add reservations dashboard page (WIP)
 
-## IN PROGRESS
+## 🔄 IN PROGRESS: Wave 3
 
-### Task 2: Hook de validación en checkout ⏳
-- Background task: bg_273af136
-- Creating `src/workflows/hooks/validate-tour-capacity.ts`
-- Status: running (1m 32s)
+### Remaining Tasks
+9. **Task 8:** Refactor package/ module (eliminate duplication)
+10. **Task 9:** Integration tests for race conditions
+11. **Task 10:** Documentation
 
-### Task 3: Endpoint API disponibilidad ⏳
-- Background task: bg_050e7d08
-- Creating `src/api/admin/tours/[id]/availability/route.ts`
-- Status: running (36s)
+## Architecture Summary
 
-## NEXT: Wave 2
-
-Once Wave 1 completes:
-1. Task 5: Implement locking in workflow (depends on Task 2, 4)
-2. Task 6: Calendar widget Admin
-3. Task 7: Reservations dashboard
-
-## Learnings
-
-### Single Line Item Pattern
-- Tours are group purchases, so 1 line item = 1 reservation
-- Metadata contains full breakdown: passengers, pricing_breakdown
-- Hook must parse metadata.total_passengers for validation
+### Single Line Item Model
+```typescript
+{
+  quantity: 1,
+  unit_price: totalPrice,
+  metadata: {
+    is_tour: true,
+    tour_id, tour_date,
+    total_passengers,
+    passengers: { adults, children, infants },
+    pricing_breakdown: [...]
+  }
+}
+```
 
 ### Locking Strategy
-- Lock key: `tour:${tourId}:${date}` (per tour per date)
-- Not global lock - allows concurrent bookings for different tours/dates
+- Lock keys: `tour:${tourId}:${date}`
+- Allows concurrent bookings for different tours/dates
+- 30s timeout, 120s TTL
+
+### Admin Features
+- Calendar widget with color-coded availability
+- Reservations dashboard with filters
+- CSV export functionality
+
+## Known Issues
+- Type errors in reservations dashboard (needs fixing)
+- LSP errors in create-package-booking.ts (pre-existing)
+- LSP errors in create-booking-create.ts (pre-existing)
