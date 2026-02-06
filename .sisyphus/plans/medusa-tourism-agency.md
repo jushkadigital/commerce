@@ -1153,7 +1153,7 @@ Wave 3 (After Wave 2):
 
 ### Wave 3: Refinamiento
 
-- [ ] **Task 8: Refactorizar package/ para eliminar duplicación**
+- [x] **Task 8: Refactorizar package/ para eliminar duplicación**
 
   **What to do:**
   - Analizar si `package/` y `tour-booking/` pueden consolidarse
@@ -1318,7 +1318,7 @@ curl http://localhost:9000/admin/tours/tour_123/availability
 - [x] Widget de calendario en Admin
 - [x] Dashboard de reservas funcional
 - [x] API de disponibilidad optimizada
-- [ ] Package/ consolidado con tour-booking/ (PENDIENTE - Task 8)
+- [x] Package/ consolidado con tour-booking/
 - [x] Tests de integración pasan
 - [x] Documentación completa
 - [x] Proyecto compila y despliega
