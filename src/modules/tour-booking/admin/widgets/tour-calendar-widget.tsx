@@ -1,6 +1,6 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { Container, Heading, Text, Button, Badge, ButtonSpinner, toast } from "@medusajs/ui"
-import { useAdminQuery } from "@medusajs/framework/react"
+import { Container, Heading, Text, Button, Badge, toast } from "@medusajs/ui"
+import { useAdminQuery } from "@medusajs/admin-sdk"
 import { useState, useEffect } from "react"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -70,10 +70,7 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
   const [isLoading, setIsLoading] = useState(true)
 
   // Load availability data
-  const { data: availabilityData, error, isLoading: dataLoading } = useAdminQuery<
-    AvailabilityResponse,
-    Error
-  >(
+  const { data: availabilityData, error, isLoading: dataLoading } = useAdminQuery(
     `/admin/tours/${data?.id || ""}/availability`,
     {
       query: {
@@ -202,7 +199,7 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
               Disponible
             </Text>
             <Text size="small" leading="compact" className="text-ui-fg-subtle">
-              >20% capacidad
+              {"<"}20% capacidad
             </Text>
           </div>
         </div>
@@ -213,7 +210,7 @@ const TourCalendarWidget = ({ data }: { data: any }) => {
               Pocas plazas
             </Text>
             <Text size="small" leading="compact" className="text-ui-fg-subtle">
-              <20% capacidad
+              {"<"}20% capacidad
             </Text>
           </div>
         </div>

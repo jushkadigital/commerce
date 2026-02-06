@@ -46,8 +46,8 @@ export async function GET(
     filters: {
       tour_id,
       tour_date: {
-        $gte: start_date,
-        $lte: end_date,
+        $gte: start_date as Date,
+        $lte: end_date as Date,
       },
       status: {
         $ne: "cancelled",
@@ -66,8 +66,8 @@ export async function GET(
   }> = []
 
   // Generate all dates in range
-  const current = new Date(start_date)
-  const end = new Date(end_date)
+  const current = new Date(start_date as Date)
+  const end = new Date(end_date as Date)
   end.setHours(23, 59, 59, 999)
 
   while (current <= end) {
