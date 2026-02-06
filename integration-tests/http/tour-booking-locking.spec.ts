@@ -1,7 +1,7 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules } from "@medusajs/framework/utils"
-import { TOUR_MODULE } from "../../src/modules/tour-booking"
-import TourModuleService from "../../src/modules/tour-booking/service"
+import { TOUR_MODULE } from "../../src/modules/tour"
+import TourModuleService from "../../src/modules/tour/service"
 import completeCartWithToursWorkflow from "../../src/workflows/create-tour-booking"
 import { generateTourLockKey } from "../../src/utils/locking"
 
