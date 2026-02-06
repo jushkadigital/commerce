@@ -12,6 +12,7 @@ import { acquireLockStep, completeCartWorkflow, releaseLockStep, useQueryGraphSt
 import tourBookingOrderLink from "../links/tour-booking-order"
 import { CreateBookingsStepInput, createTourBookingsStep } from "./steps/create-booking-create"
 import { Modules } from "@medusajs/framework/utils"
+import { generateTourLockKey } from "../utils/locking"
 
 export type CompleteCartWithToursWorkflowInput = {
   cart_id: string
@@ -21,17 +22,56 @@ export type CompleteCartWithToursWorkflowInput = {
 export const completeCartWithToursWorkflow = createWorkflow(
   "complete-cart-with-tours",
   (input: CompleteCartWithToursWorkflowInput) => {
+    const { data: carts } = useQueryGraphStep({
+      entity: "cart",
+      fields: [
+        "id",
+        "items.metadata",
+        "items.quantity",
+      ],
+      filters: {
+        id: input.cart_id,
+      },
+      options: {
+        throwIfKeyNotFound: true,
+      },
+    }).config({ name: "retrieve-cart-items" })
+
+    const lockKeys = transform({ carts }, ({ carts }) => {
+      const keys = new Set<string>()
+      const cart = carts[0]
+
+      if (cart?.items) {
+        for (const item of cart.items) {
+          if (!item) continue
+          const metadata = item.metadata as {
+            is_tour?: boolean
+            tour_id?: string
+            tour_date?: string
+          } | null
+
+          if (metadata?.is_tour && metadata.tour_id && metadata.tour_date) {
+            keys.add(generateTourLockKey(metadata.tour_id, metadata.tour_date))
+          }
+        }
+      }
+
+      return Array.from(keys)
+    }).config({ name: "generate-lock-keys" })
+
     acquireLockStep({
-      key: input.cart_id,
-      timeout: 2,
-      ttl: 10,
-    })
+      key: lockKeys,
+      timeout: 30,
+      ttl: 120,
+    }).config({ name: "acquire-tour-locks" })
+
     const order = completeCartWorkflow.runAsStep({
       input: {
         id: input.cart_id,
       },
-    })
-    const { data: carts } = useQueryGraphStep({
+    }).config({ name: "complete-cart" })
+
+    const { data: cartsWithTours } = useQueryGraphStep({
       entity: "cart",
       fields: [
         "id",
@@ -49,7 +89,8 @@ export const completeCartWithToursWorkflow = createWorkflow(
       options: {
         throwIfKeyNotFound: true,
       },
-    })
+    }).config({ name: "retrieve-cart-with-tours" })
+
     const { data: existingLinks } = useQueryGraphStep({
       entity: tourBookingOrderLink.entryPoint,
       fields: ["tour_booking.id"],
@@ -60,9 +101,9 @@ export const completeCartWithToursWorkflow = createWorkflow(
       .then(() => {
         const tourBookings = createTourBookingsStep({
           order_id: order.id,
-          cart: carts[0],
+          cart: cartsWithTours[0],
         } as unknown as CreateBookingsStepInput)
-
+          .config({ name: "create-tour-bookings" })
 
         const linkData = transform({
           order,
@@ -76,11 +117,11 @@ export const completeCartWithToursWorkflow = createWorkflow(
               order_id: data.order.id,
             },
           }))
-        })
+        }).config({ name: "prepare-link-data" })
 
         createRemoteLinkStep(linkData)
+          .config({ name: "create-order-links" })
       })
-
 
     const { data: refetchedOrder } = useQueryGraphStep({
       entity: "order",
@@ -105,10 +146,9 @@ export const completeCartWithToursWorkflow = createWorkflow(
       },
     }).config({ name: "refetch-order" })
 
-
     releaseLockStep({
-      key: input.cart_id,
-    })
+      key: lockKeys,
+    }).config({ name: "release-tour-locks" })
 
     return new WorkflowResponse({
       order: refetchedOrder[0],

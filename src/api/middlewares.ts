@@ -12,6 +12,8 @@ import { CreateTourSchema } from "./admin/tours/route"
 import { validateAndTransformBody, validateAndTransformQuery } from "@medusajs/framework"
 import { createFindParams } from "@medusajs/medusa/api/utils/validators"
 import { createSelectParams } from "./validators"
+import { GetTourAvailabilityParamsSchema } from "./admin/tours/[id]/availability/validators"
+import { z } from "zod"
 
 export const StoreGetCartsCart = createSelectParams()
 
@@ -87,6 +89,15 @@ export default defineMiddlewares({
       methods: ["POST"],
       middlewares: [
         validateAndTransformBody(CreateTourSchema),
+      ],
+    },
+    {
+      matcher: "/admin/tours/:id/availability",
+      methods: ["GET"],
+      middlewares: [
+        validateAndTransformQuery(GetTourAvailabilityParamsSchema, {
+          defaults: ["start_date", "end_date"],
+        }),
       ],
     }
   ]
