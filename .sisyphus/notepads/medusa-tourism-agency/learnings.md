@@ -66,3 +66,32 @@
 - Type errors in reservations dashboard (needs fixing)
 - LSP errors in create-package-booking.ts (pre-existing)
 - LSP errors in create-booking-create.ts (pre-existing)
+
+## BLOCKER: Task 8 - Package Module Refactoring
+
+**Status:** Unable to complete via delegation (JSON parse errors)
+
+**Analysis:**
+- Both `package/` and `tour-booking/` modules are ~90% identical
+- Same models: Package ≈ Tour, PackageBooking ≈ TourBooking, PackageVariant ≈ TourVariant
+- Same service methods: getAvailableCapacity(), validateBooking(), etc.
+
+**Recommended Solution:**
+1. Add `type: model.enum(['tour', 'package']).default('tour')` to Tour model
+2. Migrate existing Package data to Tour with type='package'
+3. Update TourModuleService to filter by type when needed
+4. Delete entire `src/modules/package/` directory
+5. Update any imports referencing Package module
+
+**Files to Modify:**
+- `src/modules/tour-booking/models/tour.ts` - Add type field
+- `src/modules/tour-booking/service.ts` - Handle type filtering
+- Create migration for data migration
+- Delete: `src/modules/package/`
+
+**Impact:** 
+- Non-blocking for functionality
+- Code cleanup opportunity
+- Reduces maintenance burden
+
+**Workaround:** Leave both modules as-is - system functions correctly with duplication.
