@@ -220,7 +220,7 @@ Wave 3 (After Wave 2):
 
 ### Wave 1: Fundamentos
 
-- [ ] **Task 1: Eliminar código muerto y consolidar arquitectura**
+- [x] **Task 1: Eliminar código muerto y consolidar arquitectura**
 
   **What to do:**
   - Eliminar `/src/api/store/customcart/` (código no usado)
