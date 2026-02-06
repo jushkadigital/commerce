@@ -307,9 +307,6 @@ module.exports = defineConfig({
     {
       resolve: './src/modules/tour-booking',
     },
-    {
-      resolve: './src/modules/package',
-    },
 
     // --------------------------------------------------------------------
     // AUTH MODULE
