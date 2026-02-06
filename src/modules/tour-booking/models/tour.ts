@@ -12,6 +12,7 @@ export const Tour = model.define("tour", {
   max_capacity: model.number(),
   thumbnail: model.text().nullable(),
   available_dates: model.array(),
+  type: model.enum(["tour", "package"]).default("tour"),
   variants: model.hasMany(() => TourVariant, {
     mappedBy: "tour",
   }),
