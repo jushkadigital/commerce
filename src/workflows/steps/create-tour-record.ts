@@ -1,6 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import TourModuleService from "../../modules/tour-booking/service"
-import { TOUR_MODULE } from "../../modules/tour-booking"
+import TourModuleService from "../../modules/tour/service"
+import { TOUR_MODULE } from "../../modules/tour"
 
 export const createTourRecordStep = createStep(
   "create-tour-record",

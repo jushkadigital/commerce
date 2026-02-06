@@ -305,7 +305,7 @@ module.exports = defineConfig({
     // CUSTOM MODULES
     // --------------------------------------------------------------------
     {
-      resolve: './src/modules/tour-booking',
+      resolve: './src/modules/tour',
     },
     {
       resolve: './src/modules/package',

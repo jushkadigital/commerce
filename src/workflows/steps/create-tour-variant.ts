@@ -1,6 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import TourModuleService from "../../modules/tour-booking/service"
-import { PassengerType, TOUR_MODULE } from "../../modules/tour-booking"
+import TourModuleService from "../../modules/tour/service"
+import { PassengerType, TOUR_MODULE } from "../../modules/tour"
 
 export type CreateTourVariantsStepInput = {
   variants: {

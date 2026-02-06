@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-import { TOUR_MODULE } from "../../../modules/tour-booking"
-import TourModuleService from "../../../modules/tour-booking/service"
+import { TOUR_MODULE } from "../../../modules/tour"
+import TourModuleService from "../../../modules/tour/service"
 
 /**
  * GET /admin/tour-orders

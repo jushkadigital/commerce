@@ -1,6 +1,6 @@
 import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { Modules, ProductStatus } from "@medusajs/framework/utils"
-import { PassengerType } from "../../modules/tour-booking/models/tour-variant"
+import { PassengerType } from "../../modules/tour/models/tour-variant"
 
 interface TourProductData {
   destination: string

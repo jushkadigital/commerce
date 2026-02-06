@@ -6,8 +6,8 @@ import {
   when,
   transform
 } from "@medusajs/framework/workflows-sdk"
-import { TOUR_MODULE } from "../modules/tour-booking"
-import TourModuleService from "../modules/tour-booking/service"
+import { TOUR_MODULE } from "../modules/tour"
+import TourModuleService from "../modules/tour/service"
 import { acquireLockStep, completeCartWorkflow, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
 import tourBookingOrderLink from "../links/tour-booking-order"
 import { CreateBookingsStepInput, createTourBookingsStep } from "./steps/create-booking-create"

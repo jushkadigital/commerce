@@ -1,7 +1,7 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { CartDTO, CartLineItemDTO, InferTypeOf, ProductVariantDTO } from "@medusajs/framework/types"
-import TourModuleService from "../../modules/tour-booking/service"
-import { TOUR_MODULE, TourVariant } from "../../modules/tour-booking"
+import TourModuleService from "../../modules/tour/service"
+import { TOUR_MODULE, TourVariant } from "../../modules/tour"
 import { groupBy } from "lodash"
 
 export type CreateBookingsStepInput = {

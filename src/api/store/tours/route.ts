@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import TourModuleService from "../../../modules/tour-booking/service"
-import { TOUR_MODULE } from "../../../modules/tour-booking"
+import TourModuleService from "../../../modules/tour/service"
+import { TOUR_MODULE } from "../../../modules/tour"
 import createTourWorkflow from "../../../workflows/create-tour"
 import { StoreCreateTourBodyType } from "./validators"
 

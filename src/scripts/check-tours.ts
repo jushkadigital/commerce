@@ -1,5 +1,5 @@
-import { TOUR_MODULE } from "../modules/tour-booking"
-import TourModuleService from "../modules/tour-booking/service"
+import { TOUR_MODULE } from "../modules/tour"
+import TourModuleService from "../modules/tour/service"
 import { Modules } from "@medusajs/framework/utils"
 
 export default async function checkTours({ container }) {

@@ -1,6 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import { TOUR_MODULE } from "../../modules/tour-booking"
-import TourModuleService from "../../modules/tour-booking/service"
+import { TOUR_MODULE } from "../../modules/tour"
+import TourModuleService from "../../modules/tour/service"
 
 export type UpdateTourPricesStepInput = {
   tourId: string

@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { TOUR_MODULE } from "../../../../modules/tour-booking"
+import { TOUR_MODULE } from "../../../../modules/tour"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import TourModuleService from "../../../../modules/tour-booking/service"
+import TourModuleService from "../../../../modules/tour/service"
 
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {

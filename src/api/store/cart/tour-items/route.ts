@@ -1,9 +1,9 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import type { IPricingModuleService } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
-import { TOUR_MODULE } from "../../../../modules/tour-booking"
-import TourModuleService from "../../../../modules/tour-booking/service"
-import { PassengerType } from "../../../../modules/tour-booking/models/tour-variant"
+import { TOUR_MODULE } from "../../../../modules/tour"
+import TourModuleService from "../../../../modules/tour/service"
+import { PassengerType } from "../../../../modules/tour/models/tour-variant"
 
 /**
  * Add tour items to cart

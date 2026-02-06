@@ -1,7 +1,7 @@
 import { completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import { MedusaError } from "@medusajs/framework/utils"
-import { TOUR_MODULE } from "../../modules/tour-booking"
-import TourModuleService from "../../modules/tour-booking/service"
+import { TOUR_MODULE } from "../../modules/tour"
+import TourModuleService from "../../modules/tour/service"
 
 /**
  * Hook para validar capacidad de tours antes de completar el checkout

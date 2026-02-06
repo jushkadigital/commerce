@@ -1,4 +1,4 @@
-import TourModule from "../modules/tour-booking"
+import TourModule from "../modules/tour"
 import ProductModule from "@medusajs/medusa/product"
 import { defineLink } from "@medusajs/framework/utils"
 

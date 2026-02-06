@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { AuthenticatedMedusaRequest } from "@medusajs/framework"
-import { TOUR_MODULE } from "../../../../../modules/tour-booking"
-import TourModuleService from "../../../../../modules/tour-booking/service"
+import { TOUR_MODULE } from "../../../../../modules/tour"
+import TourModuleService from "../../../../../modules/tour/service"
 import { GetTourAvailabilityParams, GetTourAvailabilityParamsSchema } from "./validators"
 
 /**
