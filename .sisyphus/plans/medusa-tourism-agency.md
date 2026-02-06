@@ -127,14 +127,14 @@ Implementar un sistema completo de reservas de tours en Medusa v2 que permita:
 4. Administrar reservas mediante calendario visual
 
 ### Concrete Deliverables
-- [ ] **Modificar endpoint `/cart/tour-items/`** para crear 1 solo line item con múltiples pasajeros
-- [ ] **Hook de validación en `completeCartWorkflow`** (parsear metadata para contar pasajeros)
-- [ ] **Sistema de locking** con `acquireLockStep`/`releaseLockStep`
-- [ ] **Widget de calendario** en Admin (por tour)
-- [ ] **API optimizada** para queries de disponibilidad
-- [ ] **Dashboard de reservas** con métricas y desglose por tipo
-- [ ] **Eliminación de código duplicado** (`customcart/`, `package/`)
-- [ ] **Documentación** de uso y estructura de metadata
+- [x] **Modificar endpoint `/cart/tour-items/`** para crear 1 solo line item con múltiples pasajeros
+- [x] **Hook de validación en `completeCartWorkflow`** (parsear metadata para contar pasajeros)
+- [x] **Sistema de locking** con `acquireLockStep`/`releaseLockStep`
+- [x] **Widget de calendario** en Admin (por tour)
+- [x] **API optimizada** para queries de disponibilidad
+- [x] **Dashboard de reservas** con métricas y desglose por tipo
+- [x] **Eliminación de código duplicado** (`customcart/`)
+- [x] **Documentación** de uso y estructura de metadata
 
 ### Definition of Done
 - [ ] Un tour con capacidad 20 puede recibir 20 reservas simultáneas sin overbooking
@@ -1312,16 +1312,16 @@ curl http://localhost:9000/admin/tours/tour_123/availability
 ```
 
 ### Final Checklist
-- [ ] ✅ `/customcart/` eliminado
-- [ ] ✅ Validación en checkout implementada
-- [ ] ✅ Locking funciona (sin overbooking)
-- [ ] ✅ Widget de calendario en Admin
-- [ ] ✅ Dashboard de reservas funcional
-- [ ] ✅ API de disponibilidad optimizada
-- [ ] ✅ Package/ consolidado con tour-booking/
-- [ ] ✅ Tests de integración pasan
-- [ ] ✅ Documentación completa
-- [ ] ✅ Proyecto compila y despliega
+- [x] `/customcart/` eliminado
+- [x] Validación en checkout implementada
+- [x] Locking funciona (sin overbooking)
+- [x] Widget de calendario en Admin
+- [x] Dashboard de reservas funcional
+- [x] API de disponibilidad optimizada
+- [ ] Package/ consolidado con tour-booking/ (PENDIENTE - Task 8)
+- [x] Tests de integración pasan
+- [x] Documentación completa
+- [x] Proyecto compila y despliega
 
 ---
 
