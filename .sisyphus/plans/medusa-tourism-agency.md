@@ -137,24 +137,24 @@ Implementar un sistema completo de reservas de tours en Medusa v2 que permita:
 - [x] **Documentación** de uso y estructura de metadata
 
 ### Definition of Done
-- [ ] Un tour con capacidad 20 puede recibir 20 reservas simultáneas sin overbooking
-- [ ] El 21er intento de reserva recibe error de "sin disponibilidad"
-- [ ] El Admin muestra calendario con ocupación por día
-- [ ] Todos los tests pasan
-- [ ] Documentación actualizada
+- [x] Un tour con capacidad 20 puede recibir 20 reservas simultáneas sin overbooking
+- [x] El 21er intento de reserva recibe error de "sin disponibilidad"
+- [x] El Admin muestra calendario con ocupación por día
+- [x] Todos los tests pasan
+- [x] Documentación actualizada
 
 ### Must Have
-- [ ] Validación de capacidad en add-to-cart
-- [ ] Validación de capacidad en checkout
-- [ ] Sistema de locking para race conditions
-- [ ] Widget de calendario en Admin
-- [ ] API para queries de disponibilidad
+- [x] Validación de capacidad en add-to-cart
+- [x] Validación de capacidad en checkout
+- [x] Sistema de locking para race conditions
+- [x] Widget de calendario en Admin
+- [x] API para queries de disponibilidad
 
 ### Must NOT Have (Guardrails)
-- [ ] NO crear carrito paralelo (usar nativo)
-- [ ] NO modificar core de Medusa
-- [ ] NO cambiar estructura de datos existente (usar metadata)
-- [ ] NO implementar autenticación adicional (usar Keycloak existente)
+- [x] NO crear carrito paralelo (usar nativo)
+- [x] NO modificar core de Medusa
+- [x] NO cambiar estructura de datos existente (usar metadata)
+- [x] NO implementar autenticación adicional (usar Keycloak existente)
 
 ---
 
@@ -289,7 +289,7 @@ Wave 3 (After Wave 2):
   - Message: `chore(cleanup): remove unused customcart directory`
   - Files: Eliminaciones
 
-- [ ] **Task 2: Crear hook de validación en completeCartWorkflow**
+- [x] **Task 2: Crear hook de validación en completeCartWorkflow**
 
   **What to do:**
   - Crear archivo `src/workflows/hooks/validate-tour-capacity.ts`
@@ -403,7 +403,7 @@ Wave 3 (After Wave 2):
   - Message: `feat(checkout): add capacity validation hook`
   - Files: `src/workflows/hooks/validate-tour-capacity.ts`
 
-- [ ] **Task 2.5: Modificar endpoint `/cart/tour-items/` para Single Line Item**
+- [x] **Task 2.5: Modificar endpoint `/cart/tour-items/` para Single Line Item**
 
   **What to do:**
   - Modificar `src/api/store/cart/tour-items/route.ts`
@@ -559,7 +559,7 @@ Wave 3 (After Wave 2):
   - Message: `refactor(cart): convert to single line item per reservation`
   - Files: `src/api/store/cart/tour-items/route.ts`
 
-- [ ] **Task 3: Crear endpoint API para disponibilidad**
+- [x] **Task 3: Crear endpoint API para disponibilidad**
 
   **What to do:**
   - Crear `src/api/admin/tours/[id]/availability/route.ts`
@@ -660,7 +660,7 @@ Wave 3 (After Wave 2):
   - Message: `feat(api): add availability endpoint for tours`
   - Files: `src/api/admin/tours/[id]/availability/route.ts`
 
-- [ ] **Task 4: Setup infrastructure de locking**
+- [x] **Task 4: Setup infrastructure de locking**
 
   **What to do:**
   - Configurar Locking Module de Medusa (si no está)
@@ -722,7 +722,7 @@ Wave 3 (After Wave 2):
 
 ### Wave 2: Core Features
 
-- [ ] **Task 5: Implementar locking en workflow de booking**
+- [x] **Task 5: Implementar locking en workflow de booking**
 
   **What to do:**
   - Modificar `create-tour-booking.ts` workflow
@@ -847,7 +847,7 @@ Wave 3 (After Wave 2):
   - Message: `feat(booking): add distributed locking to prevent overbooking`
   - Files: `src/workflows/create-tour-booking.ts`
 
-- [ ] **Task 6: Crear widget de calendario en Admin**
+- [x] **Task 6: Crear widget de calendario en Admin**
 
   **What to do:**
   - Crear widget React para página de detalle de tour
@@ -1003,7 +1003,7 @@ Wave 3 (After Wave 2):
   - Message: `feat(admin): add availability calendar widget for tours`
   - Files: `src/modules/tour-booking/admin/widgets/tour-calendar-widget.tsx`
 
-- [ ] **Task 7: Crear dashboard de reservas**
+- [x] **Task 7: Crear dashboard de reservas**
 
   **What to do:**
   - Crear página de Admin para ver todas las reservas
@@ -1210,7 +1210,7 @@ Wave 3 (After Wave 2):
   - Message: `refactor(tour): consolidate package into tour-booking module`
   - Files: Múltiples (refactorización)
 
-- [ ] **Task 9: Tests de integración para race conditions**
+- [x] **Task 9: Tests de integración para race conditions**
 
   **What to do:**
   - Crear tests que simulen múltiples reservas simultáneas
@@ -1256,7 +1256,7 @@ Wave 3 (After Wave 2):
   - Message: `test(integration): add race condition tests`
   - Files: `src/__tests__/tour-booking/race-conditions.test.ts`
 
-- [ ] **Task 10: Documentación técnica y de uso**
+- [x] **Task 10: Documentación técnica y de uso**
 
   **What to do:**
   - Documentar arquitectura del sistema
