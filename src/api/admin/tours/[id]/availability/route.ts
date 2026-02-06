@@ -10,11 +10,11 @@ import { GetTourAvailabilityParams, GetTourAvailabilityParamsSchema } from "./va
  * Query params: start_date (YYYY-MM-DD), end_date (YYYY-MM-DD)
  */
 export async function GET(
-  req: AuthenticatedMedusaRequest<GetTourAvailabilityParams>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) {
   const tour_id = req.params.id
-  const { start_date, end_date } = req.validatedQuery
+  const { start_date, end_date } = req.validatedQuery as GetTourAvailabilityParams
 
   // Validate date range
   if (start_date > end_date) {
