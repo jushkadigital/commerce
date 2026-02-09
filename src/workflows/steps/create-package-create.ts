@@ -10,6 +10,12 @@ export type CreatePackagesStepInput = {
     duration_days: number
     max_capacity: number
     available_dates: string[]
+    thumbnail?: string
+    is_special?: boolean
+    blocked_dates?: string[]
+    blocked_week_days?: number[]
+    cancellation_deadline_hours?: number
+    booking_min_months_ahead?: number
   }[]
 }
 
@@ -18,7 +24,13 @@ export const createPackagesStep = createStep(
   async (input: CreatePackagesStepInput, { container }) => {
     const packageModuleService: PackageModuleService = container.resolve(PACKAGE_MODULE)
 
-    const packages = await packageModuleService.createPackages(input.packages)
+    // Transform packages data to match service expectations (blocked_week_days as strings)
+    const packagesData = input.packages.map((pkg) => ({
+      ...pkg,
+      blocked_week_days: pkg.blocked_week_days?.map((day) => day.toString()),
+    }))
+
+    const packages = await packageModuleService.createPackages(packagesData)
 
     return new StepResponse(
       { packages },

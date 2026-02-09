@@ -18,6 +18,9 @@ import { PassengerType } from "../modules/package/models/package-variant"
 import { validatePackageStep } from "./steps/create-package-validate"
 import { createPackageVariantsStep } from "./steps/create-package-variant"
 import { createPackagesStep } from "./steps/create-package-create"
+import { validateBookingWindowStep } from "./steps/validate-booking-window"
+import { validateCapacityStep } from "./steps/validate-capacity"
+import { validateBlockedDatesStep } from "./steps/validate-blocked-dates"
 
 export type CreatePackageWorkflowInput = {
   destination: string
@@ -32,6 +35,11 @@ export type CreatePackageWorkflowInput = {
     infant: number
     currency_code?: string
   }
+  is_special?: boolean
+  blocked_dates?: string[]
+  blocked_week_days?: number[]
+  cancellation_deadline_hours?: number
+  booking_min_months_ahead?: number
 }
 
 export const createPackageWorkflow = createWorkflow(
@@ -121,7 +129,12 @@ export const createPackageWorkflow = createWorkflow(
           duration_days: data.input.duration_days,
           max_capacity: data.input.max_capacity,
           available_dates: data.input.available_dates,
-          thumbnail: data.input.thumbnail
+          thumbnail: data.input.thumbnail,
+          is_special: data.input.is_special,
+          blocked_dates: data.input.blocked_dates,
+          blocked_week_days: data.input.blocked_week_days,
+          cancellation_deadline_hours: data.input.cancellation_deadline_hours,
+          booking_min_months_ahead: data.input.booking_min_months_ahead,
         }]
       }
     })

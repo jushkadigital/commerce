@@ -18,6 +18,9 @@ import { PassengerType } from "../modules/tour/models/tour-variant"
 import { validateTourStep } from "./steps/create-tour-validate"
 import { createTourVariantsStep } from "./steps/create-tour-variant"
 import { createToursStep } from "./steps/create-tour-create"
+import { validateBookingWindowStep } from "./steps/validate-booking-window"
+import { validateCapacityStep } from "./steps/validate-capacity"
+import { validateBlockedDatesStep } from "./steps/validate-blocked-dates"
 
 
 
@@ -34,6 +37,11 @@ export type CreateTourWorkflowInput = {
     infant: number
     currency_code?: string
   }
+  is_special?: boolean
+  blocked_dates?: string[]
+  blocked_week_days?: number[]
+  cancellation_deadline_hours?: number
+  booking_min_days_ahead?: number
 }
 
 export const createTourWorkflow = createWorkflow(
@@ -132,7 +140,12 @@ export const createTourWorkflow = createWorkflow(
           duration_days: data.input.duration_days,
           max_capacity: data.input.max_capacity,
           available_dates: data.input.available_dates,
-          thumbnail: data.input.thumbnail
+          thumbnail: data.input.thumbnail,
+          is_special: data.input.is_special,
+          blocked_dates: data.input.blocked_dates,
+          blocked_week_days: data.input.blocked_week_days,
+          cancellation_deadline_hours: data.input.cancellation_deadline_hours,
+          booking_min_days_ahead: data.input.booking_min_days_ahead,
         }]
       }
     })
@@ -188,13 +201,20 @@ export const createTourWorkflow = createWorkflow(
 
     // --- Step 10: Retrieve Final Graph ---
     const { data: finalTour } = useQueryGraphStep({
-      entity: "tour", // Asegúrate de que este nombre coincida con tu definición en medusa-config o link definition
+      entity: "tour",
       fields: [
         "id",
         "destination",
-        "product.*", // Obtenemos datos del producto linkeado
-        "variants.*", // Obtenemos los tour variants
-        "variants.product_variant.*" // Y sus contrapartes de producto
+        "description",
+        "duration_days",
+        "max_capacity",
+        "thumbnail",
+        "available_dates",
+        "product_id",
+        "product.*",
+        "product.variants.*",
+        "variants.*",
+        "variants.product_variant.*"
       ],
       filters: {
         id: tours[0].id

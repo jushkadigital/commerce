@@ -10,6 +10,12 @@ export type CreateToursStepInput = {
     duration_days: number
     max_capacity: number
     available_dates: string[]
+    thumbnail?: string
+    is_special?: boolean
+    blocked_dates?: string[]
+    blocked_week_days?: number[]
+    cancellation_deadline_hours?: number
+    booking_min_days_ahead?: number
   }[]
 }
 
@@ -23,8 +29,14 @@ export const createToursStep = createStep(
   async (input: CreateToursStepInput, { container }) => {
     const tourModuleService: TourModuleService = container.resolve(TOUR_MODULE)
 
+    // Transform tours data to match service expectations (blocked_week_days as strings)
+    const toursData = input.tours.map((tour) => ({
+      ...tour,
+      blocked_week_days: tour.blocked_week_days?.map((day) => day.toString()),
+    }))
+
     // Creamos los tours (el servicio generado por Medusa suele aceptar arrays)
-    const tours = await tourModuleService.createTours(input.tours)
+    const tours = await tourModuleService.createTours(toursData)
 
     return new StepResponse(
       { tours },
