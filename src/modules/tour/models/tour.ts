@@ -13,6 +13,11 @@ export const Tour = model.define("tour", {
   thumbnail: model.text().nullable(),
   available_dates: model.array(),
   type: model.enum(["tour", "package"]).default("tour"),
+  is_special: model.boolean().default(false),
+  blocked_dates: model.array().default([]),
+  blocked_week_days: model.array().default([]),
+  cancellation_deadline_hours: model.number().default(12),
+  booking_min_days_ahead: model.number().default(2),
   variants: model.hasMany(() => TourVariant, {
     mappedBy: "tour",
   }),
