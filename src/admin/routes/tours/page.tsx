@@ -56,13 +56,7 @@ const getColumns = (navigate: Function, handleDelete: Function, handlerUpdate: F
     header: "Capacidad",
     cell: ({ getValue }) => <span>{getValue()} pers.</span>,
   }),
-  columnHelper.accessor("available_dates", {
-    header: "Fechas",
-    cell: ({ getValue }) => {
-      const count = getValue()?.length || 0
-      return <Badge size="small" color="grey">{count} fechas</Badge>
-    },
-  }),
+
   // Columna de Acciones (Action Menu)
   columnHelper.display({
     id: "actions",

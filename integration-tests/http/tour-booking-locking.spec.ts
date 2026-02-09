@@ -108,7 +108,6 @@ medusaIntegrationTestRunner({
           description: "Full day tour to Machu Picchu",
           duration_days: 1,
           max_capacity: tourCapacity,
-          available_dates: [testDate],
         })
 
         // Create variants for each passenger type

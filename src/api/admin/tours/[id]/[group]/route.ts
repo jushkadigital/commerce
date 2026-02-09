@@ -10,7 +10,6 @@ const UpdateTourSchema = z.object({
   description: z.string().optional(),
   duration_days: z.coerce.number().optional(), // 'coerce' convierte strings a números automáticamente
   max_capacity: z.coerce.number().optional(),
-  available_dates: z.array(z.string()).optional(),
   thumbnail: z.string().optional(),
   prices: z.object({
     adult: z.coerce.number().optional(),

@@ -31,7 +31,6 @@ export const TourFormModal = ({
   const [description, setDescription] = useState("")
   const [duration, setDuration] = useState<number | "">("")
   const [capacity, setCapacity] = useState<number | "">("")
-  const [availableDates, setAvailableDates] = useState<string[]>([])
 
   // --- Step 2 Data ---
   // CORRECCIÓN 1: Inicializar como objeto vacío, NO null
@@ -86,7 +85,6 @@ export const TourFormModal = ({
       setDescription(tourToEdit.description || "")
       setDuration(tourToEdit.duration_days)
       setCapacity(tourToEdit.max_capacity)
-      setAvailableDates(tourToEdit.available_dates || [])
 
       // 2. LÓGICA DE PRECIOS CORREGIDA
       if (tourToEdit.variants && tourToEdit.variants.length > 0) {
@@ -143,8 +141,7 @@ export const TourFormModal = ({
     setDescription("")
     setDuration("")
     setCapacity("")
-    setAvailableDates([])
-    setPrices({}) // Resetear a objeto vacío
+    setPrices({})
     setCurrentStep("0")
   }
 
@@ -171,7 +168,6 @@ export const TourFormModal = ({
         description,
         duration_days: Number(duration),
         max_capacity: Number(capacity),
-        available_dates: availableDates,
         prices: {
           // CORRECCIÓN 4: Acceso seguro con ?. y usando la clave correcta
           // Nota: Usa mayúscula "Adult" si así está en tu PricingStep (PASSENGER_TYPES)
@@ -210,9 +206,6 @@ export const TourFormModal = ({
           description={description} setDescription={setDescription}
           duration={duration} setDuration={setDuration}
           capacity={capacity} setCapacity={setCapacity}
-          availableDates={availableDates} setAvailableDates={setAvailableDates}
-        // Si deseas bloquear edición en el paso 1, descomenta esto:
-        // isReadOnly={isEditMode} 
         />
       )
     },

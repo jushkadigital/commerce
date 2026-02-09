@@ -16,7 +16,6 @@ export type UpdatePackageWorkflowInput = {
   description?: string
   duration_days?: number
   max_capacity?: number
-  available_dates?: string[]
   thumbnail?: string
   prices?: {
     adult?: number
@@ -45,7 +44,6 @@ export const updatePackageNoPriceWorkflow = createWorkflow(
         description: input.description,
         duration_days: input.duration_days,
         max_capacity: input.max_capacity,
-        available_dates: input.available_dates,
         thumbnail: input.thumbnail
       }
     })
@@ -91,7 +89,6 @@ export const updatePackageNoPriceWorkflow = createWorkflow(
         "description",
         "duration_days",
         "max_capacity",
-        "available_dates",
         "thumbnail",
         "product_id"
       ],

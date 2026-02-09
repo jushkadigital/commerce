@@ -19,7 +19,6 @@ export default async function checkTours({ container }) {
     console.log(`  Product ID: ${tour.product_id || "SIN PRODUCTO"}`)
     console.log(`  Duración: ${tour.duration_days} días`)
     console.log(`  Capacidad: ${tour.max_capacity}`)
-    console.log(`  Fechas disponibles: ${tour.available_dates?.length || 0}`)
     console.log(`  Variantes: ${tour.variants?.length || 0}`)
   }
 

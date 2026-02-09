@@ -37,7 +37,6 @@ export async function POST(
     description,
     duration_days,
     max_capacity,
-    available_dates,
     thumbnail,
     prices,
   } = req.validatedBody
@@ -48,7 +47,6 @@ export async function POST(
       description,
       duration_days,
       max_capacity,
-      available_dates,
       thumbnail,
       prices,
     },
@@ -66,7 +64,6 @@ export async function POST(
       description: createdPackage.description,
       duration_days: createdPackage.duration_days,
       max_capacity: createdPackage.max_capacity,
-      available_dates: createdPackage.available_dates,
       prices: pricing.prices,
     },
   })

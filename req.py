@@ -53,7 +53,6 @@ def run_test():
         "description": "Tour creado validando el Bearer Token",
         "duration_days": 3,
         "max_capacity": 15,
-        "available_dates": ["2027-10-01"],
         "thumbnail": "https://placehold.co/400",
         "prices": {"adult": 200, "child": 100, "infant": 0, "currency_code": "usd"},
     }

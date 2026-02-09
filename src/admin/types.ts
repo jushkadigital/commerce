@@ -5,7 +5,6 @@ export interface Tour {
   duration_days: number
   max_capacity: number
   thumbnail?: string
-  available_dates: string[]
   product_id?: string
   created_at: string
   variants?: TourVariant[]
@@ -40,7 +39,6 @@ export interface Package {
   duration_days: number
   max_capacity: number
   thumbnail?: string
-  available_dates: string[]
   product_id?: string
   created_at: string
   variants?: PackageVariant[]

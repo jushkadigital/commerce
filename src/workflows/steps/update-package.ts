@@ -9,7 +9,6 @@ export type UpdatePackageStepInput = {
     description?: string
     duration_days?: number
     max_capacity?: number
-    available_dates?: string[]
     thumbnail?: string
   }
 }
@@ -37,7 +36,6 @@ export const updatePackageStep = createStep(
       description: previousPackage.description,
       duration_days: previousPackage.duration_days,
       max_capacity: previousPackage.max_capacity,
-      available_dates: previousPackage.available_dates,
     })
   }
 )

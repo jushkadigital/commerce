@@ -11,7 +11,6 @@ export const createPackageRecordStep = createStep(
       description?: string
       duration_days: number
       max_capacity: number
-      available_dates: string[]
     },
     { container }
   ) => {
@@ -23,7 +22,6 @@ export const createPackageRecordStep = createStep(
       description: input.description,
       duration_days: input.duration_days,
       max_capacity: input.max_capacity,
-      available_dates: input.available_dates,
     })
 
     return new StepResponse(pkg, pkg[0]?.id)

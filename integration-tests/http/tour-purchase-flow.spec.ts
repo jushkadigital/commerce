@@ -10,13 +10,16 @@ jest.setTimeout(120 * 1000)
  * Integration tests for complete tour purchase flow (E2E)
  * 
  * These tests verify the entire purchase flow:
- * 1. Create tour with capacity and available dates
+ * These tests verify the complete E2E flow for tourism tours:
+ * 1. Create tour with available dates
  * 2. Create cart with tour item
  * 3. Add customer information
- * 4. Select shipping method
- * 5. Complete checkout (with mocked payment)
- * 6. Verify order created correctly
- * 7. Verify booking created in TourModule
+ * 4. Complete checkout (mock payment)
+ * 5. Verify order created correctly
+ * 6. Verify booking created in TourModule
+ * 
+ * Note: Tourism tours don't use fulfillment/shipping as they are
+ * experiences, not physical products that need delivery.
  */
 medusaIntegrationTestRunner({
   inApp: true,
@@ -31,7 +34,6 @@ medusaIntegrationTestRunner({
       let salesChannelModule: any
       let regionModule: any
       let customerModule: any
-      let fulfillmentModule: any
       let paymentModule: any
       let orderModule: any
       let remoteLink: any
@@ -42,8 +44,6 @@ medusaIntegrationTestRunner({
       let product: any
       let region: any
       let salesChannel: any
-      let shippingProfile: any
-      let shippingOption: any
       let productVariants: any[] = []
       const testDate = "2026-04-15"
       const tourCapacity = 10
@@ -57,7 +57,6 @@ medusaIntegrationTestRunner({
         salesChannelModule = container.resolve(Modules.SALES_CHANNEL)
         regionModule = container.resolve(Modules.REGION)
         customerModule = container.resolve(Modules.CUSTOMER)
-        fulfillmentModule = container.resolve(Modules.FULFILLMENT)
         paymentModule = container.resolve(Modules.PAYMENT)
         orderModule = container.resolve(Modules.ORDER)
         remoteLink = container.resolve("remoteLink")
@@ -77,28 +76,6 @@ medusaIntegrationTestRunner({
           countries: ["us"],
         })
 
-        // Create a shipping profile
-        shippingProfile = await fulfillmentModule.createShippingProfiles({
-          name: "Test Shipping Profile",
-          type: "default",
-        })
-
-        // Create shipping option
-        shippingOption = await fulfillmentModule.createShippingOptions({
-          name: "Standard Shipping",
-          service_zone_id: region.id,
-          shipping_profile_id: shippingProfile.id,
-          provider_id: "manual_manual",
-          price_type: "flat",
-          rules: [
-            {
-              attribute: "enabled",
-              operator: "eq",
-              value: "true",
-            },
-          ],
-        })
-
         // Create product for the tour
         product = await productModule.createProducts({
           title: "Cusco City Tour",
@@ -114,7 +91,6 @@ medusaIntegrationTestRunner({
           description: "Full day city tour of Cusco",
           duration_days: 1,
           max_capacity: tourCapacity,
-          available_dates: [testDate],
         })
 
         // Create variants for each passenger type
@@ -175,8 +151,6 @@ medusaIntegrationTestRunner({
           }
           await productModule.deleteProducts(product.id)
 
-          await fulfillmentModule.deleteShippingOptions(shippingOption.id)
-          await fulfillmentModule.deleteShippingProfiles(shippingProfile.id)
           await regionModule.deleteRegions(region.id)
           await salesChannelModule.deleteSalesChannels(salesChannel.id)
         } catch (error) {
@@ -342,36 +316,14 @@ medusaIntegrationTestRunner({
           })
         }
 
-        // Create cart
+        // Create cart - tourism tours don't need shipping/fulfillment
         const cart = await cartModule.createCarts({
           currency_code: "usd",
           email: customerEmail,
           customer_id: customer.id,
           sales_channel_id: salesChannel.id,
           region_id: region.id,
-          shipping_address: {
-            first_name: "Test",
-            last_name: "Customer",
-            address_1: "123 Test St",
-            city: "Test City",
-            country_code: "us",
-            postal_code: "12345",
-          },
-          billing_address: {
-            first_name: "Test",
-            last_name: "Customer",
-            address_1: "123 Test St",
-            city: "Test City",
-            country_code: "us",
-            postal_code: "12345",
-          },
           items,
-        })
-
-        // Add shipping method to cart
-        await cartModule.addShippingMethod({
-          cart_id: cart.id,
-          option_id: shippingOption.id,
         })
 
         return { cart, totalPassengers, totalPrice }

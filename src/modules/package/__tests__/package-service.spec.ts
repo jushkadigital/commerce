@@ -21,7 +21,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Machu Picchu",
             duration_days: 3,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             is_special: true,
             blocked_dates: ["2026-12-25", "2026-12-31"],
             blocked_week_days: [0, 6],
@@ -49,7 +48,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Test Package",
             duration_days: 2,
             max_capacity: 5,
-            available_dates: [availableDateStr],
             is_special: false,
             blocked_dates: [],
             blocked_week_days: [],
@@ -83,7 +81,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Retrieval Test",
             duration_days: 4,
             max_capacity: 15,
-            available_dates: [availableDateStr],
             is_special: true,
             blocked_dates: ["2026-12-25"],
             blocked_week_days: [0, 6],
@@ -108,7 +105,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Special Package",
             duration_days: 2,
             max_capacity: 8,
-            available_dates: [availableDateStr],
             is_special: true
           })
 
@@ -117,7 +113,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Regular Package",
             duration_days: 3,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             is_special: false
           })
 
@@ -140,7 +135,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Defaults Test",
             duration_days: 2,
             max_capacity: 5,
-            available_dates: [availableDateStr]
           })
           
           expect(pkg.is_special).toBe(false)
@@ -158,7 +152,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Months Default Test",
             duration_days: 2,
             max_capacity: 5,
-            available_dates: [availableDateStr]
           })
           
           expect(pkg.booking_min_months_ahead).toBe(2)
@@ -175,7 +168,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Booking Window Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           const result = await service.validateBooking(pkg.id, availableDate, 2)
@@ -183,7 +175,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
           expect(result.valid).toBe(true)
         })
 
-        it("should reject booking for dates not in available_dates", async () => {
           const availableDateStr = "2026-12-15T00:00:00.000Z"
           const unavailableDate = new Date("2026-12-20T00:00:00.000Z")
           
@@ -192,7 +183,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Unavailable Date Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           const result = await service.validateBooking(pkg.id, unavailableDate, 2)
@@ -211,7 +201,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Past Date Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr, pastDateStr]
           })
 
           const result = await service.validateBooking(pkg.id, pastDate, 2)
@@ -228,7 +217,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Time Component Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           const requestedDate = new Date(availableDateStr)
@@ -245,7 +233,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Months Field Verification",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           expect(pkg.booking_min_months_ahead).toBeDefined()
@@ -267,7 +254,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Capacity Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           const capacity = await service.getAvailableCapacity(pkg.id, availableDate)
@@ -284,7 +270,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Capacity Validation Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           const result = await service.validateBooking(pkg.id, availableDate, 5)
@@ -301,7 +286,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Over Capacity Test",
             duration_days: 2,
             max_capacity: 5,
-            available_dates: [availableDateStr]
           })
 
           await service.createPackageBookings([
@@ -340,7 +324,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Exact Capacity Test",
             duration_days: 2,
             max_capacity: 5,
-            available_dates: [availableDateStr]
           })
 
           await service.createPackageBookings([
@@ -378,7 +361,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Available Capacity Calculation",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           await service.createPackageBookings([
@@ -422,7 +404,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Cancelled Bookings Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           await service.createPackageBookings([
@@ -466,7 +447,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Fully Booked Test",
             duration_days: 2,
             max_capacity: 3,
-            available_dates: [availableDateStr]
           })
 
           await service.createPackageBookings([
@@ -509,7 +489,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Blocked Dates Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             blocked_dates: ["2026-12-25", "2026-12-31", "2027-01-01"]
           })
 
@@ -529,7 +508,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Blocked Week Days Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             blocked_week_days: [0, 6]
           })
 
@@ -548,7 +526,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Empty Blocked Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             blocked_dates: [],
             blocked_week_days: []
           })
@@ -567,7 +544,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Update Blocked Test",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             blocked_dates: ["2026-12-25"],
             blocked_week_days: [0]
           })
@@ -595,7 +571,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Special Package",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             is_special: true
           })
 
@@ -604,7 +579,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Regular Package",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             is_special: false
           })
 
@@ -627,7 +601,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "12h Cancellation",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             cancellation_deadline_hours: 12
           })
 
@@ -636,7 +609,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "24h Cancellation",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             cancellation_deadline_hours: 24
           })
 
@@ -645,7 +617,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "48h Cancellation",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             cancellation_deadline_hours: 48
           })
 
@@ -664,7 +635,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "Months vs Days Verification",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr]
           })
 
           expect(pkg).toHaveProperty("booking_min_months_ahead")
@@ -680,7 +650,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "1 Month Ahead",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             booking_min_months_ahead: 1
           })
 
@@ -689,7 +658,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "6 Months Ahead",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             booking_min_months_ahead: 6
           })
 
@@ -698,7 +666,6 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "12 Months Ahead",
             duration_days: 2,
             max_capacity: 10,
-            available_dates: [availableDateStr],
             booking_min_months_ahead: 12
           })
 
@@ -708,7 +675,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
         })
       })
     })
-  }
-})
 
 jest.setTimeout(60 * 1000)
+  }
+})

@@ -156,7 +156,6 @@ describe("TourModuleService", () => {
       mockRetrieveTour.mockResolvedValue({
         id: tourId,
         max_capacity: 10,
-        available_dates: [tourDate.toISOString()],
       })
 
       mockListTourBookings.mockResolvedValue([
@@ -177,7 +176,6 @@ describe("TourModuleService", () => {
       mockRetrieveTour.mockResolvedValue({
         id: tourId,
         max_capacity: 10,
-        available_dates: [pastDate.toISOString()],
       })
 
       const result = await tourModuleService.validateBooking(tourId, pastDate, quantity)
@@ -195,7 +193,6 @@ describe("TourModuleService", () => {
       mockRetrieveTour.mockResolvedValue({
         id: tourId,
         max_capacity: 10,
-        available_dates: [tourDate.toISOString()],
       })
 
       const result = await tourModuleService.validateBooking(tourId, unavailableDate, quantity)
@@ -212,7 +209,6 @@ describe("TourModuleService", () => {
       mockRetrieveTour.mockResolvedValue({
         id: tourId,
         max_capacity: 10,
-        available_dates: [tourDate.toISOString()],
       })
 
       mockListTourBookings.mockResolvedValue([
@@ -241,7 +237,6 @@ describe("TourModuleService", () => {
       mockRetrieveTour.mockResolvedValue({
         id: tourId,
         max_capacity: 10,
-        available_dates: [tourDate.toISOString()],
       })
 
       mockListTourBookings.mockResolvedValue([

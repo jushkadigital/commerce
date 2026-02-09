@@ -34,7 +34,6 @@ export const CreateTourSchema = z.object({
   description: z.string().optional(),
   duration_days: z.number().int().positive("Duration must be at least 1 day"),
   max_capacity: z.number().int().positive("Max capacity must be at least 1"),
-  available_dates: z.array(z.string()),
   thumbnail: z.string().optional(),
   prices: z.object({
     adult: z.number().min(0, "Adult price must be non-negative"),

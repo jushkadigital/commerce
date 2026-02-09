@@ -58,7 +58,7 @@ export default defineMiddlewares({
         validateAndTransformQuery(createFindParams(), {
           isList: true,
           defaults: ["id", "product_id", "tour_id", "destination", "description", "thumbnail",
-            "duration_days", "max_capacity", "available_dates", "variants.*", "variants.product_variant.price_set.*", // El set de precios
+            "duration_days", "max_capacity", "variants.*", "variants.product_variant.price_set.*",
             "variants.product_variant.price_set.prices.*"],
         })
       ],
@@ -78,7 +78,7 @@ export default defineMiddlewares({
         validateAndTransformQuery(createFindParams(), {
           isList: true,
           defaults: ["id", "product_id", "package_id", "destination", "description", "thumbnail",
-            "duration_days", "max_capacity", "available_dates", "variants.*", "variants.product_variant.price_set.*", // El set de precios
+            "duration_days", "max_capacity", "variants.*", "variants.product_variant.price_set.*",
             "variants.product_variant.price_set.prices.*"],
         })
       ],

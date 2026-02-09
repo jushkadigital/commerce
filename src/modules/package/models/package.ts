@@ -11,7 +11,6 @@ export const Package = model.define("package", {
   duration_days: model.number(),
   max_capacity: model.number(),
   thumbnail: model.text().nullable(),
-  available_dates: model.array(),
   is_special: model.boolean().default(false),
   blocked_dates: model.array().default([]),
   blocked_week_days: model.array().default([]),
@@ -28,7 +27,7 @@ export const Package = model.define("package", {
   }),
 }).indexes([
   {
-    on: ["destination", "available_dates"],
+    on: ["destination"],
   },
 ])
 

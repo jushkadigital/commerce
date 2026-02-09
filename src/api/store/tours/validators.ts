@@ -28,7 +28,6 @@ export const StoreCreateTourBody = z.object({
   description: z.string().optional(),
   duration_days: z.number().int().positive("Duration must be a positive integer"),
   max_capacity: z.number().int().positive("Max capacity must be a positive integer"),
-  available_dates: z.array(z.string()).min(1, "At least one available date is required"),
   thumbnail: z.string().url().optional(),
   prices: z.object({
     adult: z.number().positive("Adult price must be positive"),

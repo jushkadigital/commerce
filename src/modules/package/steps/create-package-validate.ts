@@ -4,7 +4,6 @@ import { PACKAGE_MODULE } from ".."
 
 export type ValidatePackageStepInput = {
   destination: string
-  available_dates: string[]
   duration_days: number
 }
 

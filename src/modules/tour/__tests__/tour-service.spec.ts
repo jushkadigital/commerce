@@ -36,7 +36,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Ancient Incan city",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             is_special: true,
             blocked_dates: [blockedDate],
             blocked_week_days: [0, 6],
@@ -63,7 +62,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "City exploration",
             duration_days: 1,
             max_capacity: 15,
-            available_dates: [formatDate(nextWeek)],
             is_special: false,
             blocked_dates: [blockedDate],
             blocked_week_days: [0],
@@ -87,7 +85,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Valley tour",
             duration_days: 1,
             max_capacity: 20,
-            available_dates: [formatDate(nextWeek)],
             is_special: false,
             blocked_dates: [],
             blocked_week_days: [],
@@ -120,7 +117,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "First tour",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             is_special: true
           }])
 
@@ -130,7 +126,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Second tour",
             duration_days: 2,
             max_capacity: 15,
-            available_dates: [formatDate(nextWeek)],
             is_special: false
           }])
 
@@ -152,7 +147,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Will be deleted",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           const tourId = tour[0].id
@@ -170,7 +164,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing defaults",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           expect(tour[0].is_special).toBe(false)
@@ -186,7 +179,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             destination: "Test Boolean Default",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           expect(tour[0].is_special).toBe(false)
@@ -199,7 +191,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             destination: "Test Array Defaults",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           expect(Array.isArray(tour[0].blocked_dates)).toBe(true)
@@ -214,7 +205,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             destination: "Test Numeric Defaults",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           expect(tour[0].cancellation_deadline_hours).toBe(12)
@@ -232,7 +222,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing 2-day minimum",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(twoDaysFromNow)],
             booking_min_days_ahead: 2
           }])
 
@@ -252,7 +241,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing future booking",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             booking_min_days_ahead: 2
           }])
 
@@ -275,7 +263,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing past dates",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(yesterday)]
           }])
 
           const validation = await service.validateBooking(
@@ -295,7 +282,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing same-day booking",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(today)]
           }])
 
           const validation = await service.validateBooking(
@@ -314,11 +300,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing custom 5-day minimum",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [
-              formatDate(twoDaysFromNow),
-              formatDate(threeDaysFromNow),
-              formatDate(nextWeek)
-            ],
             booking_min_days_ahead: 5
           }])
 
@@ -341,7 +322,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing empty capacity",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           const capacity = await service.getAvailableCapacity(
@@ -359,7 +339,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing capacity with bookings",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -392,7 +371,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing capacity with pending",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -425,7 +403,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing capacity excludes cancelled",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -464,7 +441,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing capacity limits",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -505,7 +481,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing exact capacity",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -539,7 +514,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing full capacity",
             duration_days: 1,
             max_capacity: 3,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -578,7 +552,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing overbooking scenario",
             duration_days: 1,
             max_capacity: 2,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -616,11 +589,7 @@ moduleIntegrationTestRunner<TourModuleService>({
             destination: "Multi Date Capacity Test",
             description: "Testing capacity per date",
             duration_days: 1,
-            max_capacity: 10,
-            available_dates: [
-              formatDate(nextWeek),
-              formatDate(threeDaysFromNow)
-            ]
+            max_capacity: 10
           }])
 
           await service.createTourBookings([
@@ -660,7 +629,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing blocked dates",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_dates: ["2026-12-25", "2026-12-31", "2027-01-01"]
           }])
 
@@ -677,7 +645,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing blocked dates update",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_dates: ["2026-12-25"]
           }])
 
@@ -697,7 +664,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing clearing blocked dates",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_dates: ["2026-12-25", "2026-12-26"]
           }])
 
@@ -717,7 +683,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing blocked dates persistence",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_dates: blockedDates
           }])
 
@@ -738,7 +703,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing blocked week days",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_week_days: [0, 6]
           }])
 
@@ -754,7 +718,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing Sunday only blocked",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_week_days: [0]
           }])
 
@@ -770,7 +733,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing blocked week days update",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_week_days: [0]
           }])
 
@@ -790,7 +752,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing clearing blocked week days",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_week_days: [0, 6]
           }])
 
@@ -809,7 +770,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing blocked week days persistence",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_week_days: [0, 6, 3]
           }])
 
@@ -828,7 +788,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing all days blocked",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             blocked_week_days: [0, 1, 2, 3, 4, 5, 6]
           }])
 
@@ -844,7 +803,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing special flag true",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             is_special: true
           }])
 
@@ -858,7 +816,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing special flag false",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             is_special: false
           }])
 
@@ -872,7 +829,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing special flag toggle",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             is_special: false
           }])
 
@@ -898,7 +854,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Special tour for filtering",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             is_special: true
           }])
 
@@ -908,7 +863,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Regular tour for filtering",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             is_special: false
           }])
 
@@ -935,7 +889,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing cancellation deadline",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             cancellation_deadline_hours: 72
           }])
 
@@ -949,7 +902,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing cancellation deadline update",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             cancellation_deadline_hours: 12
           }])
 
@@ -968,7 +920,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing cancellation deadline persistence",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)],
             cancellation_deadline_hours: 24
           }])
 
@@ -986,7 +937,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing booking creation",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           const booking = await service.createTourBookings([{
@@ -1009,7 +959,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing tour with bookings",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -1042,7 +991,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Testing capacity enforcement",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           await service.createTourBookings([
@@ -1078,10 +1026,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Tour with all new fields",
             duration_days: 2,
             max_capacity: 15,
-            available_dates: [
-              formatDate(threeDaysFromNow),
-              formatDate(nextWeek)
-            ],
             is_special: true,
             blocked_dates: ["2026-12-25", "2026-12-31"],
             blocked_week_days: [0, 6],
@@ -1109,7 +1053,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             destination: "Special Holiday Tour",
             duration_days: 1,
             max_capacity: 20,
-            available_dates: [formatDate(nextWeek)],
             is_special: true,
             blocked_dates: ["2026-12-25"],
             blocked_week_days: [0],
@@ -1122,7 +1065,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             destination: "Regular Daily Tour",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: [formatDate(twoDaysFromNow)],
             is_special: false,
             blocked_dates: [],
             blocked_week_days: [6],
@@ -1153,7 +1095,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Tour with zero capacity",
             duration_days: 1,
             max_capacity: 0,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           const capacity = await service.getAvailableCapacity(
@@ -1179,7 +1120,6 @@ moduleIntegrationTestRunner<TourModuleService>({
             description: "Tour with large capacity",
             duration_days: 1,
             max_capacity: 1000,
-            available_dates: [formatDate(nextWeek)]
           }])
 
           const capacity = await service.getAvailableCapacity(

@@ -82,16 +82,6 @@ class TourModuleService extends MedusaService({
       }
     }
 
-    const availableDates = tour.available_dates.map((d: string) => new Date(d).toISOString())
-    const requestedDate = new Date(tourDate).toISOString()
-
-    if (!availableDates.includes(requestedDate)) {
-      return {
-        valid: false,
-        reason: "Tour is not available on the requested date",
-      }
-    }
-
     const availableCapacity = await this.getAvailableCapacity(tourId, tourDate)
 
     if (availableCapacity < quantity) {

@@ -1,6 +1,4 @@
-import { Heading, Input, Label, Text, Textarea, Button, IconButton } from "@medusajs/ui"
-import { Plus, Trash } from "@medusajs/icons"
-import { useState } from "react"
+import { Heading, Input, Label, Text, Textarea } from "@medusajs/ui"
 
 interface PackageDetailsStepProps {
   destination: string
@@ -11,8 +9,6 @@ interface PackageDetailsStepProps {
   setDuration: (v: number | "") => void
   capacity: number | ""
   setCapacity: (v: number | "") => void
-  availableDates: string[]
-  setAvailableDates: (dates: string[]) => void
 }
 
 export const PackageDetailsStep = ({
@@ -24,25 +20,7 @@ export const PackageDetailsStep = ({
   setDuration,
   capacity,
   setCapacity,
-  availableDates,
-  setAvailableDates
 }: PackageDetailsStepProps) => {
-  const [dateInput, setDateInput] = useState("")
-
-  const addDate = () => {
-    if (!dateInput) return
-    if (availableDates.includes(dateInput)) {
-      setDateInput("")
-      return
-    }
-    setAvailableDates([...availableDates, dateInput].sort())
-    setDateInput("")
-  }
-
-  const removeDate = (dateToRemove: string) => {
-    setAvailableDates(availableDates.filter(d => d !== dateToRemove))
-  }
-
   return (
     <div className="flex flex-col gap-y-8">
       <div>
@@ -93,39 +71,6 @@ export const PackageDetailsStep = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-        </div>
-
-        <div className="flex flex-col gap-2 pt-2">
-          <Label>Available Dates</Label>
-          <div className="flex gap-2">
-            <Input
-              type="date"
-              value={dateInput}
-              onChange={(e) => setDateInput(e.target.value)}
-              className="flex-1"
-            />
-            <Button variant="secondary" onClick={addDate} type="button">
-              <Plus /> Add Date
-            </Button>
-          </div>
-
-          {availableDates.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-2 p-4 bg-ui-bg-subtle rounded-lg border border-ui-border-base">
-              {availableDates.map((date) => (
-                <div key={date} className="flex items-center justify-between bg-white px-2 py-1 rounded border shadow-sm text-small">
-                  <span>{date}</span>
-                  <IconButton
-                    size="small"
-                    variant="transparent"
-                    className="text-ui-fg-muted hover:text-ui-fg-error"
-                    onClick={() => removeDate(date)}
-                  >
-                    <Trash />
-                  </IconButton>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -81,16 +81,6 @@ class PackageModuleService extends MedusaService({
       }
     }
 
-    const availableDates = pkg.available_dates.map((d: string) => new Date(d).toISOString())
-    const requestedDate = new Date(packageDate).toISOString()
-
-    if (!availableDates.includes(requestedDate)) {
-      return {
-        valid: false,
-        reason: "Package is not available on the requested date",
-      }
-    }
-
     const availableCapacity = await this.getAvailableCapacity(packageId, packageDate)
 
     if (availableCapacity < quantity) {

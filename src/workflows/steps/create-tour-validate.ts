@@ -4,7 +4,6 @@ import { TOUR_MODULE } from "../../modules/tour"
 
 export type ValidateTourStepInput = {
   destination: string
-  available_dates: string[]
   duration_days: number
 }
 

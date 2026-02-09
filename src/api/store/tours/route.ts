@@ -37,7 +37,6 @@ export async function POST(
     description,
     duration_days,
     max_capacity,
-    available_dates,
     thumbnail,
     prices,
   } = req.validatedBody
@@ -49,7 +48,6 @@ export async function POST(
       description,
       duration_days,
       max_capacity,
-      available_dates,
       thumbnail,
       prices,
     },
@@ -68,7 +66,6 @@ export async function POST(
       description: createdTour.description,
       duration_days: createdTour.duration_days,
       max_capacity: createdTour.max_capacity,
-      available_dates: createdTour.available_dates,
       prices: pricing.prices,
     },
   })

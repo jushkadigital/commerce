@@ -25,7 +25,6 @@ jest.mock("../service", () => {
       if (requestedDateObj < today) {
         return { valid: false, reason: "Cannot book packages for past dates" }
       }
-      const availableDates = pkg.available_dates.map((d: string) => new Date(d).toISOString().split("T")[0])
       const requestedDate = new Date(packageDate).toISOString().split("T")[0]
       if (!availableDates.includes(requestedDate)) {
         return { valid: false, reason: "Package is not available on the requested date" }
@@ -207,7 +206,6 @@ describe("PackageModuleService", () => {
     description: "Amazing package",
     duration_days: 3,
     max_capacity: 10,
-    available_dates: ["2026-03-15T00:00:00.000Z", "2026-03-16T00:00:00.000Z"],
     variants: [
       { id: "var_1", variant_id: "pv_1", passenger_type: PassengerType.ADULT, price: 150 },
       { id: "var_2", variant_id: "pv_2", passenger_type: PassengerType.CHILD, price: 100 },
@@ -330,7 +328,6 @@ describe("PackageModuleService", () => {
     })
 
     it("should validate dates correctly ignoring time", async () => {
-      const packageWithDate = { ...mockPackage, available_dates: ["2026-03-15T12:00:00.000Z"] }
       mockRetrievePackage.mockResolvedValue(packageWithDate)
       mockListPackageBookings.mockResolvedValue([])
 

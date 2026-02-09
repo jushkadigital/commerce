@@ -16,7 +16,7 @@ El sistema incluye una interfaz gráfica completa en el Admin Dashboard de Medus
 
 **Página de Listado de Tours:**
 - Ver todos los tours creados en una tabla
-- Información rápida: destino, duración, capacidad, número de fechas
+- Información rápida: destino, duración, capacidad
 - Botones de acción: Ver/Editar y Eliminar
 - Botón "Crear Tour" para agregar nuevos tours
 
@@ -28,7 +28,6 @@ El sistema incluye una interfaz gráfica completa en el Admin Dashboard de Medus
   - Descripción
   - Duración en días (requerido)
   - Capacidad máxima (requerido)
-  - Fechas disponibles (dinámico, agregar/eliminar múltiples)
 - Se crean automáticamente las 3 variantes de pasajeros (adulto, niño, infante)
 
 **Página de Detalle/Edición:**
@@ -40,7 +39,7 @@ El sistema incluye una interfaz gráfica completa en el Admin Dashboard de Medus
 **Características:**
 - ✅ Interfaz moderna con componentes de Medusa UI
 - ✅ Validación de formularios
-- ✅ Gestión dinámica de fechas múltiples
+
 - ✅ Confirmación antes de eliminar
 - ✅ Mensajes de error y éxito
 - ✅ Responsive y accesible
@@ -68,7 +67,6 @@ Campos:
 - `description`: Descripción del tour
 - `duration_days`: Duración en días
 - `max_capacity`: Capacidad máxima de pasajeros
-- `available_dates`: Array de fechas disponibles
 
 #### 2. TourVariant (`tour_variant`)
 Representa un tipo de pasajero para un tour.
@@ -166,7 +164,6 @@ Content-Type: application/json
   "description": "Tour guiado de día completo",
   "duration_days": 1,
   "max_capacity": 30,
-  "available_dates": [
     "2025-02-15T00:00:00Z",
     "2025-02-20T00:00:00Z"
   ]
@@ -187,7 +184,6 @@ Content-Type: application/json
 
 {
   "max_capacity": 35,
-  "available_dates": ["2025-02-15T00:00:00Z", "2025-03-01T00:00:00Z"]
 }
 ```
 

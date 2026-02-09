@@ -9,7 +9,6 @@ export type UpdateTourStepInput = {
     description?: string
     duration_days?: number
     max_capacity?: number
-    available_dates?: string[]
     thumbnail?: string
   }
 }
@@ -40,7 +39,6 @@ export const updateTourStep = createStep(
       description: previousTour.description,
       duration_days: previousTour.duration_days,
       max_capacity: previousTour.max_capacity,
-      available_dates: previousTour.available_dates,
     })
   }
 )

@@ -9,7 +9,6 @@ export type CreateToursStepInput = {
     description?: string
     duration_days: number
     max_capacity: number
-    available_dates: string[]
   }[]
 }
 

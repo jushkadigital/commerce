@@ -24,7 +24,6 @@ export type CreatePackageWorkflowInput = {
   description?: string
   duration_days: number
   max_capacity: number
-  available_dates: string[]
   thumbnail?: string
   prices: {
     adult: number
@@ -39,7 +38,6 @@ export const createPackageWorkflow = createWorkflow(
   (input: CreatePackageWorkflowInput) => {
     validatePackageStep({
       destination: input.destination,
-      available_dates: input.available_dates,
       duration_days: input.duration_days
     })
 
@@ -120,7 +118,6 @@ export const createPackageWorkflow = createWorkflow(
           description: data.input.description,
           duration_days: data.input.duration_days,
           max_capacity: data.input.max_capacity,
-          available_dates: data.input.available_dates,
           thumbnail: data.input.thumbnail
         }]
       }

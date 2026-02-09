@@ -11,7 +11,6 @@ export const Tour = model.define("tour", {
   duration_days: model.number(),
   max_capacity: model.number(),
   thumbnail: model.text().nullable(),
-  available_dates: model.array(),
   type: model.enum(["tour", "package"]).default("tour"),
   is_special: model.boolean().default(false),
   blocked_dates: model.array().default([]),
@@ -29,7 +28,7 @@ export const Tour = model.define("tour", {
   }),
 }).indexes([
   {
-    on: ["destination", "available_dates"],
+    on: ["destination"],
   },
 ])
 

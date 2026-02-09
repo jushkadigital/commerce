@@ -10,14 +10,16 @@ jest.setTimeout(120 * 1000)
 /**
  * Integration tests for package purchase flow
  * 
- * These tests verify the complete E2E flow:
+ * These tests verify the complete E2E flow for tourism packages:
  * 1. Create package with available dates
  * 2. Create cart with package item
  * 3. Add customer information
- * 4. Select shipping method
- * 5. Complete checkout (mock payment)
- * 6. Verify order created correctly
- * 7. Verify booking created in PackageModule
+ * 4. Complete checkout (mock payment)
+ * 5. Verify order created correctly
+ * 6. Verify booking created in PackageModule
+ * 
+ * Note: Tourism packages don't use fulfillment/shipping as they are
+ * experiences, not physical products that need delivery.
  */
 medusaIntegrationTestRunner({
   inApp: true,
@@ -32,7 +34,6 @@ medusaIntegrationTestRunner({
       let salesChannelModule: any
       let regionModule: any
       let customerModule: any
-      let fulfillmentModule: any
       let paymentModule: any
       let orderModule: any
       let remoteLink: any
@@ -43,8 +44,6 @@ medusaIntegrationTestRunner({
       let product: any
       let region: any
       let salesChannel: any
-      let shippingProfile: any
-      let shippingOption: any
       let priceSet: any
       let productVariants: any[] = []
       const testDate = "2026-03-15"
@@ -59,7 +58,6 @@ medusaIntegrationTestRunner({
         salesChannelModule = container.resolve(Modules.SALES_CHANNEL)
         regionModule = container.resolve(Modules.REGION)
         customerModule = container.resolve(Modules.CUSTOMER)
-        fulfillmentModule = container.resolve(Modules.FULFILLMENT)
         paymentModule = container.resolve(Modules.PAYMENT)
         orderModule = container.resolve(Modules.ORDER)
         remoteLink = container.resolve("remoteLink")
@@ -79,28 +77,6 @@ medusaIntegrationTestRunner({
           countries: ["us"],
         })
 
-        // Create a shipping profile
-        shippingProfile = await fulfillmentModule.createShippingProfiles({
-          name: "Test Shipping Profile",
-          type: "default",
-        })
-
-        // Create shipping option
-        shippingOption = await fulfillmentModule.createShippingOptions({
-          name: "Standard Shipping",
-          service_zone_id: region.id,
-          shipping_profile_id: shippingProfile.id,
-          provider_id: "manual_manual",
-          price_type: "flat",
-          rules: [
-            {
-              attribute: "enabled",
-              operator: "eq",
-              value: "true",
-            },
-          ],
-        })
-
         // Create product for the package
         product = await productModule.createProducts({
           title: "Cusco Adventure Package",
@@ -116,7 +92,6 @@ medusaIntegrationTestRunner({
           description: "3-day adventure package in Cusco",
           duration_days: 3,
           max_capacity: packageCapacity,
-          available_dates: [testDate],
         })
 
         // Create variants for each passenger type
@@ -177,8 +152,6 @@ medusaIntegrationTestRunner({
           }
           await productModule.deleteProducts(product.id)
 
-          await fulfillmentModule.deleteShippingOptions(shippingOption.id)
-          await fulfillmentModule.deleteShippingProfiles(shippingProfile.id)
           await regionModule.deleteRegions(region.id)
           await salesChannelModule.deleteSalesChannels(salesChannel.id)
         } catch (error) {
@@ -217,21 +190,13 @@ medusaIntegrationTestRunner({
           throw new Error("Adult variant not found")
         }
 
-        // Create cart
+        // Create cart - tourism packages don't need shipping/fulfillment
         const cart = await cartModule.createCarts({
           currency_code: "usd",
           email: customerEmail,
           customer_id: customer.id,
           sales_channel_id: salesChannel.id,
           region_id: region.id,
-          shipping_address: {
-            first_name: "Test",
-            last_name: "Customer",
-            address_1: "123 Test St",
-            city: "Test City",
-            country_code: "us",
-            postal_code: "12345",
-          },
           items: [
             {
               variant_id: adultVariant.id,
@@ -260,12 +225,6 @@ medusaIntegrationTestRunner({
               },
             },
           ],
-        })
-
-        // Add shipping method to cart
-        await cartModule.addShippingMethod({
-          cart_id: cart.id,
-          option_id: shippingOption.id,
         })
 
         return cart
@@ -369,7 +328,6 @@ medusaIntegrationTestRunner({
             description: "City tour package in Lima",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: [testDate],
           })
 
           // Create variant for second package
@@ -413,14 +371,6 @@ medusaIntegrationTestRunner({
             customer_id: customer.id,
             sales_channel_id: salesChannel.id,
             region_id: region.id,
-            shipping_address: {
-              first_name: "Test",
-              last_name: "Customer",
-              address_1: "123 Test St",
-              city: "Test City",
-              country_code: "us",
-              postal_code: "12345",
-            },
             items: [
               {
                 variant_id: adultVariant1.id,
@@ -445,11 +395,6 @@ medusaIntegrationTestRunner({
                 },
               },
             ],
-          })
-
-          await cartModule.addShippingMethod({
-            cart_id: cart.id,
-            option_id: shippingOption.id,
           })
 
           // Complete checkout
@@ -614,8 +559,8 @@ medusaIntegrationTestRunner({
         })
 
         it("should validate booking date is available", async () => {
-          const invalidDate = "2025-12-25" // Not in available_dates
-          
+          const invalidDate = "2025-12-25"
+
           const validation = await packageModuleService.validateBooking(
             pkg.id,
             new Date(invalidDate),

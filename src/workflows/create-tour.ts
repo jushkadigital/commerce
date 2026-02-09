@@ -29,7 +29,6 @@ export type CreateTourWorkflowInput = {
   description?: string
   duration_days: number
   max_capacity: number
-  available_dates: string[]
   thumbnail?: string
   prices: {
     adult: number
@@ -51,7 +50,6 @@ export const createTourWorkflow = createWorkflow(
     // --- Step 1: Validate tour inputs (Adaptado de validateVenueAvailability) ---
     validateTourStep({
       destination: input.destination,
-      available_dates: input.available_dates,
       duration_days: input.duration_days
     })
 
@@ -139,7 +137,6 @@ export const createTourWorkflow = createWorkflow(
           description: data.input.description,
           duration_days: data.input.duration_days,
           max_capacity: data.input.max_capacity,
-          available_dates: data.input.available_dates,
           thumbnail: data.input.thumbnail,
           is_special: data.input.is_special,
           blocked_dates: data.input.blocked_dates,
@@ -209,7 +206,6 @@ export const createTourWorkflow = createWorkflow(
         "duration_days",
         "max_capacity",
         "thumbnail",
-        "available_dates",
         "product_id",
         "product.*",
         "product.variants.*",

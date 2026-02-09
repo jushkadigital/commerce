@@ -28,7 +28,6 @@ const testCreateTourWorkflow = createWorkflow(
     description?: string
     duration_days: number
     max_capacity: number
-    available_dates: string[]
   }) => {
     const result = createTourRecordStep(input)
     return new WorkflowResponse(result)
@@ -51,7 +50,6 @@ const testCreatePackageWorkflow = createWorkflow(
     description?: string
     duration_days: number
     max_capacity: number
-    available_dates: string[]
   }) => {
     const result = createPackageRecordStep(input)
     return new WorkflowResponse(result)
@@ -73,7 +71,6 @@ const testTourWithCompensationWorkflow = createWorkflow(
     description?: string
     duration_days: number
     max_capacity: number
-    available_dates: string[]
   }) => {
     const tour = createTourRecordStep(input)
     failStep()
@@ -89,7 +86,6 @@ const testPackageWithCompensationWorkflow = createWorkflow(
     description?: string
     duration_days: number
     max_capacity: number
-    available_dates: string[]
   }) => {
     const pkg = createPackageRecordStep(input)
     failStep()
@@ -118,7 +114,6 @@ medusaIntegrationTestRunner({
         it("should pass validation with valid tour data (duration_days = 1)", async () => {
           const validInput: ValidateTourStepInput = {
             destination: "Cusco",
-            available_dates: ["2026-04-15"],
             duration_days: 1,
           }
 
@@ -133,7 +128,6 @@ medusaIntegrationTestRunner({
         it("should pass validation with longer duration", async () => {
           const validInput: ValidateTourStepInput = {
             destination: "Lima",
-            available_dates: ["2026-05-20", "2026-05-21"],
             duration_days: 7,
           }
 
@@ -148,7 +142,6 @@ medusaIntegrationTestRunner({
         it("should throw error when duration_days = 0", async () => {
           const invalidInput: ValidateTourStepInput = {
             destination: "Cusco",
-            available_dates: ["2026-04-15"],
             duration_days: 0,
           }
 
@@ -162,7 +155,6 @@ medusaIntegrationTestRunner({
         it("should throw error when duration_days is negative", async () => {
           const invalidInput: ValidateTourStepInput = {
             destination: "Cusco",
-            available_dates: ["2026-04-15"],
             duration_days: -5,
           }
 
@@ -176,7 +168,6 @@ medusaIntegrationTestRunner({
         it("should throw error when duration_days is negative large number", async () => {
           const invalidInput: ValidateTourStepInput = {
             destination: "Cusco",
-            available_dates: ["2026-04-15"],
             duration_days: -100,
           }
 
@@ -214,7 +205,6 @@ medusaIntegrationTestRunner({
             description: "Amazing tour",
             duration_days: 2,
             max_capacity: 20,
-            available_dates: ["2026-06-15", "2026-06-16"],
           }
 
           const { result } = await testCreateTourWorkflow(container).run({
@@ -241,7 +231,6 @@ medusaIntegrationTestRunner({
             destination: "Test Destination",
             duration_days: 1,
             max_capacity: 10,
-            available_dates: ["2026-07-01"],
           }
 
           const { result } = await testCreateTourWorkflow(container).run({
@@ -259,7 +248,6 @@ medusaIntegrationTestRunner({
             destination: "No Description Tour",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: ["2026-08-01"],
           }
 
           const { result } = await testCreateTourWorkflow(container).run({
@@ -279,7 +267,6 @@ medusaIntegrationTestRunner({
               destination: "Compensation Test Tour",
               duration_days: 1,
               max_capacity: 5,
-              available_dates: ["2026-09-01"],
             }
 
             let tourId: string | null = null
@@ -306,7 +293,6 @@ medusaIntegrationTestRunner({
         it("should pass validation with valid package data (duration_days = 1)", async () => {
           const validInput: ValidatePackageStepInput = {
             destination: "Cusco",
-            available_dates: ["2026-04-15"],
             duration_days: 1,
           }
 
@@ -321,7 +307,6 @@ medusaIntegrationTestRunner({
         it("should pass validation with longer duration", async () => {
           const validInput: ValidatePackageStepInput = {
             destination: "Lima",
-            available_dates: ["2026-05-20"],
             duration_days: 5,
           }
 
@@ -336,7 +321,6 @@ medusaIntegrationTestRunner({
         it("should throw error when duration_days = 0", async () => {
           const invalidInput: ValidatePackageStepInput = {
             destination: "Cusco",
-            available_dates: ["2026-04-15"],
             duration_days: 0,
           }
 
@@ -350,7 +334,6 @@ medusaIntegrationTestRunner({
         it("should throw error when duration_days is negative", async () => {
           const invalidInput: ValidatePackageStepInput = {
             destination: "Cusco",
-            available_dates: ["2026-04-15"],
             duration_days: -3,
           }
 
@@ -388,7 +371,6 @@ medusaIntegrationTestRunner({
             description: "Amazing package deal",
             duration_days: 3,
             max_capacity: 15,
-            available_dates: ["2026-07-15", "2026-07-16", "2026-07-17"],
           }
 
           const { result } = await testCreatePackageWorkflow(container).run({
@@ -415,7 +397,6 @@ medusaIntegrationTestRunner({
             destination: "Test Package",
             duration_days: 2,
             max_capacity: 8,
-            available_dates: ["2026-08-01"],
           }
 
           const { result } = await testCreatePackageWorkflow(container).run({
@@ -433,7 +414,6 @@ medusaIntegrationTestRunner({
             destination: "No Description Package",
             duration_days: 1,
             max_capacity: 5,
-            available_dates: ["2026-09-01"],
           }
 
           const { result } = await testCreatePackageWorkflow(container).run({
@@ -453,7 +433,6 @@ medusaIntegrationTestRunner({
               destination: "Compensation Test Package",
               duration_days: 2,
               max_capacity: 10,
-              available_dates: ["2026-10-01", "2026-10-02"],
             }
 
             let packageId: string | null = null
@@ -493,14 +472,12 @@ medusaIntegrationTestRunner({
               destination: "Tour 1",
               duration_days: 1,
               max_capacity: 5,
-              available_dates: ["2026-11-01"],
             }
             const input2 = {
               productId: product2.id,
               destination: "Tour 2",
               duration_days: 2,
               max_capacity: 10,
-              available_dates: ["2026-11-02"],
             }
 
             const { result: result1 } = await testCreateTourWorkflow(container).run({
@@ -537,14 +514,12 @@ medusaIntegrationTestRunner({
               destination: "Package 1",
               duration_days: 3,
               max_capacity: 8,
-              available_dates: ["2026-12-01"],
             }
             const input2 = {
               productId: product2.id,
               destination: "Package 2",
               duration_days: 5,
               max_capacity: 12,
-              available_dates: ["2026-12-15"],
             }
 
             const { result: result1 } = await testCreatePackageWorkflow(container).run({
@@ -568,7 +543,6 @@ medusaIntegrationTestRunner({
         })
 
         describe("Data Integrity", () => {
-          it("should preserve available_dates array correctly", async () => {
             const product = await productModule.createProducts({
               title: "Dates Test Tour",
               status: "published",
@@ -579,7 +553,6 @@ medusaIntegrationTestRunner({
               destination: "Dates Test",
               duration_days: 1,
               max_capacity: 5,
-              available_dates: ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01"],
             }
 
             const { result } = await testCreateTourWorkflow(container).run({
@@ -587,9 +560,6 @@ medusaIntegrationTestRunner({
             })
 
             const tour = await tourModuleService.retrieveTour(result.id)
-            expect(tour.available_dates).toHaveLength(4)
-            expect(tour.available_dates).toContain("2026-01-01")
-            expect(tour.available_dates).toContain("2026-04-01")
 
             await tourModuleService.deleteTours(result.id)
             await productModule.deleteProducts(product.id)
@@ -606,7 +576,6 @@ medusaIntegrationTestRunner({
               destination: "Cusco & Sacred Valley (Perú)",
               duration_days: 2,
               max_capacity: 10,
-              available_dates: ["2026-05-01"],
             }
 
             const { result } = await testCreateTourWorkflow(container).run({

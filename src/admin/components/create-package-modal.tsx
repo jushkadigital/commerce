@@ -29,7 +29,6 @@ export const PackageFormModal = ({
   const [description, setDescription] = useState("")
   const [duration, setDuration] = useState<number | "">("")
   const [capacity, setCapacity] = useState<number | "">("")
-  const [availableDates, setAvailableDates] = useState<string[]>([])
 
   const [prices, setPrices] = useState<Record<string, Record<string, number>>>({})
 
@@ -76,7 +75,6 @@ export const PackageFormModal = ({
       setDescription(packageToEdit.description || "")
       setDuration(packageToEdit.duration_days)
       setCapacity(packageToEdit.max_capacity)
-      setAvailableDates(packageToEdit.available_dates || [])
 
       if (packageToEdit.variants && packageToEdit.variants.length > 0) {
         const mappedPrices: Record<string, Record<string, number>> = {}
@@ -116,7 +114,6 @@ export const PackageFormModal = ({
     setDescription("")
     setDuration("")
     setCapacity("")
-    setAvailableDates([])
     setPrices({})
     setCurrentStep("0")
   }
@@ -142,7 +139,6 @@ export const PackageFormModal = ({
         description,
         duration_days: Number(duration),
         max_capacity: Number(capacity),
-        available_dates: availableDates,
         prices: {
           adult: prices["Adult"]?.[priceKey] || prices["adult"]?.[priceKey] || 0,
           child: prices["Child"]?.[priceKey] || prices["child"]?.[priceKey] || 0,
@@ -178,7 +174,6 @@ export const PackageFormModal = ({
           description={description} setDescription={setDescription}
           duration={duration} setDuration={setDuration}
           capacity={capacity} setCapacity={setCapacity}
-          availableDates={availableDates} setAvailableDates={setAvailableDates}
         />
       )
     },
