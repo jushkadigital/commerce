@@ -1,0 +1,21 @@
+TEST RESULTS: TourModuleService Unit Tests
+==========================================
+
+Date: 2026-02-07
+Status: PASS ✅
+
+Command: TEST_TYPE=unit npm run test:unit -- src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+
+Results:
+- Test Suites: 1 passed, 1 total
+- Tests: 34 passed, 34 total
+- Time: ~3s
+
+Coverage Areas:
+✓ getAvailableCapacity (5 tests)
+✓ validateBooking (6 tests)
+✓ getTourPricing (8 tests)
+✓ calculateCartTotal (6 tests)
+✓ updateVariantPrices (9 tests)
+
+All tests passing. No modifications needed - tests already existed and are comprehensive.

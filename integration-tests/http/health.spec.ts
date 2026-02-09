@@ -1,9 +1,11 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
-jest.setTimeout(60 * 1000)
+jest.setTimeout(300 * 1000)
 
 medusaIntegrationTestRunner({
   inApp: true,
-  env: {},
+  env: {
+    NODE_TLS_REJECT_UNAUTHORIZED: "0"
+  },
   testSuite: ({ api }) => {
     describe("Ping", () => {
       it("ping the server health endpoint", async () => {

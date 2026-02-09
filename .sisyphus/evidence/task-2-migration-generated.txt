@@ -1,0 +1,46 @@
+TASK 2: Migration Generated for Tour Module
+=============================================
+
+Date: 2026-02-09
+Command: npx medusa db:generate --modules tourModule
+
+RESULT: SUCCESS
+-------------
+
+Migration file created:
+- Path: src/modules/tour/migrations/Migration20260209173550.ts
+- Size: 916 bytes
+- Timestamp: Feb 9 17:35
+
+Fields included in migration:
+1. is_special (boolean, default false)
+2. blocked_dates (text[], default '{}')
+3. blocked_week_days (text[], default '{}')
+4. cancellation_deadline_hours (integer, default 12)
+5. booking_min_days_ahead (integer, default 2)
+
+Migration structure:
+- up() method: Adds all 5 columns to "tour" table
+- down() method: Drops all 5 columns from "tour" table
+- Uses "if exists" and "if not exists" for safety
+
+SQL generated:
+ALTER TABLE "tour" ADD COLUMN "is_special" BOOLEAN NOT NULL DEFAULT FALSE,
+ADD COLUMN "blocked_dates" TEXT[] NOT NULL DEFAULT '{}',
+ADD COLUMN "blocked_week_days" TEXT[] NOT NULL DEFAULT '{}',
+ADD COLUMN "cancellation_deadline_hours" INTEGER NOT NULL DEFAULT 12,
+ADD COLUMN "booking_min_days_ahead" INTEGER NOT NULL DEFAULT 2;
+
+VERIFICATION:
+-------------
+✓ Migration file created in correct location
+✓ All 5 new fields included
+✓ Proper up() and down() methods
+✓ Valid SQL syntax
+✓ Default values match model definitions
+
+NEXT STEPS:
+-----------
+- Run migration: npx medusa db:migrate
+- Verify columns in database
+- Test with sample data

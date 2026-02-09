@@ -6,7 +6,10 @@ import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 // Si estamos compilando, esta variable será true.
 // Esto nos permitirá apagar conexiones a DB/Redis/RabbitMQ durante el build.
 const IS_BUILD = process.env.IS_BUILD === 'true' || process.env.npm_lifecycle_event === 'build';
+const IS_TEST = process.env.NODE_ENV === 'test';
+const DISABLE_REDIS = IS_BUILD || IS_TEST;
 
+console.log("NODE_ENV =", process.env.NODE_ENV)
 console.log("NODE_ENV =", process.env.NODE_ENV)
 console.log("CWD =", process.cwd())
 console.log("IS_BUILD MODE =", IS_BUILD) // Log para confirmar en consola
@@ -21,6 +24,7 @@ loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 console.log("KEYCLOAK_CLIENT_ID:", process.env.KEYCLOAK_CLIENT_ID)
 console.log("BACKEND_URL:", process.env.BACKEND_URL)
 console.log("MEDUSA_BACKEND_URL:", process.env.MEDUSA_BACKEND_URL)
+console.log("DATABASE_URL:", process.env.DATABASE_URL)
 
 const DATABASE_URL = process.env.DATABASE_URL
 const REDIS_URL = process.env.REDIS_URL
@@ -101,7 +105,7 @@ module.exports = defineConfig({
       },
     } : {}),
     // FIX: Si es build, anulamos Redis global para evitar conexiones del core
-    redisUrl: IS_BUILD ? undefined : REDIS_URL,
+    redisUrl: DISABLE_REDIS ? undefined : REDIS_URL,
 
     http: {
       storeCors: STORE_CORS,
@@ -129,7 +133,7 @@ module.exports = defineConfig({
     {
       key: Modules.CACHING,
       // LOGICA: Si es Build -> In-Memory. Si no -> Redis (si hay URL) o In-Memory (default)
-      resolve: IS_BUILD
+      resolve: DISABLE_REDIS
         ? '@medusajs/medusa/cache-inmemory'
         : (CACHE_REDIS_URL ? '@medusajs/medusa/cache-redis' : '@medusajs/medusa/cache-inmemory'),
       options: {
@@ -144,7 +148,7 @@ module.exports = defineConfig({
     {
       key: Modules.EVENT_BUS,
       // LOGICA: Si es Build -> Local. Si no -> Tu RabbitMQ custom
-      resolve: IS_BUILD
+      resolve: DISABLE_REDIS
         ? "@medusajs/medusa/event-bus-local"
         : "./src/modules/event-bus-rabbitmq",
       options: {
@@ -158,7 +162,7 @@ module.exports = defineConfig({
     // --------------------------------------------------------------------
     {
       key: Modules.WORKFLOW_ENGINE,
-      resolve: IS_BUILD
+      resolve: DISABLE_REDIS
         ? '@medusajs/medusa/workflow-engine-inmemory'
         : (WE_REDIS_URL ? '@medusajs/medusa/workflow-engine-redis' : '@medusajs/medusa/workflow-engine-inmemory'),
       options: {
@@ -171,7 +175,7 @@ module.exports = defineConfig({
     // --------------------------------------------------------------------
     // LOCKING (REDIS vs IN-MEMORY)
     // --------------------------------------------------------------------
-    ...(LOCKING_REDIS_URL && !IS_BUILD ? [{
+    ...(LOCKING_REDIS_URL && !DISABLE_REDIS ? [{
       key: Modules.LOCKING,
       resolve: '@medusajs/medusa/locking',
       options: {

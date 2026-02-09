@@ -1,0 +1,932 @@
+
+> medusa-starter-default@0.0.1 test:integration:http
+> TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit workflow-steps.spec.ts
+
+(node:199054) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.log
+    NODE_ENV = development
+
+      at Object.log (medusa-config.ts:10:9)
+
+  console.log
+    CWD = /home/node/app
+
+      at Object.log (medusa-config.ts:11:9)
+
+  console.log
+    IS_BUILD MODE = false
+
+      at Object.log (medusa-config.ts:12:9)
+
+  console.log
+    KEYCLOAK_CLIENT_ID: 5f2947dd-a3e7-4759-9f0b-4bd32e7898b8
+
+      at Object.log (medusa-config.ts:21:9)
+
+  console.log
+    BACKEND_URL: https://commerce.patarutera.pe
+
+      at Object.log (medusa-config.ts:22:9)
+
+  console.log
+    MEDUSA_BACKEND_URL: https://commerce.patarutera.pe
+
+      at Object.log (medusa-config.ts:23:9)
+
+[32minfo[39m:    Disabling admin as we run integration tests
+[32minfo[39m:    Creating database medusa-01kgwfqqszxtm122w6q3jje6qn-integration-1
+[31merror[39m:   Error creating database:
+[31merror[39m:   connect ECONNREFUSED 127.0.0.1:5432
+  console.error
+    PgGodError {
+      name: 'PDG_ERR::UnexpectedError',
+      message: 'connect ECONNREFUSED 127.0.0.1:5432',
+      code: 'ECONNREFUSED',
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5432\n' +
+        '    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)'
+    }
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at Object.create (node_modules/@medusajs/test-utils/src/database.ts:217:14)
+      at MedusaTestRunner.initializeDatabase (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:150:7)
+      at MedusaTestRunner.setupApplication (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:181:5)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:265:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:7)
+
+[31merror[39m:   Error initializing database: connect ECONNREFUSED 127.0.0.1:5432
+[31merror[39m:   Error during database shutdown:
+[31merror[39m:   connect ECONNREFUSED 127.0.0.1:5432
+  console.error
+    PgGodError {
+      name: 'PDG_ERR::UnexpectedError',
+      message: 'connect ECONNREFUSED 127.0.0.1:5432',
+      code: 'ECONNREFUSED',
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5432\n' +
+        '    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)'
+    }
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at Object.shutdown (node_modules/@medusajs/test-utils/src/database.ts:333:14)
+      at MedusaTestRunner.cleanup (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:236:7)
+      at MedusaTestRunner.initializeDatabase (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:154:7)
+      at MedusaTestRunner.setupApplication (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:181:5)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:265:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:7)
+
+[31merror[39m:   undefined
+  console.error
+    connect ECONNREFUSED 127.0.0.1:5432
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.cleanup (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:256:14)
+      at MedusaTestRunner.initializeDatabase (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:154:7)
+      at MedusaTestRunner.setupApplication (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:181:5)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:265:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:7)
+
+[31merror[39m:   Error during database shutdown:
+[31merror[39m:   connect ECONNREFUSED 127.0.0.1:5432
+  console.error
+    PgGodError {
+      name: 'PDG_ERR::UnexpectedError',
+      message: 'connect ECONNREFUSED 127.0.0.1:5432',
+      code: 'ECONNREFUSED',
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5432\n' +
+        '    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)'
+    }
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at Object.shutdown (node_modules/@medusajs/test-utils/src/database.ts:333:14)
+      at MedusaTestRunner.cleanup (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:236:7)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:267:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:7)
+
+[31merror[39m:   undefined
+  console.error
+    connect ECONNREFUSED 127.0.0.1:5432
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.cleanup (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:256:14)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:267:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   undefined
+  console.error
+    Cannot read properties of null (reading 'resolve')
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:309:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:7)
+
+[31merror[39m:   Error during database shutdown:
+[31merror[39m:   connect ECONNREFUSED 127.0.0.1:5432
+  console.error
+    PgGodError {
+      name: 'PDG_ERR::UnexpectedError',
+      message: 'connect ECONNREFUSED 127.0.0.1:5432',
+      code: 'ECONNREFUSED',
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5432\n' +
+        '    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)'
+    }
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at Object.shutdown (node_modules/@medusajs/test-utils/src/database.ts:333:14)
+      at MedusaTestRunner.cleanup (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:236:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:390:7)
+
+[31merror[39m:   undefined
+  console.error
+    connect ECONNREFUSED 127.0.0.1:5432
+
+      at Reporter.error (node_modules/@medusajs/cli/src/reporter/index.ts:228:15)
+      at MedusaTestRunner.cleanup (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:256:14)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:390:7)
+
+FAIL integration-tests/http/workflow-steps.spec.ts
+    Workflow Steps - Integration Tests
+      validateTourStep
+        ✕ should pass validation with valid tour data (duration_days = 1) (3 ms)
+        ✕ should pass validation with longer duration (2 ms)
+        ✕ should throw error when duration_days = 0 (1 ms)
+        ✕ should throw error when duration_days is negative (2 ms)
+        ✕ should throw error when duration_days is negative large number (1 ms)
+      createTourRecordStep
+        ✕ should create tour record with valid data (2 ms)
+        ✕ should return tour data with id for rollback (2 ms)
+        ✕ should handle optional description field (2 ms)
+        Compensation (Rollback)
+          ✕ should delete tour when workflow fails and compensation is triggered (2 ms)
+      validatePackageStep
+        ✕ should pass validation with valid package data (duration_days = 1) (1 ms)
+        ✕ should pass validation with longer duration (2 ms)
+        ✕ should throw error when duration_days = 0 (2 ms)
+        ✕ should throw error when duration_days is negative (2 ms)
+      createPackageRecordStep
+        ✕ should create package record with valid data (2 ms)
+        ✕ should return package data with id for rollback (1 ms)
+        ✕ should handle optional description field (1 ms)
+        Compensation (Rollback)
+          ✕ should delete package when workflow fails and compensation is triggered (1 ms)
+      Cross-cutting Concerns
+        Step Isolation
+          ✕ should not affect other tours when creating one tour (1 ms)
+          ✕ should not affect other packages when creating one package (1 ms)
+        Data Integrity
+          ✕ should preserve available_dates array correctly (1 ms)
+          ✕ should handle special characters in destination (1 ms)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should pass validation with valid tour data (duration_days = 1)
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should pass validation with valid tour data (duration_days = 1)
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should pass validation with valid tour data (duration_days = 1)
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should pass validation with longer duration
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should pass validation with longer duration
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should pass validation with longer duration
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days = 0
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days = 0
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days = 0
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days is negative
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days is negative
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days is negative
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days is negative large number
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days is negative large number
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validateTourStep › should throw error when duration_days is negative large number
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should create tour record with valid data
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should create tour record with valid data
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should create tour record with valid data
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should return tour data with id for rollback
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should return tour data with id for rollback
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should return tour data with id for rollback
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should handle optional description field
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should handle optional description field
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › should handle optional description field
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › Compensation (Rollback) › should delete tour when workflow fails and compensation is triggered
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › Compensation (Rollback) › should delete tour when workflow fails and compensation is triggered
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createTourRecordStep › Compensation (Rollback) › should delete tour when workflow fails and compensation is triggered
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should pass validation with valid package data (duration_days = 1)
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should pass validation with valid package data (duration_days = 1)
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should pass validation with valid package data (duration_days = 1)
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should pass validation with longer duration
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should pass validation with longer duration
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should pass validation with longer duration
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should throw error when duration_days = 0
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should throw error when duration_days = 0
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should throw error when duration_days = 0
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should throw error when duration_days is negative
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should throw error when duration_days is negative
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › validatePackageStep › should throw error when duration_days is negative
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should create package record with valid data
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should create package record with valid data
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should create package record with valid data
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should return package data with id for rollback
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should return package data with id for rollback
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should return package data with id for rollback
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should handle optional description field
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should handle optional description field
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › should handle optional description field
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › Compensation (Rollback) › should delete package when workflow fails and compensation is triggered
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › Compensation (Rollback) › should delete package when workflow fails and compensation is triggered
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › createPackageRecordStep › Compensation (Rollback) › should delete package when workflow fails and compensation is triggered
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Step Isolation › should not affect other tours when creating one tour
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Step Isolation › should not affect other tours when creating one tour
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Step Isolation › should not affect other tours when creating one tour
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Step Isolation › should not affect other packages when creating one package
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Step Isolation › should not affect other packages when creating one package
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Step Isolation › should not affect other packages when creating one package
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Data Integrity › should preserve available_dates array correctly
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Data Integrity › should preserve available_dates array correctly
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Data Integrity › should preserve available_dates array correctly
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Data Integrity › should handle special characters in destination
+
+    connect ECONNREFUSED 127.0.0.1:5432
+
+
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Data Integrity › should handle special characters in destination
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      110 |       beforeAll(async () => {
+      111 |         container = getContainer()
+    > 112 |         tourModuleService = container.resolve(TOUR_MODULE)
+          |                                       ^
+      113 |         packageModuleService = container.resolve(PACKAGE_MODULE)
+      114 |         productModule = container.resolve(Modules.PRODUCT)
+      115 |       })
+
+      at Object.resolve (integration-tests/http/workflow-steps.spec.ts:112:39)
+
+  ●  › Workflow Steps - Integration Tests › Cross-cutting Concerns › Data Integrity › should handle special characters in destination
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+Test Suites: 1 failed, 1 total
+Tests:       21 failed, 21 total
+Snapshots:   0 total
+Time:        3.6 s
+Ran all test suites matching /workflow-steps.spec.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

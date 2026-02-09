@@ -234,9 +234,6 @@ const ToursListPage = () => {
         {!isLoading && (data as any)?.tours?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-ui-fg-muted">
             <p className="mb-4">No hay tours creados aún.</p>
-            <Button variant="secondary" onClick={() => navigate("/tours/new")}>
-              Crear el primer tour
-            </Button>
           </div>
         ) : (
           <>

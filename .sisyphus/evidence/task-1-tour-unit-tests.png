@@ -1,0 +1,57 @@
+
+> medusa-starter-default@0.0.1 test:unit
+> TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit src/modules/tour/__tests__/tour-module.service.unit.spec.ts --coverage --collectCoverageFrom=src/modules/tour/service.ts --verbose
+
+PASS src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+  TourModuleService
+    getAvailableCapacity
+      ✓ calculates available capacity correctly (6 ms)
+      ✓ returns full capacity when no bookings (1 ms)
+      ✓ returns zero when capacity is full (1 ms)
+      ✓ returns negative when overbooked (1 ms)
+      ✓ throws error when tour not found (3 ms)
+    validateBooking
+      ✓ validates booking when date is available and capacity exists (3 ms)
+      ✓ rejects booking for past dates (9 ms)
+      ✓ rejects booking for unavailable dates (1 ms)
+      ✓ rejects booking exceeding available capacity (1 ms)
+      ✓ accepts booking for exactly remaining capacity
+      ✓ throws error when tour retrieval fails (1 ms)
+    getTourPricing
+      ✓ returns pricing with zeros when no container provided (1 ms)
+      ✓ returns pricing with specified currency (1 ms)
+      ✓ fetches and maps pricing from Pricing Module (1 ms)
+      ✓ handles missing variants gracefully (1 ms)
+      ✓ handles variants without variant_id (1 ms)
+      ✓ handles pricing module errors gracefully
+      ✓ only maps prices for found variants (1 ms)
+      ✓ handles null calculated_amount (1 ms)
+    calculateCartTotal
+      ✓ calculates cart total correctly with single item (2 ms)
+      ✓ calculates cart total correctly with multiple items (1 ms)
+      ✓ handles empty cart (1 ms)
+      ✓ uses default currency when container not provided (1 ms)
+      ✓ handles zero quantity passengers
+      ✓ includes item details in result (1 ms)
+    updateVariantPrices
+      ✓ skips update when no container provided (2 ms)
+      ✓ skips update when no variants found (1 ms)
+      ✓ updates prices for all passenger types (1 ms)
+      ✓ uses PEN as default currency (1 ms)
+      ✓ skips variants without price set (1 ms)
+      ✓ skips variants without variant_id
+      ✓ continues with next variant if update fails
+      ✓ handles empty query result
+      ✓ handles query result with undefined data (1 ms)
+
+------------|---------|----------|---------|---------|-------------------
+File        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+------------|---------|----------|---------|---------|-------------------
+All files   |     100 |    87.17 |     100 |     100 |                   
+ service.ts |     100 |    87.17 |     100 |     100 | 157,255,311-317   
+------------|---------|----------|---------|---------|-------------------
+Test Suites: 1 passed, 1 total
+Tests:       34 passed, 34 total
+Snapshots:   0 total
+Time:        2.543 s, estimated 3 s
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

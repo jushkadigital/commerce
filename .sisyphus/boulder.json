@@ -1,8 +1,11 @@
 {
-  "active_plan": "/home/node/app/.sisyphus/plans/tour-package-separation.md",
-  "started_at": "2026-02-06T06:42:40.357Z",
+  "active_plan": null,
+  "completed_plan": "/home/node/app/.sisyphus/plans/tour-package-model-modifications.md",
+  "completed_at": "2026-02-09T17:55:00.000Z",
   "session_ids": [
-    "ses_3ce70f3c8ffeYL4GudmIJbQ98i"
+    "ses_3bcb4f69bffexiDRxJiuOVKxKc"
   ],
-  "plan_name": "tour-package-separation"
+  "plan_name": "tour-package-model-modifications",
+  "agent": "atlas",
+  "status": "completed"
 }

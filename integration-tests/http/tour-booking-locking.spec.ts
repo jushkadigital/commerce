@@ -4,7 +4,7 @@ import { TOUR_MODULE } from "../../src/modules/tour"
 import TourModuleService from "../../src/modules/tour/service"
 import completeCartWithToursWorkflow from "../../src/workflows/create-tour-booking"
 import { generateTourLockKey } from "../../src/utils/locking"
-
+import { PassengerType } from "../../src/modules/tour/models/tour-variant"
 jest.setTimeout(120 * 1000)
 
 /**
@@ -135,7 +135,7 @@ medusaIntegrationTestRunner({
           await tourModuleService.createTourVariants({
             tour_id: tour.id,
             variant_id: variant.id,
-            passenger_type: type.toUpperCase(),
+            passenger_type: type === "adult" ? PassengerType.ADULT : type === "child" ? PassengerType.CHILD : PassengerType.INFANT
           })
         }
 
@@ -573,10 +573,10 @@ medusaIntegrationTestRunner({
         it("should handle concurrent bookings with mixed passenger counts", async () => {
           // This test creates carts with different passenger counts
           // and verifies the system correctly calculates capacity
-          
+
           // Create custom carts with 2 passengers each
           const customCarts: any[] = []
-          
+
           for (let i = 0; i < 3; i++) {
             const customer = await customerModule.createCustomers({
               email: `mixed${i}@test.com`,

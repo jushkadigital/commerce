@@ -1,0 +1,28 @@
+
+> medusa-starter-default@0.0.1 test:integration:modules
+> TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit src/modules/tour/__tests__/tour-model.test.ts
+
+PASS src/modules/tour/__tests__/tour-model.test.ts
+  Tour Model - New Fields
+    Field Definitions
+      ✓ should have is_special field defined (2 ms)
+      ✓ should have is_special default to false
+      ✓ should have cancellation_deadline_hours field defined (1 ms)
+      ✓ should have cancellation_deadline_hours default to 12
+      ✓ should have booking_min_days_ahead field defined
+      ✓ should have booking_min_days_ahead default to 2
+      ✓ should have blocked_dates field defined
+      ✓ should have blocked_dates default to empty array
+      ✓ should have blocked_week_days field defined
+      ✓ should have blocked_week_days default to empty array (1 ms)
+    Model Structure
+      ✓ should import Tour model successfully
+      ✓ should define Tour model using model.define
+      ✓ should export Tour model (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       13 passed, 13 total
+Snapshots:   0 total
+Time:        0.455 s, estimated 1 s
+Ran all test suites matching /src\/modules\/tour\/__tests__\/tour-model.test.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

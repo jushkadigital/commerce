@@ -29,7 +29,6 @@ export type UpdatePackageWorkflowInput = {
 export const updatePackageNoPriceWorkflow = createWorkflow(
   "update-package-no-price",
   (input: UpdatePackageWorkflowInput) => {
-    console.log("HELLO")
 
     const { data: packages } = useQueryGraphStep({
       entity: "package",
@@ -38,7 +37,6 @@ export const updatePackageNoPriceWorkflow = createWorkflow(
     })
 
     const pkg = transform({ packages }, (data) => data.packages[0])
-    console.log(pkg)
 
     const updatedPackage = updatePackageStep({
       id: input.id,
