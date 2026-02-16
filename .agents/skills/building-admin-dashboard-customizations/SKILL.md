@@ -111,6 +111,8 @@ pnpm add react-router-dom@[exact-version]
 
 ### 1. Data Loading (CRITICAL)
 
+- `data-sdk-always` - **ALWAYS use Medusa JS SDK for ALL API requests** - NEVER use regular fetch() (missing auth headers causes errors)
+- `data-sdk-method-choice` - Use existing SDK methods for built-in endpoints (`sdk.admin.product.list()`), use `sdk.client.fetch()` for custom routes
 - `data-display-on-mount` - Display queries MUST load on mount (no enabled condition based on UI state)
 - `data-separate-queries` - Separate display queries from modal/form queries
 - `data-invalidate-display` - Invalidate display queries after mutations, not just modal queries
@@ -221,6 +223,8 @@ const BrokenWidget = ({ data: product }) => {
 Before implementing, verify you're NOT doing these:
 
 **Data Loading:**
+- [ ] Using regular fetch() instead of Medusa JS SDK (causes missing auth header errors)
+- [ ] Not using existing SDK methods for built-in endpoints (e.g., using sdk.client.fetch("/admin/products") instead of sdk.admin.product.list())
 - [ ] Loading display data conditionally based on modal/UI state
 - [ ] Using a single query for both display and modal
 - [ ] Forgetting to invalidate display queries after mutations
@@ -274,13 +278,30 @@ Each reference contains:
 
 ## Integration with Backend
 
-Admin UI connects to backend API routes:
+**⚠️ CRITICAL: ALWAYS use the Medusa JS SDK for ALL API requests - NEVER use regular fetch()**
+
+Admin UI connects to backend API routes using the SDK:
 
 ```tsx
-// Fetch from custom backend route
-const { data } = useQuery({
+import { sdk } from "[LOCATE SDK INSTANCE IN PROJECT]"
+
+// ✅ CORRECT - Built-in endpoint: Use existing SDK method
+const { data: product } = useQuery({
+  queryKey: ["product", productId],
+  queryFn: () => sdk.admin.product.retrieve(productId),
+})
+
+// ✅ CORRECT - Custom endpoint: Use sdk.client.fetch()
+const { data: reviews } = useQuery({
   queryKey: ["reviews", product.id],
   queryFn: () => sdk.client.fetch(`/admin/products/${product.id}/reviews`),
+})
+
+// ❌ WRONG - Using regular fetch
+const { data } = useQuery({
+  queryKey: ["reviews", product.id],
+  queryFn: () => fetch(`http://localhost:9000/admin/products/${product.id}/reviews`),
+  // ❌ Error: Missing Authorization header!
 })
 
 // Mutation to custom backend route
@@ -295,6 +316,17 @@ const createReview = useMutation({
   },
 })
 ```
+
+**Why the SDK is required:**
+- Admin routes need `Authorization` and session cookie headers
+- Store routes need `x-publishable-api-key` header
+- SDK handles all required headers automatically
+- Regular fetch() without headers → authentication/authorization errors
+- Using existing SDK methods provides better type safety
+
+**When to use what:**
+- **Built-in endpoints**: Use existing SDK methods (`sdk.admin.product.list()`, `sdk.store.product.list()`)
+- **Custom endpoints**: Use `sdk.client.fetch()` for your custom API routes
 
 **For implementing backend API routes**, load the `building-with-medusa` skill.
 

@@ -26,6 +26,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
   protected isReady_: boolean = false
   protected queueName_: string = "" // <--- NUEVA PROPIEDAD
   protected pendingBindings_: Map<string, string> = new Map()
+  protected productModuleService_: any
 
   // Almacén temporal para eventos agrupados (Transacciones)
   protected stagedEvents_: Map<string, EventBusTypes.Message<unknown>[]> = new Map()
@@ -40,6 +41,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
     this.logger_ = logger
     this.options_ = moduleOptions
+    this.productModuleService_ = null // Will be resolved lazily when needed
 
     // Iniciamos conexión
     this.connect()
@@ -149,6 +151,44 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
   }
 
   // --- IMPLEMENTACIÓN DE MÉTODOS ABSTRACTOS ---
+  
+  private async enrichProductEvent(event: EventBusTypes.Message<any>): Promise<EventBusTypes.Message<any>> {
+    if (!['product.created', 'product.updated'].includes(event.name)) {
+      return event
+    }
+
+    const productId = event.data?.id || event.data
+
+    if (!productId || typeof productId !== 'string') {
+      this.logger_.warn(`Product event ${event.name} missing valid product ID`)
+      return event
+    }
+
+    try {
+      if (!this.productModuleService_) {
+        const { modules } = require('@medusajs/framework/modules-sdk')
+        this.productModuleService_ = modules.product
+      }
+
+      const product = await this.productModuleService_.retrieve(productId, {
+        relations: ['variants', 'images', 'tags', 'categories']
+      })
+
+      return {
+        ...event,
+        data: product,
+        metadata: {
+          ...event.metadata,
+          enriched: true,
+          original_data: event.data
+        }
+      }
+    } catch (err) {
+      this.logger_.error(`Failed to enrich product event ${event.name}: ${err}`)
+      return event
+    }
+  }
+  
   subscribe(
     eventName: string | symbol,
     subscriber: EventBusTypes.Subscriber,
@@ -270,8 +310,10 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
     for (const event of events) {
       try {
-        const buffer = Buffer.from(JSON.stringify(event))
-        this.channel_.publish(exchange, event.name, buffer)
+        const enrichedEvent = await this.enrichProductEvent(event)
+        
+        const buffer = Buffer.from(JSON.stringify(enrichedEvent))
+        this.channel_.publish(exchange, enrichedEvent.name, buffer)
       } catch (err) {
         this.logger_.error(`Error publishing event ${event.name}: ${err}`)
       }

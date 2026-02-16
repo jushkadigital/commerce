@@ -1,4 +1,4 @@
-import { Modules } from "@medusajs/framework/utils"
+import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { ExecArgs } from "@medusajs/framework/types"
 
 /**
@@ -91,11 +91,30 @@ export default async function setupStore({ container }: ExecArgs) {
       name: "Perú",
       currency_code: "pen",
       countries: ["pe"],
-      payment_providers: ["Izipay"]
+      payment_providers: ["pp_izipay_izipay"]
     })
     console.log("Region Perú creada:", regionPeru.id)
   } else {
     console.log("Region Perú existente:", regionPeru.id)
+    console.log("Asignando proveedor pp_izipay_izipay a la región...")
+    const link = container.resolve(ContainerRegistrationKeys.LINK)
+    try {
+      await link.create({
+        [Modules.REGION]: {
+          region_id: regionPeru.id,
+        },
+        [Modules.PAYMENT]: {
+          payment_provider_id: "pp_izipay_izipay",
+        },
+      })
+      console.log("Proveedor asignado correctamente")
+    } catch (error: any) {
+      if (error.message?.includes("already exists")) {
+        console.log("El proveedor ya está asignado a esta región")
+      } else {
+        console.error("Error al asignar proveedor:", error.message)
+      }
+    }
   }
 
   // 5. Crear Region Internacional con USD

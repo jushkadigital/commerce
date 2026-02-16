@@ -1,12 +1,10 @@
 {
-  "active_plan": null,
-  "completed_plan": "/home/node/app/.sisyphus/plans/fix-available-dates.md",
-  "completed_at": "2026-02-09T23:30:00.000Z",
+  "active_plan": "/home/node/app/.sisyphus/plans/rabbitmq-event-bus-improvement.md",
+  "started_at": "2026-02-16T21:25:50.923Z",
   "session_ids": [
-    "ses_3bcb4f69bffexiDRxJiuOVKxKc",
-    "ses_3bb63b127ffeXZn4K4m45yNYFh"
+    "ses_397dfda75ffeu5fnEMBpeN0FpS",
+    "ses_39784dda6ffeNajImpVCCbcn5u"
   ],
-  "plan_name": "fix-available-dates",
-  "agent": "atlas",
-  "status": "completed_with_notes"
+  "plan_name": "rabbitmq-event-bus-improvement",
+  "agent": "atlas"
 }

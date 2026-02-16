@@ -347,16 +347,30 @@ Each reference file contains:
 
 ## Integration with Frontend Applications
 
+**⚠️ CRITICAL: Frontend applications MUST use the Medusa JS SDK for ALL API requests**
+
 When building features that span backend and frontend:
 
 **For Admin Dashboard:**
 1. **Backend (this skill):** Module → Workflow → API Route
 2. **Frontend:** Load `building-admin-dashboard-customizations` skill
-3. **Connection:** Admin widgets call custom API routes via `sdk.client.fetch()`
+3. **Connection:**
+   - Built-in endpoints: Use existing SDK methods (`sdk.admin.product.list()`)
+   - Custom API routes: Use `sdk.client.fetch("/admin/my-route")`
+   - **NEVER use regular fetch()** - missing auth headers will cause errors
 
 **For Storefronts:**
 1. **Backend (this skill):** Module → Workflow → API Route
 2. **Frontend:** Load `building-storefronts` skill
-3. **Connection:** Storefront calls custom API routes via `sdk.client.fetch()`
+3. **Connection:**
+   - Built-in endpoints: Use existing SDK methods (`sdk.store.product.list()`)
+   - Custom API routes: Use `sdk.client.fetch("/store/my-route")`
+   - **NEVER use regular fetch()** - missing publishable API key will cause errors
+
+**Why the SDK is required:**
+- Store routes need `x-publishable-api-key` header
+- Admin routes need `Authorization` and session headers
+- SDK handles all required headers automatically
+- Regular fetch() without headers → authentication/authorization errors
 
 See respective frontend skills for complete integration patterns.

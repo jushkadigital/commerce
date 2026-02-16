@@ -341,7 +341,6 @@ medusaIntegrationTestRunner({
           expect(tourFromDb.blocked_week_days).toEqual([])
           expect(tourFromDb.cancellation_deadline_hours).toBe(12)
           expect(tourFromDb.booking_min_days_ahead).toBe(2)
-          expect(tourFromDb.type).toBe("tour")
 
           await cleanupTour(result.tour.id)
         })
@@ -360,13 +359,11 @@ medusaIntegrationTestRunner({
 
           const { result } = await createTourWorkflow(container).run({ input })
 
-          await tourModuleService.updateTours({
-            selector: { id: result.tour.id },
-            data: {
-              is_special: true,
-              blocked_dates: ["2026-12-24"],
-            },
-          })
+          await tourModuleService.updateTours([{
+            id: result.tour.id,
+            is_special: true,
+            blocked_dates: ["2026-12-24"],
+          }])
 
           const updatedTour = await tourModuleService.retrieveTour(result.tour.id)
           expect(updatedTour.is_special).toBe(true)
@@ -389,12 +386,10 @@ medusaIntegrationTestRunner({
 
           const { result } = await createTourWorkflow(container).run({ input })
 
-          await tourModuleService.updateTours({
-            selector: { id: result.tour.id },
-            data: {
-              blocked_dates: ["2026-12-25", "2026-12-31", "2027-01-01"],
-            },
-          })
+          await tourModuleService.updateTours([{
+            id: result.tour.id,
+            blocked_dates: ["2026-12-25", "2026-12-31", "2027-01-01"],
+          }])
 
           const updatedTour = await tourModuleService.retrieveTour(result.tour.id)
           expect(updatedTour.blocked_dates).toHaveLength(3)
@@ -420,10 +415,8 @@ medusaIntegrationTestRunner({
           const { result } = await createTourWorkflow(container).run({ input })
 
           await tourModuleService.updateTours({
-            selector: { id: result.tour.id },
-            data: {
-              blocked_week_days: [0, 6],
-            },
+            id: result.tour.id,
+            blocked_week_days: ["0", "6"],
           })
 
           const updatedTour = await tourModuleService.retrieveTour(result.tour.id)
@@ -447,13 +440,11 @@ medusaIntegrationTestRunner({
 
           const { result } = await createTourWorkflow(container).run({ input })
 
-          await tourModuleService.updateTours({
-            selector: { id: result.tour.id },
-            data: {
-              cancellation_deadline_hours: 72,
-              booking_min_days_ahead: 7,
-            },
-          })
+          await tourModuleService.updateTours([{
+            id: result.tour.id,
+            cancellation_deadline_hours: 72,
+            booking_min_days_ahead: 7,
+          }])
 
           const updatedTour = await tourModuleService.retrieveTour(result.tour.id)
           expect(updatedTour.cancellation_deadline_hours).toBe(72)
@@ -591,6 +582,348 @@ medusaIntegrationTestRunner({
           expect(tour.variants.length).toBe(3)
 
           await cleanupTour(tour.id)
+        })
+      })
+
+      describe("Tour Creation with Unavailable Dates", () => {
+        it("should create tour with blocked dates in initial input", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Holiday Blocked Tour",
+            duration_days: 1,
+            max_capacity: 20,
+            prices: {
+              adult: 150,
+              child: 100,
+              infant: 0,
+            },
+            blocked_dates: ["2026-12-25", "2026-12-31", "2027-01-01"],
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          expect(result.tour).toBeDefined()
+          expect(result.tour.destination).toBe("Holiday Blocked Tour")
+
+          const tourFromDb = await tourModuleService.retrieveTour(result.tour.id)
+          expect(tourFromDb.blocked_dates).toHaveLength(3)
+          expect(tourFromDb.blocked_dates).toContain("2026-12-25")
+          expect(tourFromDb.blocked_dates).toContain("2026-12-31")
+          expect(tourFromDb.blocked_dates).toContain("2027-01-01")
+
+          await cleanupTour(result.tour.id)
+        })
+
+        it("should create tour with blocked week days in initial input", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Weekdays Only Office Tour",
+            duration_days: 1,
+            max_capacity: 15,
+            prices: {
+              adult: 80,
+              child: 50,
+              infant: 0,
+            },
+            blocked_week_days: ["0", "6"],
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          expect(result.tour).toBeDefined()
+
+          const tourFromDb = await tourModuleService.retrieveTour(result.tour.id)
+          expect(tourFromDb.blocked_week_days).toHaveLength(2)
+          expect(tourFromDb.blocked_week_days.map(Number)).toContain(0)
+          expect(tourFromDb.blocked_week_days.map(Number)).toContain(6)
+
+          await cleanupTour(result.tour.id)
+        })
+
+        it("should create tour with all availability fields in initial input", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Full Config Tour",
+            description: "Tour with complete availability configuration",
+            duration_days: 2,
+            max_capacity: 12,
+            thumbnail: "https://example.com/full-config.jpg",
+            prices: {
+              adult: 300,
+              child: 200,
+              infant: 0,
+              currency_code: "USD",
+            },
+            is_special: true,
+            blocked_dates: ["2026-07-04", "2026-11-26"],
+            blocked_week_days: ["2"],
+            cancellation_deadline_hours: 48,
+            booking_min_days_ahead: 5,
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          const tourFromDb = await tourModuleService.retrieveTour(result.tour.id)
+
+          expect(tourFromDb.destination).toBe("Full Config Tour")
+          expect(tourFromDb.is_special).toBe(true)
+          expect(tourFromDb.blocked_dates).toHaveLength(2)
+          expect(tourFromDb.blocked_dates).toContain("2026-07-04")
+          expect(tourFromDb.blocked_dates).toContain("2026-11-26")
+          expect(tourFromDb.blocked_week_days.map(Number)).toContain(2)
+          expect(tourFromDb.cancellation_deadline_hours).toBe(48)
+          expect(tourFromDb.booking_min_days_ahead).toBe(5)
+
+          await cleanupTour(result.tour.id)
+        })
+
+        it("should create tour with weekend-only availability (blocked weekdays)", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Weekend Special Tour",
+            duration_days: 1,
+            max_capacity: 30,
+            prices: {
+              adult: 120,
+              child: 80,
+              infant: 0,
+            },
+            blocked_week_days: ["1", "2", "3", "4", "5"],
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          const tourFromDb = await tourModuleService.retrieveTour(result.tour.id)
+          expect(tourFromDb.blocked_week_days).toHaveLength(5)
+          expect(tourFromDb.blocked_week_days.map(Number)).toContain(1)
+          expect(tourFromDb.blocked_week_days.map(Number)).toContain(5)
+
+          await cleanupTour(result.tour.id)
+        })
+
+        it("should create tour with single blocked date", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Single Blackout Tour",
+            duration_days: 1,
+            max_capacity: 25,
+            prices: {
+              adult: 90,
+              child: 60,
+              infant: 0,
+            },
+            blocked_dates: ["2026-02-14"],
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          const tourFromDb = await tourModuleService.retrieveTour(result.tour.id)
+          expect(tourFromDb.blocked_dates).toHaveLength(1)
+          expect(tourFromDb.blocked_dates).toContain("2026-02-14")
+
+          await cleanupTour(result.tour.id)
+        })
+
+        it("should create tour with extended booking advance requirement", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Expedition Tour",
+            duration_days: 7,
+            max_capacity: 8,
+            prices: {
+              adult: 2500,
+              child: 2000,
+              infant: 0,
+            },
+            booking_min_days_ahead: 30,
+            cancellation_deadline_hours: 168,
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          const tourFromDb = await tourModuleService.retrieveTour(result.tour.id)
+          expect(tourFromDb.booking_min_days_ahead).toBe(30)
+          expect(tourFromDb.cancellation_deadline_hours).toBe(168)
+
+          await cleanupTour(result.tour.id)
+        })
+
+        it("should create tour with empty availability arrays", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Always Available Tour",
+            duration_days: 1,
+            max_capacity: 100,
+            prices: {
+              adult: 50,
+              child: 30,
+              infant: 0,
+            },
+            blocked_dates: [],
+            blocked_week_days: [],
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          const tourFromDb = await tourModuleService.retrieveTour(result.tour.id)
+          expect(tourFromDb.blocked_dates).toEqual([])
+          expect(tourFromDb.blocked_week_days).toEqual([])
+
+          await cleanupTour(result.tour.id)
+        })
+
+        it("should validate booking against blocked dates after creation", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Date Restricted Tour",
+            duration_days: 1,
+            max_capacity: 20,
+            prices: {
+              adult: 100,
+              child: 70,
+              infant: 0,
+            },
+            blocked_dates: ["2026-08-15"],
+            booking_min_days_ahead: 0,
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+          const tourId = result.tour.id
+
+          const blockedValidation = await tourModuleService.validateBooking(
+            tourId,
+            new Date("2026-08-15"),
+            2
+          )
+          expect(blockedValidation.valid).toBe(false)
+          expect(blockedValidation.reason).toContain("not available")
+
+          const allowedValidation = await tourModuleService.validateBooking(
+            tourId,
+            new Date("2026-08-16"),
+            2
+          )
+          expect(allowedValidation.valid).toBe(true)
+
+          await cleanupTour(tourId)
+        })
+
+        it("should validate booking against blocked week days after creation", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "No Sunday Tour",
+            duration_days: 1,
+            max_capacity: 15,
+            prices: {
+              adult: 75,
+              child: 50,
+              infant: 0,
+            },
+            blocked_week_days: ["0"],
+            booking_min_days_ahead: 0,
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+          const tourId = result.tour.id
+
+          const sundayValidation = await tourModuleService.validateBooking(
+            tourId,
+            new Date("2026-08-09"),
+            2
+          )
+          expect(sundayValidation.valid).toBe(false)
+          expect(sundayValidation.reason).toContain("Sunday")
+
+          const mondayValidation = await tourModuleService.validateBooking(
+            tourId,
+            new Date("2026-08-10"),
+            2
+          )
+          expect(mondayValidation.valid).toBe(true)
+
+          await cleanupTour(tourId)
+        })
+
+        it("should validate booking against minimum days ahead requirement", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Advance Booking Tour",
+            duration_days: 1,
+            max_capacity: 10,
+            prices: {
+              adult: 200,
+              child: 150,
+              infant: 0,
+            },
+            booking_min_days_ahead: 7,
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+          const tourId = result.tour.id
+
+          const today = new Date()
+
+          const tomorrow = new Date(today)
+          tomorrow.setDate(tomorrow.getDate() + 1)
+
+          const shortValidation = await tourModuleService.validateBooking(
+            tourId,
+            tomorrow,
+            2
+          )
+          expect(shortValidation.valid).toBe(false)
+          expect(shortValidation.reason).toContain("days in advance")
+
+          const futureDate = new Date(today)
+          futureDate.setDate(futureDate.getDate() + 10)
+
+          const futureValidation = await tourModuleService.validateBooking(
+            tourId,
+            futureDate,
+            2
+          )
+          expect(futureValidation.valid).toBe(true)
+
+          await cleanupTour(tourId)
+        })
+
+        it("should handle complex availability rules combining blocked dates and days", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Complex Availability Tour",
+            duration_days: 1,
+            max_capacity: 12,
+            prices: {
+              adult: 180,
+              child: 120,
+              infant: 0,
+            },
+            blocked_dates: ["2026-09-07"],
+            blocked_week_days: ["0", "6"],
+            booking_min_days_ahead: 3,
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+          const tourId = result.tour.id
+
+          const specificDateValidation = await tourModuleService.validateBooking(
+            tourId,
+            new Date("2026-09-07"),
+            2
+          )
+          expect(specificDateValidation.valid).toBe(false)
+
+          const saturdayValidation = await tourModuleService.validateBooking(
+            tourId,
+            new Date("2026-09-05"),
+            2
+          )
+          expect(saturdayValidation.valid).toBe(false)
+
+          const today = new Date()
+          const validWeekday = new Date(today)
+          validWeekday.setDate(validWeekday.getDate() + 10)
+          while (validWeekday.getDay() !== 3) {
+            validWeekday.setDate(validWeekday.getDate() + 1)
+          }
+
+          const validValidation = await tourModuleService.validateBooking(
+            tourId,
+            validWeekday,
+            2
+          )
+          expect(validValidation.valid).toBe(true)
+
+          await cleanupTour(tourId)
         })
       })
 

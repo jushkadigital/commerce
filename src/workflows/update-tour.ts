@@ -28,7 +28,6 @@ export type UpdateTourWorkflowInput = {
 export const updateTourWorkflow = createWorkflow(
   "update-tour",
   (input: UpdateTourWorkflowInput) => {
-    console.log("HELLO")
 
     // --- Step 1: Obtener el Tour actual (para saber su product_id) ---
     const { data: tours } = useQueryGraphStep({

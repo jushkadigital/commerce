@@ -12,9 +12,11 @@ export type CreatePackagesStepInput = {
     thumbnail?: string
     is_special?: boolean
     blocked_dates?: string[]
-    blocked_week_days?: number[]
+    blocked_week_days?: string[]
     cancellation_deadline_hours?: number
-    booking_min_months_ahead?: number
+    booking_min_months_ahead?: number,
+    metadata?: Record<string, any>
+
   }[]
 }
 

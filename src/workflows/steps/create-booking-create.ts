@@ -40,15 +40,36 @@ export const createTourBookingsStep = createStep(
 
     for (const item of items as { type: string; items: any[] }[]) {
       const firstItem = item.items[0]
-      if (!firstItem?.variant?.tour_variant) continue
+      const variantId = firstItem?.variant?.id
+      const metadata = firstItem?.metadata as { tour_id?: string; tour_date?: string }
+      
+      // Try to get tour_id from metadata first, then from tour_variant link
+      let tourId = metadata?.tour_id
+      
+      if (!tourId && variantId) {
+        // Look up tour_variant by variant_id
+        const tourVariants = await tourModuleService.listTourVariants({
+          variant_id: variantId,
+        })
+        if (tourVariants.length > 0) {
+          tourId = tourVariants[0].tour_id
+        }
+      }
+      
+      if (!tourId) {
+        continue
+      }
+      
+      const tourDate = metadata?.tour_date
+      if (!tourDate) {
+        continue
+      }
       
       tourBookingsToCreate.push({
         order_id,
-        tour_id: firstItem.variant.tour_variant.tour_id,
-        line_items: { items: item.items.map(ele => ele.variant?.tour_variant) },
-        tour_date: new Date(
-          firstItem.metadata?.tour_date as string
-        ),
+        tour_id: tourId,
+        line_items: { items: item.items.map(ele => ({ variant_id: ele.variant_id, metadata: ele.metadata })) },
+        tour_date: new Date(tourDate),
       })
     }
 

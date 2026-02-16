@@ -29,6 +29,18 @@ import { sdk } from "[LOCATE IN PROJECT]"
 
 ### Using sdk.client.fetch()
 
+**⚠️ CRITICAL: ALWAYS use the Medusa JS SDK for ALL API requests - NEVER use regular fetch()**
+
+**Why this is critical:**
+- **Store API routes** require the publishable API key in headers
+- **Admin API routes** require authentication headers
+- **Regular fetch()** without these headers will cause errors
+- The SDK automatically handles all required headers for you
+
+**When to use what:**
+- **Existing endpoints** (built-in Medusa routes): Use existing SDK methods like `sdk.store.product.list()`, `sdk.admin.order.retrieve()`
+- **Custom endpoints** (your custom API routes): Use `sdk.client.fetch()` for custom routes
+
 **⚠️ CRITICAL: The SDK handles JSON serialization automatically. NEVER use JSON.stringify() on the body.**
 
 Call custom API routes using the SDK:
@@ -61,6 +73,41 @@ const result = await sdk.client.fetch("/store/my-route", {
 - No need to set Content-Type headers - SDK adds them
 - Session/JWT authentication is handled automatically
 - Publishable API key is automatically added
+
+### Built-in Endpoints vs Custom Endpoints
+
+**⚠️ CRITICAL: Use the appropriate SDK method based on endpoint type**
+
+```typescript
+import { sdk } from "[LOCATE SDK INSTANCE IN PROJECT]"
+
+// ✅ CORRECT - Built-in endpoint: Use existing SDK method
+const products = await sdk.store.product.list({
+  limit: 10,
+  offset: 0
+})
+
+// ✅ CORRECT - Custom endpoint: Use sdk.client.fetch()
+const reviews = await sdk.client.fetch("/store/products/prod_123/reviews")
+
+// ❌ WRONG - Using regular fetch for ANY endpoint
+const products = await fetch("http://localhost:9000/store/products")
+// ❌ Error: Missing publishable API key header!
+
+// ❌ WRONG - Using regular fetch for custom endpoint
+const reviews = await fetch("http://localhost:9000/store/products/prod_123/reviews")
+// ❌ Error: Missing publishable API key header!
+
+// ❌ WRONG - Using sdk.client.fetch() for built-in endpoint when SDK method exists
+const products = await sdk.client.fetch("/store/products")
+// ❌ Less type-safe than using sdk.store.product.list()
+```
+
+**Why this matters:**
+- **Store routes** require `x-publishable-api-key` header - SDK adds it automatically
+- **Admin routes** require `Authorization` and session cookie headers - SDK adds them automatically
+- **Regular fetch()** doesn't include these headers → API returns authentication/authorization errors
+- Using existing SDK methods provides **better type safety** and autocomplete
 
 ## React Query Pattern
 

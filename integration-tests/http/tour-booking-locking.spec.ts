@@ -84,6 +84,11 @@ medusaIntegrationTestRunner({
           shipping_profile_id: shippingProfile.id,
           provider_id: "manual_manual",
           price_type: "flat",
+          type: {
+            label: "Standard",
+            description: "Standard shipping",
+            code: "standard",
+          },
           rules: [
             {
               attribute: "enabled",

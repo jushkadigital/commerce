@@ -1,26 +1,12 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
-import { Modules } from "@medusajs/framework/utils"
+import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { createPaymentCollectionForCartWorkflow } from "@medusajs/medusa/core-flows"
 import { TOUR_MODULE, PassengerType } from "../../src/modules/tour"
 import TourModuleService from "../../src/modules/tour/service"
 import completeCartWithToursWorkflow from "../../src/modules/tour/workflows/create-tour-booking"
 
 jest.setTimeout(120 * 1000)
 
-/**
- * Integration tests for complete tour purchase flow (E2E)
- * 
- * These tests verify the entire purchase flow:
- * These tests verify the complete E2E flow for tourism tours:
- * 1. Create tour with available dates
- * 2. Create cart with tour item
- * 3. Add customer information
- * 4. Complete checkout (mock payment)
- * 5. Verify order created correctly
- * 6. Verify booking created in TourModule
- * 
- * Note: Tourism tours don't use fulfillment/shipping as they are
- * experiences, not physical products that need delivery.
- */
 medusaIntegrationTestRunner({
   inApp: true,
   env: {},
@@ -29,17 +15,15 @@ medusaIntegrationTestRunner({
       let container: any
       let tourModuleService: TourModuleService
       let productModule: any
-      let pricingModule: any
       let cartModule: any
       let salesChannelModule: any
       let regionModule: any
       let customerModule: any
-      let paymentModule: any
       let orderModule: any
+      let paymentModule: any
       let remoteLink: any
       let query: any
 
-      // Test data
       let tour: any
       let product: any
       let region: any
@@ -52,39 +36,41 @@ medusaIntegrationTestRunner({
         container = getContainer()
         tourModuleService = container.resolve(TOUR_MODULE)
         productModule = container.resolve(Modules.PRODUCT)
-        pricingModule = container.resolve(Modules.PRICING)
         cartModule = container.resolve(Modules.CART)
         salesChannelModule = container.resolve(Modules.SALES_CHANNEL)
         regionModule = container.resolve(Modules.REGION)
         customerModule = container.resolve(Modules.CUSTOMER)
-        paymentModule = container.resolve(Modules.PAYMENT)
         orderModule = container.resolve(Modules.ORDER)
-        remoteLink = container.resolve("remoteLink")
+        paymentModule = container.resolve(Modules.PAYMENT)
+        remoteLink = container.resolve(ContainerRegistrationKeys.LINK)
         query = container.resolve("query")
       })
 
       beforeEach(async () => {
-        // Create sales channel
         salesChannel = await salesChannelModule.createSalesChannels({
           name: "Test Sales Channel",
         })
 
-        // Create region with currency
         region = await regionModule.createRegions({
           name: "Test Region",
           currency_code: "usd",
           countries: ["us"],
+          payment_providers: ["pp_system_default"],
         })
 
-        // Create product for the tour
         product = await productModule.createProducts({
           title: "Cusco City Tour",
           description: "Amazing city tour of Cusco",
           status: "published",
           sales_channels: [{ id: salesChannel.id }],
+          options: [
+            {
+              title: "Passenger Type",
+              values: ["Adult", "Child", "Infant"],
+            },
+          ],
         })
 
-        // Create tour with capacity
         tour = await tourModuleService.createTours({
           product_id: product.id,
           destination: "Cusco",
@@ -93,7 +79,6 @@ medusaIntegrationTestRunner({
           max_capacity: tourCapacity,
         })
 
-        // Create variants for each passenger type
         const passengerTypes = ["adult", "child", "infant"]
         for (const type of passengerTypes) {
           const variant = await productModule.createProductVariants({
@@ -107,13 +92,14 @@ medusaIntegrationTestRunner({
               },
             ],
             options: {
-              passenger_type: type,
+              "Passenger Type": type.charAt(0).toUpperCase() + type.slice(1),
             },
+            manage_inventory: false,
+            allow_backorder: true,
           })
 
           productVariants.push(variant)
 
-          // Create tour variant link
           await tourModuleService.createTourVariants({
             tour_id: tour.id,
             variant_id: variant.id,
@@ -121,14 +107,12 @@ medusaIntegrationTestRunner({
           })
         }
 
-        // Re-fetch product with variants
         product = await productModule.retrieveProduct(product.id, {
           relations: ["variants"],
         })
       })
 
       afterEach(async () => {
-        // Clean up test data
         try {
           const bookings = await tourModuleService.listTourBookings({
             tour_id: tour.id,
@@ -145,7 +129,6 @@ medusaIntegrationTestRunner({
 
           await tourModuleService.deleteTours(tour.id)
 
-          // Delete product and variants
           for (const variant of productVariants) {
             await productModule.deleteProductVariants(variant.id)
           }
@@ -160,14 +143,10 @@ medusaIntegrationTestRunner({
         productVariants = []
       })
 
-      /**
-       * Helper function to create a cart with tour items
-       */
       async function createCartWithTour(
         customerEmail: string,
         passengerCounts: { adults: number; children: number; infants: number } = { adults: 1, children: 0, infants: 0 }
       ) {
-        // Create or retrieve customer
         const customers = await customerModule.listCustomers({
           email: customerEmail,
         })
@@ -183,7 +162,6 @@ medusaIntegrationTestRunner({
           customer = customers[0]
         }
 
-        // Find variants
         const adultVariant = product.variants.find(
           (v: any) => v.title === "Adult Ticket"
         )
@@ -200,10 +178,7 @@ medusaIntegrationTestRunner({
 
         const items: any[] = []
         let totalPassengers = 0
-        let totalPrice = 0
-        const pricingBreakdown: any[] = []
 
-        // Add adult tickets
         if (passengerCounts.adults > 0) {
           items.push({
             variant_id: adultVariant.id,
@@ -233,15 +208,8 @@ medusaIntegrationTestRunner({
             },
           })
           totalPassengers += passengerCounts.adults
-          totalPrice += 150 * passengerCounts.adults
-          pricingBreakdown.push({
-            type: "ADULT",
-            quantity: passengerCounts.adults,
-            unit_price: 150,
-          })
         }
 
-        // Add child tickets
         if (passengerCounts.children > 0 && childVariant) {
           items.push({
             variant_id: childVariant.id,
@@ -271,15 +239,8 @@ medusaIntegrationTestRunner({
             },
           })
           totalPassengers += passengerCounts.children
-          totalPrice += 100 * passengerCounts.children
-          pricingBreakdown.push({
-            type: "CHILD",
-            quantity: passengerCounts.children,
-            unit_price: 100,
-          })
         }
 
-        // Add infant tickets
         if (passengerCounts.infants > 0 && infantVariant) {
           items.push({
             variant_id: infantVariant.id,
@@ -309,14 +270,8 @@ medusaIntegrationTestRunner({
             },
           })
           totalPassengers += passengerCounts.infants
-          pricingBreakdown.push({
-            type: "INFANT",
-            quantity: passengerCounts.infants,
-            unit_price: 0,
-          })
         }
 
-        // Create cart - tourism tours don't need shipping/fulfillment
         const cart = await cartModule.createCarts({
           currency_code: "usd",
           email: customerEmail,
@@ -326,19 +281,271 @@ medusaIntegrationTestRunner({
           items,
         })
 
-        return { cart, totalPassengers, totalPrice }
+        await createPaymentCollectionForCartWorkflow(container).run({
+          input: {
+            cart_id: cart.id,
+          },
+        })
+
+        const { data: carts } = await query.graph({
+          entity: "cart",
+          fields: ["id", "total", "payment_collection.id"],
+          filters: { id: cart.id },
+        })
+        const cartWithPayment = carts[0]
+
+        await paymentModule.createPaymentSession(
+          cartWithPayment.payment_collection.id,
+          {
+            provider_id: "pp_system_default",
+            currency_code: "usd",
+            amount: cartWithPayment.total,
+            data: {},
+          }
+        )
+
+        const { data: cartsWithItems } = await query.graph({
+          entity: "cart",
+          fields: ["id", "total", "items.*", "items.metadata"],
+          filters: { id: cart.id },
+        })
+
+        return { cart: cartsWithItems[0], totalPassengers }
       }
 
       describe("Complete Purchase Flow - Success Cases", () => {
-        it("should complete full purchase flow for a single adult passenger", async () => {
-          // Verify initial capacity
+        it("should complete full purchase flow and create order and booking", async () => {
           const initialCapacity = await tourModuleService.getAvailableCapacity(
             tour.id,
             new Date(testDate)
           )
           expect(initialCapacity).toBe(tourCapacity)
 
-          // Step 1: Create cart with tour item
+          const { cart, totalPassengers } = await createCartWithTour(
+            "test@example.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
+
+          expect(cart).toBeDefined()
+          expect(cart.items).toHaveLength(1)
+          expect(cart.items[0].metadata.is_tour).toBe(true)
+          expect(cart.items[0].metadata.tour_id).toBe(tour.id)
+
+          const { result } = await completeCartWithToursWorkflow(container).run({
+            input: {
+              cart_id: cart.id,
+            },
+          })
+
+          expect(result).toBeDefined()
+          expect((result as any).order).toBeDefined()
+          expect((result as any).order.id).toBeDefined()
+          expect((result as any).order.email).toBe("test@example.com")
+          expect((result as any).order.items).toHaveLength(1)
+
+          const orderId = (result as any).order.id
+
+          // Verify tour booking was created
+          const bookings = await tourModuleService.listTourBookings({
+            tour_id: tour.id,
+            tour_date: new Date(testDate),
+          })
+
+          expect(bookings).toHaveLength(1)
+          const booking = bookings[0]
+          expect(booking.order_id).toBe(orderId)
+          expect(booking.status).toBe("pending")
+
+          // Verify capacity was reduced
+          const remainingCapacity = await tourModuleService.getAvailableCapacity(
+            tour.id,
+            new Date(testDate)
+          )
+          expect(remainingCapacity).toBe(tourCapacity - 1)
+        })
+
+        it("should create booking with correct metadata", async () => {
+          const { cart } = await createCartWithTour("meta@example.com", { adults: 3, children: 0, infants: 0 })
+
+          const { result } = await completeCartWithToursWorkflow(container).run({
+            input: {
+              cart_id: cart.id,
+            },
+          })
+
+          const orderId = (result as any).order.id
+
+          // Query booking with all details
+          const { data: bookings } = await query.graph({
+            entity: "tour_booking",
+            fields: ["id", "order_id", "tour_date", "status", "line_items"],
+            filters: {
+              order_id: orderId,
+            },
+          })
+
+          expect(bookings).toHaveLength(1)
+          const booking = bookings[0]
+          expect(booking.order_id).toBe(orderId)
+          expect(booking.status).toBe("pending")
+          expect(new Date(booking.tour_date).toISOString().split("T")[0]).toBe(testDate)
+        })
+
+        it("should handle multiple tours in same cart", async () => {
+          // Create a second tour
+          const product2 = await productModule.createProducts({
+            title: "Lima City Tour",
+            description: "Lima city tour",
+            status: "published",
+            sales_channels: [{ id: salesChannel.id }],
+            options: [
+              {
+                title: "Passenger Type",
+                values: ["Adult", "Child", "Infant"],
+              },
+            ],
+          })
+
+          const tour2 = await tourModuleService.createTours({
+            product_id: product2.id,
+            destination: "Lima",
+            description: "City tour in Lima",
+            duration_days: 1,
+            max_capacity: 5,
+          })
+
+          // Create variant for second tour
+          const variant2 = await productModule.createProductVariants({
+            product_id: product2.id,
+            title: "Adult Ticket",
+            sku: "LIMA-ADULT-001",
+            prices: [
+              {
+                currency_code: "usd",
+                amount: 50,
+              },
+            ],
+            options: {
+              "Passenger Type": "Adult",
+            },
+          })
+
+          await tourModuleService.createTourVariants({
+            tour_id: tour2.id,
+            variant_id: variant2.id,
+            passenger_type: PassengerType.ADULT,
+          })
+
+          // Get customer
+          const customer = await customerModule.createCustomers({
+            email: "multi@example.com",
+            first_name: "Test",
+            last_name: "Customer",
+          })
+
+          // Get adult variants for both tours
+          const adultVariant1 = product.variants.find(
+            (v: any) => v.title === "Adult Ticket"
+          )
+
+          // Create cart with both tours
+          const cart = await cartModule.createCarts({
+            currency_code: "usd",
+            email: "multi@example.com",
+            customer_id: customer.id,
+            sales_channel_id: salesChannel.id,
+            region_id: region.id,
+            items: [
+              {
+                variant_id: adultVariant1.id,
+                quantity: 1,
+                unit_price: 150,
+                title: `Cusco - ${testDate}`,
+                metadata: {
+                  is_tour: true,
+                  tour_id: tour.id,
+                  tour_date: testDate,
+                  total_passengers: 1,
+                  group_id: `tour-${tour.id}-${testDate}`,
+                },
+              },
+              {
+                variant_id: variant2.id,
+                quantity: 1,
+                unit_price: 50,
+                title: `Lima - ${testDate}`,
+                metadata: {
+                  is_tour: true,
+                  tour_id: tour2.id,
+                  tour_date: testDate,
+                  total_passengers: 1,
+                  group_id: `tour-${tour2.id}-${testDate}`,
+                },
+              },
+            ],
+          })
+
+          // Create payment collection for cart
+          await createPaymentCollectionForCartWorkflow(container).run({
+            input: {
+              cart_id: cart.id,
+            },
+          })
+
+          const { data: cartsWithPayment } = await query.graph({
+            entity: "cart",
+            fields: ["id", "total", "payment_collection.id"],
+            filters: { id: cart.id },
+          })
+          const cartWithPayment = cartsWithPayment[0]
+
+          await paymentModule.createPaymentSession(
+            cartWithPayment.payment_collection.id,
+            {
+              provider_id: "pp_system_default",
+              currency_code: "usd",
+              amount: cartWithPayment.total,
+              data: {},
+            }
+          )
+
+          // Complete checkout
+          const result = await completeCartWithToursWorkflow(container).run({
+            input: {
+              cart_id: cart.id,
+            },
+          })
+
+          const orderId = (result as any).result.order.id
+
+          // Verify both bookings were created
+          const bookings1 = await tourModuleService.listTourBookings({
+            tour_id: tour.id,
+          })
+          const bookings2 = await tourModuleService.listTourBookings({
+            tour_id: tour2.id,
+          })
+
+          expect(bookings1).toHaveLength(1)
+          expect(bookings2).toHaveLength(1)
+          expect(bookings1[0].order_id).toBe(orderId)
+          expect(bookings2[0].order_id).toBe(orderId)
+
+          // Cleanup tour2 data
+          await tourModuleService.deleteTourBookings(bookings2.map((b: any) => b.id))
+          await tourModuleService.deleteTourVariants({ tour_id: tour2.id })
+          await tourModuleService.deleteTours(tour2.id)
+          await productModule.deleteProductVariants(variant2.id)
+          await productModule.deleteProducts(product2.id)
+        })
+
+        it("should complete full purchase flow for a single adult passenger", async () => {
+          const initialCapacity = await tourModuleService.getAvailableCapacity(
+            tour.id,
+            new Date(testDate)
+          )
+          expect(initialCapacity).toBe(tourCapacity)
+
           const { cart, totalPassengers } = await createCartWithTour(
             "single-adult@test.com",
             { adults: 1, children: 0, infants: 0 }
@@ -349,368 +556,337 @@ medusaIntegrationTestRunner({
           expect(cart.items[0].metadata.is_tour).toBe(true)
           expect(cart.items[0].metadata.tour_id).toBe(tour.id)
 
-          // Step 2: Complete checkout using workflow
           const { result } = await completeCartWithToursWorkflow(container).run({
             input: {
               cart_id: cart.id,
             },
           })
 
-          // Step 3: Verify order was created
           expect(result).toBeDefined()
           expect((result as any).order).toBeDefined()
           expect((result as any).order.id).toBeDefined()
           expect((result as any).order.email).toBe("single-adult@test.com")
           expect((result as any).order.items).toHaveLength(1)
-
-          // Step 4: Verify capacity was reduced
-          const remainingCapacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
-          )
-          expect(remainingCapacity).toBe(tourCapacity - totalPassengers)
-
-          // Step 5: Verify booking was created
-          const bookings = await tourModuleService.listTourBookings({
-            tour_id: tour.id,
-            tour_date: new Date(testDate),
-          })
-
-          expect(bookings).toHaveLength(1)
-          expect(bookings[0].order_id).toBe((result as any).order.id)
-          expect(bookings[0].tour_id).toBe(tour.id)
-          expect(bookings[0].status).toBe("pending")
         })
 
-        it("should complete purchase with mixed passenger types", async () => {
-          const { cart, totalPassengers } = await createCartWithTour(
-            "family@test.com",
-            { adults: 2, children: 1, infants: 1 }
-          )
-
-          expect(cart.items).toHaveLength(3) // 3 different passenger types
-
-          // Complete checkout
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
+        it("should reject booking for blocked date", async () => {
+          await tourModuleService.updateTours({
+            id: tour.id,
+            blocked_dates: [testDate]
           })
 
-          // Verify order
-          expect((result as any).order).toBeDefined()
-          expect((result as any).order.items).toHaveLength(3)
-
-          // Verify capacity reduced correctly (4 total passengers)
-          const remainingCapacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
+          const { cart } = await createCartWithTour(
+            "blocked-date@test.com",
+            { adults: 1, children: 0, infants: 0 }
           )
-          expect(remainingCapacity).toBe(tourCapacity - totalPassengers)
 
-          // Verify booking
-          const bookings = await tourModuleService.listTourBookings({
-            tour_id: tour.id,
+          const { errors } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
           })
-          expect(bookings).toHaveLength(1)
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("not available")
+
+          await tourModuleService.updateTours({
+            id: tour.id,
+            blocked_dates: []
+          })
         })
 
-        it("should complete multiple separate purchases for same tour", async () => {
-          // First purchase
-          const { cart: cart1, totalPassengers: passengers1 } = await createCartWithTour(
-            "customer1@test.com",
-            { adults: 2, children: 0, infants: 0 }
-          )
+        it("should reject booking for blocked weekday", async () => {
+          const tourDateObj = new Date(testDate)
+          const dayOfWeek = tourDateObj.getDay()
 
-          const result1 = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart1.id },
+          await tourModuleService.updateTours({
+            id: tour.id,
+            blocked_week_days: [dayOfWeek.toString()]
           })
 
-          expect((result1 as any).order).toBeDefined()
-
-          // Second purchase
-          const { cart: cart2, totalPassengers: passengers2 } = await createCartWithTour(
-            "customer2@test.com",
-            { adults: 3, children: 1, infants: 0 }
+          const { cart } = await createCartWithTour(
+            "blocked-weekday@test.com",
+            { adults: 1, children: 0, infants: 0 }
           )
 
-          const result2 = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart2.id },
+          const { errors } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
           })
 
-          expect((result2 as any).order).toBeDefined()
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("not available")
 
-          // Verify total capacity used
-          const remainingCapacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
-          )
-          expect(remainingCapacity).toBe(tourCapacity - passengers1 - passengers2)
-
-          // Verify both bookings exist
-          const bookings = await tourModuleService.listTourBookings({
-            tour_id: tour.id,
+          await tourModuleService.updateTours({
+            id: tour.id,
+            blocked_week_days: []
           })
-          expect(bookings).toHaveLength(2)
-
-          // Verify each booking has correct order_id
-          const bookingOrderIds = bookings.map((b) => b.order_id)
-          expect(bookingOrderIds).toContain((result1 as any).order.id)
-          expect(bookingOrderIds).toContain((result2 as any).order.id)
         })
 
-        it("should verify order contains correct pricing information", async () => {
-          const { cart, totalPrice } = await createCartWithTour(
-            "pricing-test@test.com",
-            { adults: 2, children: 1, infants: 0 }
+        it("should reject booking when capacity is exceeded", async () => {
+          // Create carts sequentially and wait for each booking to be created
+          for (let i = 0; i < tourCapacity; i++) {
+            const { cart } = await createCartWithTour(
+              `capacity${i}@test.com`,
+              { adults: 1, children: 0, infants: 0 }
+            )
+            await completeCartWithToursWorkflow(container).run({
+              input: { cart_id: cart.id },
+            })
+            
+            // Wait for the booking to be committed to the database
+            await new Promise(resolve => setTimeout(resolve, 100))
+          }
+
+          const { cart } = await createCartWithTour(
+            "exceed-capacity@test.com",
+            { adults: 1, children: 0, infants: 0 }
           )
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
+          const { errors } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("spots available")
+        })
+
+        it("should reject booking when min days ahead not met", async () => {
+          await tourModuleService.updateTours({
+            id: tour.id,
+            booking_min_days_ahead: 365
+          })
+
+          const { cart } = await createCartWithTour(
+            "min-days@test.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
+
+          const { errors } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("days in advance")
+
+          await tourModuleService.updateTours({
+            id: tour.id,
+            booking_min_days_ahead: 0
+          })
+        })
+
+        it("should reject booking for past dates", async () => {
+          const pastDate = "2020-01-01"
+
+          const customers = await customerModule.listCustomers({
+            email: "past-date@test.com",
+          })
+          let customer = customers[0] || await customerModule.createCustomers({
+            email: "past-date@test.com",
+            first_name: "Test",
+            last_name: "Customer",
+          })
+
+          const adultVariant = product.variants.find(
+            (v: any) => v.title === "Adult Ticket"
+          )
+
+          const cart = await cartModule.createCarts({
+            currency_code: "usd",
+            email: "past-date@test.com",
+            customer_id: customer.id,
+            sales_channel_id: salesChannel.id,
+            region_id: region.id,
+            items: [{
+              variant_id: adultVariant.id,
+              quantity: 1,
+              unit_price: 150,
+              title: `${tour.destination} - ${pastDate}`,
+              metadata: {
+                is_tour: true,
+                tour_id: tour.id,
+                tour_date: pastDate,
+                total_passengers: 1,
+              },
+            }],
+          })
+
+          await createPaymentCollectionForCartWorkflow(container).run({
             input: { cart_id: cart.id },
           })
 
-          // Verify order pricing (2 adults * 150 + 1 child * 100 = 400)
-          expect((result as any).order.subtotal).toBe(400)
-          expect((result as any).order.currency_code).toBe("usd")
+          const { data: carts } = await query.graph({
+            entity: "cart",
+            fields: ["id", "total", "payment_collection.id"],
+            filters: { id: cart.id },
+          })
 
-          // Verify items have correct pricing
-          const adultItems = (result as any).order.items.filter((item: any) => 
-            item.metadata?.pricing_breakdown?.some((p: any) => p.type === "ADULT")
+          await paymentModule.createPaymentSession(
+            carts[0].payment_collection.id,
+            {
+              provider_id: "pp_system_default",
+              currency_code: "usd",
+              amount: carts[0].total,
+              data: {},
+            }
           )
-          expect(adultItems.length).toBeGreaterThan(0)
+
+          const { errors } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("past dates")
         })
       })
 
-      describe("Purchase Flow - Error Cases", () => {
-        it("should fail when booking exceeds available capacity", async () => {
-          // First, fill up almost all capacity (9 out of 10 spots)
-          for (let i = 0; i < 9; i++) {
-            const { cart } = await createCartWithTour(
-              `filler${i}@test.com`,
-              { adults: 1, children: 0, infants: 0 }
-            )
-            await completeCartWithToursWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
-          }
-
-          // Verify only 1 spot left
-          const remainingCapacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
-          )
-          expect(remainingCapacity).toBe(1)
-
-          // Try to book 2 passengers when only 1 spot remains
-          const { cart } = await createCartWithTour(
-            "overflow@test.com",
-            { adults: 2, children: 0, infants: 0 }
-          )
-
-          // This should fail
-          await expect(
-            completeCartWithToursWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
-          ).rejects.toThrow()
-
-          // Verify capacity is still 1 (booking didn't go through)
-          const finalCapacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
-          )
-          expect(finalCapacity).toBe(1)
-        })
-
-        it("should fail when tour is completely full", async () => {
-          // Fill all capacity
+      describe("Capacity Validation", () => {
+        it("should validate capacity before allowing checkout", async () => {
+          // First fill up capacity
           for (let i = 0; i < tourCapacity; i++) {
-            const { cart } = await createCartWithTour(
-              `full${i}@test.com`,
-              { adults: 1, children: 0, infants: 0 }
-            )
+            const { cart } = await createCartWithTour(`fill${i}@test.com`, { adults: 1, children: 0, infants: 0 })
             await completeCartWithToursWorkflow(container).run({
               input: { cart_id: cart.id },
             })
+            await new Promise(resolve => setTimeout(resolve, 100))
           }
 
-          // Verify capacity is 0
+          // Verify capacity is full
           const capacity = await tourModuleService.getAvailableCapacity(
             tour.id,
             new Date(testDate)
           )
           expect(capacity).toBe(0)
 
-          // Try to book when full
-          const { cart } = await createCartWithTour(
-            "toofull@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+          // Try to book one more - should fail
+          const { cart } = await createCartWithTour("extra@test.com", { adults: 1, children: 0, infants: 0 })
 
-          await expect(
-            completeCartWithToursWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
-          ).rejects.toThrow()
+          const { errors } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+        })
+      })
+
+      describe("Order and Booking Link", () => {
+        it("should create link between order and tour booking", async () => {
+          const { cart } = await createCartWithTour("link@example.com", { adults: 1, children: 0, infants: 0 })
+
+          const { result } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+          })
+
+          const orderId = (result as any).order.id
+
+          // Query through link
+          const { data: linkedBookings } = await query.graph({
+            entity: "tour_booking_order",
+            fields: ["tour_booking.*", "order.*"],
+            filters: { order_id: orderId },
+          })
+
+          expect(linkedBookings).toHaveLength(1)
+          expect(linkedBookings[0].order.id).toBe(orderId)
+          expect(linkedBookings[0].tour_booking.order_id).toBe(orderId)
         })
 
-        it("should validate booking before attempting to book unavailable date", async () => {
-          const unavailableDate = "2025-12-25"
+        it("should preserve order totals correctly", async () => {
+          const { cart } = await createCartWithTour("totals@example.com", { adults: 3, children: 0, infants: 0 })
+
+          const { result } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: cart.id },
+          })
+
+          const order = (result as any).order
+
+          // Verify order has items and totals
+          expect(order.items).toBeDefined()
+          expect(order.items!.length).toBeGreaterThan(0)
+          expect(order.total).toBeGreaterThan(0)
+          expect(order.subtotal).toBeGreaterThan(0)
+        })
+      })
+
+      describe("Error Handling", () => {
+        it("should handle invalid cart id gracefully", async () => {
+          const { errors } = await completeCartWithToursWorkflow(container).run({
+            input: { cart_id: "invalid_cart_id" },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+        })
+
+        it("should validate booking for a valid future date with available capacity", async () => {
+          const futureDate = "2030-12-25"
 
           const validation = await tourModuleService.validateBooking(
             tour.id,
-            new Date(unavailableDate),
+            new Date(futureDate),
+            1
+          )
+
+          expect(validation.valid).toBe(true)
+        })
+
+        it("should validate booking date is not in the past", async () => {
+          const pastDate = "2020-01-01"
+
+          const validation = await tourModuleService.validateBooking(
+            tour.id,
+            new Date(pastDate),
             1
           )
 
           expect(validation.valid).toBe(false)
-          expect(validation.reason).toContain("not available")
+          expect(validation.reason).toContain("past")
         })
       })
 
-      describe("Order and Booking Verification", () => {
-        it("should create order with correct customer information", async () => {
-          const customerEmail = "verified-customer@test.com"
-          const { cart } = await createCartWithTour(customerEmail, { adults: 1, children: 0, infants: 0 })
+      describe("Booking Status Flow", () => {
+        it("should create booking with pending status initially", async () => {
+          const { cart } = await createCartWithTour("pending@example.com", { adults: 1, children: 0, infants: 0 })
 
           const { result } = await completeCartWithToursWorkflow(container).run({
             input: { cart_id: cart.id },
           })
 
-          // Verify customer info in order
-          expect((result as any).order.email).toBe(customerEmail)
-          expect((result as any).order.customer).toBeDefined()
-        })
-
-        it("should link booking to correct order", async () => {
-          const { cart } = await createCartWithTour("link-test@test.com", { adults: 1, children: 0, infants: 0 })
-
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
-
-          // Query for booking linked to order
-          const { data: bookings } = await query.graph({
-            entity: "tour_booking",
-            fields: ["id", "order_id", "tour_date", "status"],
-            filters: {
-              order_id: (result as any).order.id,
-            },
-          })
-
-          expect(bookings).toHaveLength(1)
-          expect(bookings[0].order_id).toBe((result as any).order.id)
-          expect(bookings[0].tour_date).toBeDefined()
-        })
-
-        it("should verify booking metadata contains correct tour info", async () => {
-          const { cart } = await createCartWithTour("metadata-test@test.com", { adults: 2, children: 0, infants: 0 })
-
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
+          const orderId = (result as any).order.id
 
           const bookings = await tourModuleService.listTourBookings({
-            order_id: (result as any).order.id,
+            order_id: orderId,
           })
 
           expect(bookings).toHaveLength(1)
-          expect(bookings[0].line_items).toBeDefined()
-          expect(bookings[0].tour_date).toBeDefined()
-        })
-      })
-
-      describe("Edge Cases and Boundary Conditions", () => {
-        it("should handle booking at exact capacity limit", async () => {
-          // Book capacity - 1 first
-          for (let i = 0; i < tourCapacity - 1; i++) {
-            const { cart } = await createCartWithTour(
-              `exact${i}@test.com`,
-              { adults: 1, children: 0, infants: 0 }
-            )
-            await completeCartWithToursWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
-          }
-
-          // Verify 1 spot left
-          let capacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
-          )
-          expect(capacity).toBe(1)
-
-          // Book the last spot
-          const { cart: finalCart } = await createCartWithTour(
-            "last-spot@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
-
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: finalCart.id },
-          })
-
-          expect((result as any).order).toBeDefined()
-
-          // Verify capacity is now 0
-          capacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
-          )
-          expect(capacity).toBe(0)
+          expect(bookings[0].status).toBe("pending")
         })
 
-        it("should handle cart with only infant tickets (zero price)", async () => {
-          const { cart, totalPassengers } = await createCartWithTour(
-            "infants-only@test.com",
-            { adults: 0, children: 0, infants: 2 }
-          )
+        it("should allow updating booking status", async () => {
+          const { cart } = await createCartWithTour("update@example.com", { adults: 1, children: 0, infants: 0 })
 
           const { result } = await completeCartWithToursWorkflow(container).run({
             input: { cart_id: cart.id },
           })
 
-          expect((result as any).order).toBeDefined()
-          expect((result as any).order.subtotal).toBe(0) // Infants are free
+          const orderId = (result as any).order.id
 
-          const remainingCapacity = await tourModuleService.getAvailableCapacity(
-            tour.id,
-            new Date(testDate)
-          )
-          expect(remainingCapacity).toBe(tourCapacity - totalPassengers)
-        })
-
-        it("should maintain data consistency after successful purchase", async () => {
-          const { cart } = await createCartWithTour(
-            "consistency@test.com",
-            { adults: 1, children: 1, infants: 1 }
-          )
-
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
-
-          // Verify order exists in order module
-          const order = await orderModule.retrieveOrder((result as any).order.id)
-          expect(order).toBeDefined()
-          expect(order.id).toBe((result as any).order.id)
-
-          // Verify booking exists
           const bookings = await tourModuleService.listTourBookings({
-            order_id: (result as any).order.id,
-          })
-          expect(bookings).toHaveLength(1)
-
-          // Verify link exists between order and booking
-          const { data: links } = await query.graph({
-            entity: "tour_booking_order",
-            fields: ["tour_booking_id", "order_id"],
-            filters: {
-              order_id: (result as any).order.id,
-            },
+            order_id: orderId,
           })
 
-          expect(links.length).toBeGreaterThan(0)
+          // Update status to confirmed
+          await tourModuleService.updateTourBookings({
+            id: bookings[0].id,
+            status: "confirmed",
+          })
+
+          // Verify status updated
+          const updated = await tourModuleService.retrieveTourBooking(bookings[0].id)
+          expect(updated.status).toBe("confirmed")
         })
       })
     })

@@ -1,18 +1,17 @@
 import {
-  createStep,
   createWorkflow,
   WorkflowResponse,
-  StepResponse,
   when,
   transform
 } from "@medusajs/framework/workflows-sdk"
 import { TOUR_MODULE } from ".."
-import TourModuleService from "../service"
-import { acquireLockStep, completeCartWorkflow, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
+import { acquireLockStep, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
 import tourBookingOrderLink from "../../../links/tour-booking-order"
 import { CreateBookingsStepInput, createTourBookingsStep } from "../../../workflows/steps/create-booking-create"
 import { Modules } from "@medusajs/framework/utils"
 import { generateTourLockKey } from "../../../utils/locking"
+import createOrderFromCartStep from "../../../workflows/steps/create-order-from-cart"
+import { validateTourBookingStep } from "../../../workflows/steps/validate-tour-booking"
 
 export type CompleteCartWithToursWorkflowInput = {
   cart_id: string
@@ -65,11 +64,13 @@ export const completeCartWithToursWorkflow = createWorkflow(
       ttl: 120,
     }).config({ name: "acquire-tour-locks" })
 
-    const order = completeCartWorkflow.runAsStep({
-      input: {
-        id: input.cart_id,
-      },
-    }).config({ name: "complete-cart" })
+    validateTourBookingStep({
+      cart_id: input.cart_id
+    }).config({ name: "validate-tour-bookings" })
+
+    const order = createOrderFromCartStep({
+      cart_id: input.cart_id,
+    }).config({ name: "create-order-from-cart" })
 
     const { data: cartsWithTours } = useQueryGraphStep({
       entity: "cart",
@@ -92,7 +93,7 @@ export const completeCartWithToursWorkflow = createWorkflow(
     }).config({ name: "retrieve-cart-with-tours" })
 
     const { data: existingLinks } = useQueryGraphStep({
-      entity: tourBookingOrderLink.entryPoint,
+      entity: "tour_booking_order",
       fields: ["tour_booking.id"],
       filters: { order_id: order.id },
     }).config({ name: "retrieve-existing-links" })

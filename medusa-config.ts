@@ -1,5 +1,7 @@
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
-
+import dotenv from 'dotenv'
+dotenv.config({ path: process.cwd() + '/.env.development', override: true })
+loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 // ========================================================================
 // 1. DETECCIÓN DE MODO BUILD (CRÍTICO PARA DOCKER)
 // ========================================================================
@@ -14,7 +16,6 @@ console.log("NODE_ENV =", process.env.NODE_ENV)
 console.log("CWD =", process.cwd())
 console.log("IS_BUILD MODE =", IS_BUILD) // Log para confirmar en consola
 
-loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
 // ========================================================================
 // 2. CARGA DE VARIABLES DE ENTORNO

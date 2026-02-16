@@ -26,16 +26,19 @@
 
 ## Fundamental Rules
 
-1. **Display data must load on mount** - Any data shown in the widget's main UI must be fetched when the component mounts, not conditionally
-2. **Separate concerns** - Modal/form data queries should be independent from display data queries
-3. **Handle reference data properly** - When storing IDs/references (in metadata or elsewhere), you must fetch the full entities to display them
-4. **Always show loading states** - Users should see loading indicators, not empty states, while data is being fetched
-5. **Invalidate the right queries** - After mutations, invalidate the queries that provide display data, not just the modal queries
+1. **ALWAYS use the Medusa JS SDK** - NEVER use regular fetch() for API requests (missing headers causes authentication/authorization errors)
+2. **Display data must load on mount** - Any data shown in the widget's main UI must be fetched when the component mounts, not conditionally
+3. **Separate concerns** - Modal/form data queries should be independent from display data queries
+4. **Handle reference data properly** - When storing IDs/references (in metadata or elsewhere), you must fetch the full entities to display them
+5. **Always show loading states** - Users should see loading indicators, not empty states, while data is being fetched
+6. **Invalidate the right queries** - After mutations, invalidate the queries that provide display data, not just the modal queries
 
 ## Think Before You Code Checklist
 
 Before implementing any widget that displays data:
 
+- [ ] Am I using the Medusa JS SDK for all API requests (not regular fetch)?
+- [ ] For built-in endpoints, am I using existing SDK methods (not sdk.client.fetch)?
 - [ ] What data needs to be visible immediately?
 - [ ] Where is this data stored? (metadata, separate endpoint, related entities)
 - [ ] If storing IDs, how will I fetch the full entities for display?
@@ -97,6 +100,47 @@ const updateMutation = useMutation({
 - Modal query only runs when needed
 - Proper invalidation ensures UI updates after changes
 - Each query has a clear, separate responsibility
+
+## Using the Medusa JS SDK
+
+**⚠️ CRITICAL: ALWAYS use the Medusa JS SDK for ALL API requests - NEVER use regular fetch()**
+
+### Why the SDK is Required
+
+- **Admin routes** require `Authorization` header and session cookie - SDK adds them automatically
+- **Store routes** require `x-publishable-api-key` header - SDK adds them automatically
+- **Regular fetch()** doesn't include these headers → authentication/authorization errors
+- Using existing SDK methods provides better type safety and autocomplete
+
+### When to Use What
+
+```tsx
+import { sdk } from "../lib/client"
+
+// ✅ CORRECT - Built-in endpoint: Use existing SDK method
+const product = await sdk.admin.product.retrieve(productId, {
+  fields: "+metadata,+variants.*"
+})
+
+// ✅ CORRECT - Custom endpoint: Use sdk.client.fetch()
+const reviews = await sdk.client.fetch(`/admin/products/${productId}/reviews`)
+
+// ❌ WRONG - Using regular fetch for ANY endpoint
+const response = await fetch(`http://localhost:9000/admin/products/${productId}`)
+// ❌ Error: Missing Authorization header!
+```
+
+### SDK Method Selection
+
+**For built-in Medusa endpoints:**
+- Use existing SDK methods: `sdk.admin.product.list()`, `sdk.store.product.list()`, etc.
+- Provides type safety, autocomplete, and proper header handling
+- Reference: [Medusa JS SDK Documentation](https://docs.medusajs.com/resources/medusa-js-sdk)
+
+**For custom API routes:**
+- Use `sdk.client.fetch()` for your custom endpoints
+- SDK still handles all required headers (auth, API keys)
+- Pass plain objects to body (SDK handles JSON serialization)
 
 ## Working with Tanstack Query
 
@@ -335,6 +379,37 @@ const updateMetadata = useMutation({
 ```
 
 ## Common Issues & Solutions
+
+### Authentication/Authorization errors when fetching data
+
+**Symptoms:**
+- API returns 401 Unauthorized or 403 Forbidden
+- "Missing x-publishable-api-key header" error
+- "Unauthorized" error on admin routes
+
+**Cause:** Using regular `fetch()` instead of the Medusa JS SDK
+
+**Solution:**
+
+```tsx
+// ❌ WRONG - Missing required headers
+const { data } = useQuery({
+  queryFn: () => fetch('http://localhost:9000/admin/products').then(r => r.json()),
+  queryKey: ["products"]
+})
+
+// ✅ CORRECT - SDK handles headers automatically
+const { data } = useQuery({
+  queryFn: () => sdk.admin.product.list(),
+  queryKey: ["products"]
+})
+
+// ✅ CORRECT - For custom routes
+const { data } = useQuery({
+  queryFn: () => sdk.client.fetch('/admin/custom-route'),
+  queryKey: ["custom-data"]
+})
+```
 
 ### "No QueryClient set, use QueryClientProvider to set one"
 

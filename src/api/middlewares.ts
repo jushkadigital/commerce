@@ -14,6 +14,7 @@ import { createFindParams } from "@medusajs/medusa/api/utils/validators"
 import { createSelectParams } from "./validators"
 import { GetTourAvailabilityParamsSchema } from "./admin/tours/[id]/availability/validators"
 import { z } from "zod"
+import { CreatePackageSchema } from "./admin/packages/route"
 
 export const StoreGetCartsCart = createSelectParams()
 
@@ -68,7 +69,7 @@ export default defineMiddlewares({
       matcher: "/admin/packages",
       methods: ["POST"],
       middlewares: [
-        validateAndTransformBody(CreateTourSchema),
+        validateAndTransformBody(CreatePackageSchema),
       ],
     },
     {

@@ -69,7 +69,6 @@ class TourModuleService extends MedusaService({
   ): Promise<{ valid: boolean; reason?: string }> {
     const tour = await this.retrieveTour(tourId)
 
-    // Validar que la fecha no sea pasada
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const requestedDateObj = new Date(tourDate)
@@ -79,6 +78,34 @@ class TourModuleService extends MedusaService({
       return {
         valid: false,
         reason: "Cannot book tours for past dates",
+      }
+    }
+
+    const minBookingDate = new Date(today)
+    minBookingDate.setDate(minBookingDate.getDate() + (tour.booking_min_days_ahead || 0))
+    if (requestedDateObj < minBookingDate) {
+      return {
+        valid: false,
+        reason: `Bookings must be made at least ${tour.booking_min_days_ahead} days in advance`,
+      }
+    }
+
+    const requestedDateStr = requestedDateObj.toISOString().split('T')[0]
+    const blockedDates = tour.blocked_dates || []
+    if (blockedDates.includes(requestedDateStr)) {
+      return {
+        valid: false,
+        reason: "This date is not available for booking",
+      }
+    }
+
+    const dayOfWeek = requestedDateObj.getDay()
+    const blockedWeekDays = tour.blocked_week_days || []
+    if (blockedWeekDays.map(Number).includes(dayOfWeek)) {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      return {
+        valid: false,
+        reason: `Tours are not available on ${days[dayOfWeek]}s`,
       }
     }
 
@@ -225,6 +252,14 @@ class TourModuleService extends MedusaService({
       currency,
       items: itemDetails,
     }
+  }
+  async getTourByMetadata(value: string) {
+    const tour = await this.listTours({
+      metadata: {
+        payloadId: value
+      }
+    }, { take: 1 })
+    return tour
   }
 
   async updateVariantPrices(

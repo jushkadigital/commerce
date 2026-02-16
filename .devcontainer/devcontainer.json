@@ -9,6 +9,7 @@
     "postgres",
     "redis"
   ],
+  // 2. Pasar la variable DISPLAY
   // Nos conectamos al contenedor como usuario 'node'
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {

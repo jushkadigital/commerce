@@ -13,7 +13,6 @@ export const TourVariant = model.define("tour_variant", {
   id: model.id().primaryKey(),
   variant_id: model.text().unique(), // Product Variant ID from Medusa
   passenger_type: model.enum(PassengerType),
-  // Prices are now managed by Medusa's Pricing Module
   tour: model.belongsTo(() => Tour, {
     mappedBy: "variants",
   }),

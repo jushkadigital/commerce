@@ -69,15 +69,6 @@
           "nullable": true,
           "mappedType": "text"
         },
-        "available_dates": {
-          "name": "available_dates",
-          "type": "text[]",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "array"
-        },
         "is_special": {
           "name": "is_special",
           "type": "boolean",
@@ -127,6 +118,15 @@
           "nullable": false,
           "default": "2",
           "mappedType": "integer"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "json"
         },
         "created_at": {
           "name": "created_at",
@@ -183,13 +183,13 @@
           "expression": "CREATE INDEX IF NOT EXISTS \"IDX_package_deleted_at\" ON \"package\" (\"deleted_at\") WHERE deleted_at IS NULL"
         },
         {
-          "keyName": "IDX_package_destination_available_dates",
+          "keyName": "IDX_package_destination",
           "columnNames": [],
           "composite": false,
           "constraint": false,
           "primary": false,
           "unique": false,
-          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_package_destination_available_dates\" ON \"package\" (\"destination\", \"available_dates\") WHERE deleted_at IS NULL"
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_package_destination\" ON \"package\" (\"destination\") WHERE deleted_at IS NULL"
         },
         {
           "keyName": "package_pkey",

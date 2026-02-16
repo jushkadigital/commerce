@@ -8,9 +8,10 @@ import {
 } from "@medusajs/framework/workflows-sdk"
 import { PACKAGE_MODULE } from "../modules/package"
 import PackageModuleService from "../modules/package/service"
-import { acquireLockStep, completeCartWorkflow, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
-import packageBookingOrderLink from "../links/package-booking-order"
+import { acquireLockStep, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
+import createOrderFromCartStep from "./steps/create-order-from-cart"
 import { CreatePackageBookingsStepInput, createPackageBookingsStep } from "./steps/create-package-booking-create"
+import { validatePackageBookingStep } from "./steps/validate-package-booking"
 import { Modules } from "@medusajs/framework/utils"
 
 export type CompleteCartWithPackagesWorkflowInput = {
@@ -25,11 +26,14 @@ export const completeCartWithPackagesWorkflow = createWorkflow(
       timeout: 2,
       ttl: 10,
     })
-    const order = completeCartWorkflow.runAsStep({
-      input: {
-        id: input.cart_id,
-      },
-    })
+
+    validatePackageBookingStep({
+      cart_id: input.cart_id
+    }).config({ name: "validate-package-bookings" })
+
+    const order = createOrderFromCartStep({
+      cart_id: input.cart_id,
+    }).config({ name: "create-order-from-cart" })
     const { data: carts } = useQueryGraphStep({
       entity: "cart",
       fields: [
@@ -50,7 +54,7 @@ export const completeCartWithPackagesWorkflow = createWorkflow(
       },
     })
     const { data: existingLinks } = useQueryGraphStep({
-      entity: packageBookingOrderLink.entryPoint,
+      entity: "package_booking_order",
       fields: ["package_booking.id"],
       filters: { order_id: order.id },
     }).config({ name: "retrieve-existing-links" })

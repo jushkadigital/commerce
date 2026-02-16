@@ -38,9 +38,10 @@ export type CreateTourWorkflowInput = {
   }
   is_special?: boolean
   blocked_dates?: string[]
-  blocked_week_days?: number[]
+  blocked_week_days?: string[]
   cancellation_deadline_hours?: number
-  booking_min_days_ahead?: number
+  booking_min_days_ahead?: number,
+  metadata?: Record<string, any>
 }
 
 export const createTourWorkflow = createWorkflow(
@@ -75,6 +76,7 @@ export const createTourWorkflow = createWorkflow(
         description: data.input.description,
         status: ProductStatus.PUBLISHED,
         thumbnail: data.input.thumbnail,
+        metadata: data.input.metadata ?? null,
         options: [
           {
             title: "Passenger Type",
@@ -143,6 +145,7 @@ export const createTourWorkflow = createWorkflow(
           blocked_week_days: data.input.blocked_week_days,
           cancellation_deadline_hours: data.input.cancellation_deadline_hours,
           booking_min_days_ahead: data.input.booking_min_days_ahead,
+          ...(data.input.metadata && { metadata: data.input.metadata })
         }]
       }
     })

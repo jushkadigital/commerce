@@ -61,6 +61,14 @@ class PackageModuleService extends MedusaService({
 
     return pkg.max_capacity - bookings.length
   }
+  async getPackageByMetadata(value: string) {
+    const packageMod = await this.listPackages({
+      metadata: {
+        payloadId: value
+      }
+    }, { take: 1 })
+    return packageMod
+  }
 
   async validateBooking(
     packageId: string,
@@ -78,6 +86,37 @@ class PackageModuleService extends MedusaService({
       return {
         valid: false,
         reason: "Cannot book packages for past dates",
+      }
+    }
+
+    // Validate booking_min_months_ahead (KEY DIFFERENCE: months, not days)
+    const minBookingDate = new Date(today)
+    minBookingDate.setMonth(minBookingDate.getMonth() + (pkg.booking_min_months_ahead || 0))
+    if (requestedDateObj < minBookingDate) {
+      return {
+        valid: false,
+        reason: `Bookings must be made at least ${pkg.booking_min_months_ahead} months in advance`,
+      }
+    }
+
+    // Validate blocked_dates
+    const requestedDateStr = requestedDateObj.toISOString().split('T')[0]
+    const blockedDates = pkg.blocked_dates || []
+    if (blockedDates.includes(requestedDateStr)) {
+      return {
+        valid: false,
+        reason: "This date is not available for booking",
+      }
+    }
+
+    // Validate blocked_week_days
+    const dayOfWeek = requestedDateObj.getDay()
+    const blockedWeekDays = pkg.blocked_week_days || []
+    if (blockedWeekDays.map(Number).includes(dayOfWeek)) {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      return {
+        valid: false,
+        reason: `Packages are not available on ${days[dayOfWeek]}s`,
       }
     }
 

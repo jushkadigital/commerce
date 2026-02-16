@@ -36,9 +36,10 @@ export type CreatePackageWorkflowInput = {
   }
   is_special?: boolean
   blocked_dates?: string[]
-  blocked_week_days?: number[]
+  blocked_week_days?: string[]
   cancellation_deadline_hours?: number
-  booking_min_months_ahead?: number
+  booking_min_months_ahead?: number,
+  metadata?: Record<string, any>
 }
 
 export const createPackageWorkflow = createWorkflow(
@@ -67,6 +68,7 @@ export const createPackageWorkflow = createWorkflow(
         description: data.input.description,
         status: ProductStatus.PUBLISHED,
         thumbnail: data.input.thumbnail,
+        metadata: data.input.metadata ?? null,
         options: [
           {
             title: "Passenger Type",
@@ -132,6 +134,7 @@ export const createPackageWorkflow = createWorkflow(
           blocked_week_days: data.input.blocked_week_days,
           cancellation_deadline_hours: data.input.cancellation_deadline_hours,
           booking_min_months_ahead: data.input.booking_min_months_ahead,
+          ...(data.input.metadata && { metadata: data.input.metadata })
         }]
       }
     })
@@ -182,7 +185,13 @@ export const createPackageWorkflow = createWorkflow(
       fields: [
         "id",
         "destination",
+        "description",
+        "duration_days",
+        "max_capacity",
+        "thumbnail",
+        "product_id",
         "product.*",
+        "product.variants.*",
         "variants.*",
         "variants.product_variant.*"
       ],
