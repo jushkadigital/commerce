@@ -7,6 +7,8 @@ import {
 import { AbstractEventBusModuleService } from "@medusajs/utils" // O desde donde importes la clase base
 import amqp, { Connection, Channel } from "amqplib"
 
+const WHITELISTED_EVENTS = ["product.created", "product.updated"]
+
 type RabbitMQOptions = {
   url: string
   exchange?: string
@@ -23,6 +25,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
   protected logger_: Logger
   protected isReady_: boolean = false
   protected queueName_: string = "" // <--- NUEVA PROPIEDAD
+  protected pendingBindings_: Map<string, string> = new Map()
 
   // Almacén temporal para eventos agrupados (Transacciones)
   protected stagedEvents_: Map<string, EventBusTypes.Message<unknown>[]> = new Map()
@@ -66,7 +69,14 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
         if (!msg) return
 
         const routingKey = msg.fields.routingKey
-        const rawContent = JSON.parse(msg.content.toString())
+        let rawContent: any
+        
+        try {
+          rawContent = JSON.parse(msg.content.toString())
+        } catch (err) {
+          this.logger_.error(`Failed to parse message content: ${err}`)
+          return
+        }
 
         // 1. CONSTRUCCIÓN ESTRICTA DEL MENSAJE TIPO MEDUSA
         // Convertimos lo que llega de RabbitMQ en la estructura Message<T>
@@ -76,8 +86,8 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
           // 'name' es obligatorio según tu tipo
           name: routingKey,
 
-          // 'data' es el payload. 
-          // NOTA: Si tu sistema externo envía ya el wrapper {data: ...}, 
+          // 'data' es el payload.
+          // NOTA: Si tu sistema externo envía ya el wrapper {data: ...},
           // deberías hacer: rawContent.data || rawContent
           data: rawContent,
 
@@ -112,6 +122,13 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
       }, { noAck: true })
 
       this.isReady_ = true
+      
+      // Process pending bindings
+      for (const [eventName, routingKey] of this.pendingBindings_.entries()) {
+        await this.channel_.bindQueue(this.queueName_, exchange, routingKey)
+      }
+      this.pendingBindings_.clear()
+      
       this.logger_.info("RabbitMQ Event Bus is ready.")
       this.logger_.info(`Conectado a RabbitMQ. Cola: ${this.queueName_}`)
     } catch (err) {
@@ -130,11 +147,15 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
     this.logger_.info("SUBS")
     this.logger_.info(`${this.isReady_}`)
+    
     // B. Si RabbitMQ ya está listo, creamos el binding inmediatamente
     if (this.isReady_ && this.queueName_ && typeof eventName === 'string') {
-      const exchange = this.options_.exchange || "medusa-events"
+      const exchange = this.options_.exchange || "tourism-exchange"
       this.channel_.bindQueue(this.queueName_, exchange, eventName)
         .catch(err => this.logger_.error(`Error binding queue for ${eventName}: ${err}`))
+    } else if (!this.isReady_ && typeof eventName === 'string') {
+      // Store for later binding when connection is ready
+      this.pendingBindings_.set(eventName, eventName)
     }
 
     return this
@@ -146,8 +167,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
   ): Promise<void> {
     const events = Array.isArray(data) ? data : [data]
 
-    // Si hay un ID de grupo, NO enviamos todavía. Lo guardamos en memoria.
-    // Esto es vital para las transacciones de Medusa.
+    // 1. Grouped events: Stage only
     const groupId = options.eventGroupId as string
     if (groupId) {
       const existing = this.stagedEvents_.get(groupId) || []
@@ -155,8 +175,37 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
       return
     }
 
-    // Si no hay grupo, enviamos inmediatamente
-    await this.publishEvents(events)
+    // 2. Non-grouped: Execute locally + publish if whitelisted
+    for (const event of events) {
+      // A. Call interceptors
+      if (typeof this.callInterceptors === 'function') {
+        try {
+          await this.callInterceptors(event, { isGrouped: false })
+        } catch (err) {
+          this.logger_.warn(`Interceptor failed for ${event.name}: ${err}`)
+        }
+      }
+
+      // B. Execute local subscribers (specific + wildcard)
+      const specificSubs = this.eventToSubscribersMap_.get(event.name) || []
+      const wildcardSubs = this.eventToSubscribersMap_.get("*") || []
+      const allSubscribers = [...specificSubs, ...wildcardSubs]
+
+      await Promise.all(
+        allSubscribers.map(async (subDescriptor) => {
+          try {
+            await subDescriptor.subscriber(event)
+          } catch (err) {
+            this.logger_.error(`Error in local subscriber for ${event.name}: ${err}`)
+          }
+        })
+      )
+
+      // C. Publish to RabbitMQ if whitelisted
+      if (WHITELISTED_EVENTS.includes(event.name)) {
+        await this.publishEvents([event])
+      }
+    }
   }
 
   async releaseGroupedEvents(eventGroupId: string): Promise<void> {
@@ -185,7 +234,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
     // Borrar solo ciertos eventos del grupo
     const events = this.stagedEvents_.get(eventGroupId) || []
     const filteredEvents = events.filter(
-      (e) => !options.eventNames?.includes(e.eventName)
+      (e) => !options.eventNames?.includes(e.name)
     )
 
     if (filteredEvents.length === 0) {
@@ -202,14 +251,18 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
       return
     }
 
-    const exchange = this.options_.exchange || "medusa-events"
+    const exchange = this.options_.exchange || "tourism-exchange"
 
     // Interceptores (opcional, pero buena práctica llamar a la clase padre)
     // await Promise.all(events.map(e => this.callInterceptors(e)))
 
     for (const event of events) {
-      const buffer = Buffer.from(JSON.stringify(event))
-      this.channel_.publish(exchange, event.eventName, buffer)
+      try {
+        const buffer = Buffer.from(JSON.stringify(event))
+        this.channel_.publish(exchange, event.name, buffer)
+      } catch (err) {
+        this.logger_.error(`Error publishing event ${event.name}: ${err}`)
+      }
     }
   }
 
