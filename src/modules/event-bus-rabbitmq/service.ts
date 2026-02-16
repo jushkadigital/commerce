@@ -104,13 +104,25 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
         }
 
         this.logger_.info("🟢 [DEBUG] Mensaje crudo recibido en RabbitMQ Service")
-        // Buscamos suscriptores locales en el mapa de la clase padre
-        const subscribers = this.eventToSubscribersMap_.get(routingKey) || []
+        
+        // A. Call interceptors (if available)
+        if (typeof this.callInterceptors === 'function') {
+          try {
+            await this.callInterceptors(message, { isGrouped: false })
+          } catch (err) {
+            this.logger_.warn(`Interceptor failed for ${routingKey}: ${err}`)
+          }
+        }
 
+        // B. Lookup subscribers (specific + wildcard)
+        const specificSubs = this.eventToSubscribersMap_.get(routingKey) || []
+        const wildcardSubs = this.eventToSubscribersMap_.get("*") || []
+        const allSubscribers = [...specificSubs, ...wildcardSubs]
+
+        // C. Execute all subscribers
         await Promise.all(
-          subscribers.map(async (subDescriptor) => {
+          allSubscribers.map(async (subDescriptor) => {
             try {
-              // subDescriptor.subscriber es la función que ejecuta la lógica
               await subDescriptor.subscriber(message)
             } catch (err) {
               this.logger_.error(
