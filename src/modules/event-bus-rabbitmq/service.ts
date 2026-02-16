@@ -5,7 +5,7 @@ import {
   Logger
 } from "@medusajs/types"
 import { AbstractEventBusModuleService } from "@medusajs/utils" // O desde donde importes la clase base
-import amqp, { Connection, Channel } from "amqplib"
+import amqp from "amqplib"
 
 const WHITELISTED_EVENTS = ["product.created", "product.updated"]
 
@@ -19,8 +19,8 @@ type InjectedDependencies = {
 }
 
 export default class RabbitMQEventBusService extends AbstractEventBusModuleService {
-  protected connection_: Connection
-  protected channel_: Channel
+  protected connection_: amqp.ChannelModel
+  protected channel_: amqp.Channel
   protected options_: RabbitMQOptions
   protected logger_: Logger
   protected isReady_: boolean = false
@@ -50,7 +50,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
     try {
       this.logger_.info("Connecting to RabbitMQ...")
-      this.connection_ = await amqp.connect(this.options_.url) as unknown as Connection
+      this.connection_ = await amqp.connect(this.options_.url)
       this.channel_ = await this.connection_.createChannel()
 
       this.logger_.info("🟢 [DEBUG] ONE")
