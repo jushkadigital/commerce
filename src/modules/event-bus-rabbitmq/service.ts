@@ -27,6 +27,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
   protected queueName_: string = "" // <--- NUEVA PROPIEDAD
   protected pendingBindings_: Map<string, string> = new Map()
   protected productModuleService_: any
+  protected moduleDeclaration_: InternalModuleDeclaration
 
   // Almacén temporal para eventos agrupados (Transacciones)
   protected stagedEvents_: Map<string, EventBusTypes.Message<unknown>[]> = new Map()
@@ -41,7 +42,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
     this.logger_ = logger
     this.options_ = moduleOptions
-    this.productModuleService_ = null // Will be resolved lazily when needed
+    this.moduleDeclaration_ = moduleDeclaration
 
     // Iniciamos conexión
     this.connect()
@@ -166,8 +167,14 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
     try {
       if (!this.productModuleService_) {
-        const { modules } = require('@medusajs/framework/modules-sdk')
-        this.productModuleService_ = modules.product
+        const container = (this.moduleDeclaration_ as any)?.scope?.cradle
+        
+        if (container?.productModuleService) {
+          this.productModuleService_ = container.productModuleService
+        } else {
+          this.logger_.warn('Cannot resolve product module service - container not available')
+          return event
+        }
       }
 
       const product = await this.productModuleService_.retrieve(productId, {
