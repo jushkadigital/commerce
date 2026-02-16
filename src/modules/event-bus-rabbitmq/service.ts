@@ -7,7 +7,7 @@ import {
 import { AbstractEventBusModuleService } from "@medusajs/utils" // O desde donde importes la clase base
 import amqp from "amqplib"
 
-const WHITELISTED_EVENTS = ["product.created", "product.updated"]
+const WHITELISTED_EVENTS = ["product.created", "product.updated", "myCustomProductCreated"]
 
 type RabbitMQOptions = {
   url: string
