@@ -118,6 +118,8 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": type.charAt(0).toUpperCase() + type.slice(1),
             },
+            manage_inventory: false,
+            allow_backorder: true,
           })
 
           productVariants.push(variant)
@@ -137,8 +139,11 @@ medusaIntegrationTestRunner({
       })
 
       afterEach(async () => {
-        // Clean up test data
         try {
+          if (!packageModuleService || !pkg) {
+            return
+          }
+
           const bookings = await packageModuleService.listPackageBookings({
             package_id: pkg.id,
           })
@@ -154,7 +159,6 @@ medusaIntegrationTestRunner({
 
           await packageModuleService.deletePackages(pkg.id)
 
-          // Delete product and variants
           for (const variant of productVariants) {
             await productModule.deleteProductVariants(variant.id)
           }
@@ -172,7 +176,10 @@ medusaIntegrationTestRunner({
       /**
        * Helper function to create a cart with package items
        */
-      async function createCartWithPackage(customerEmail: string, passengerCount: number = 1) {
+      async function createCartWithPackage(
+        customerEmail: string,
+        passengerCounts: { adults: number; children: number; infants: number } = { adults: 1, children: 0, infants: 0 }
+      ) {
         // Create or retrieve customer
         const customers = await customerModule.listCustomers({
           email: customerEmail,
@@ -189,13 +196,114 @@ medusaIntegrationTestRunner({
           customer = customers[0]
         }
 
-        // Find adult variant
         const adultVariant = product.variants.find(
           (v: any) => v.title === "Adult Ticket"
+        )
+        const childVariant = product.variants.find(
+          (v: any) => v.title === "Child Ticket"
+        )
+        const infantVariant = product.variants.find(
+          (v: any) => v.title === "Infant Ticket"
         )
 
         if (!adultVariant) {
           throw new Error("Adult variant not found")
+        }
+
+        const items: any[] = []
+        let totalPassengers = 0
+
+        if (passengerCounts.adults > 0) {
+          items.push({
+            variant_id: adultVariant.id,
+            quantity: 1,
+            unit_price: 100 * passengerCounts.adults,
+            title: `${pkg.destination} - ${testDate} (Adults)`,
+            metadata: {
+              is_package: true,
+              package_id: pkg.id,
+              package_date: testDate,
+              package_destination: pkg.destination,
+              package_duration_days: pkg.duration_days,
+              total_passengers: passengerCounts.adults,
+              passengers: {
+                adults: passengerCounts.adults,
+                children: 0,
+                infants: 0,
+              },
+              group_id: `package-${pkg.id}-${testDate}`,
+              pricing_breakdown: [
+                {
+                  type: "ADULT",
+                  quantity: passengerCounts.adults,
+                  unit_price: 100,
+                },
+              ],
+            },
+          })
+          totalPassengers += passengerCounts.adults
+        }
+
+        if (passengerCounts.children > 0 && childVariant) {
+          items.push({
+            variant_id: childVariant.id,
+            quantity: 1,
+            unit_price: 70 * passengerCounts.children,
+            title: `${pkg.destination} - ${testDate} (Children)`,
+            metadata: {
+              is_package: true,
+              package_id: pkg.id,
+              package_date: testDate,
+              package_destination: pkg.destination,
+              package_duration_days: pkg.duration_days,
+              total_passengers: passengerCounts.children,
+              passengers: {
+                adults: 0,
+                children: passengerCounts.children,
+                infants: 0,
+              },
+              group_id: `package-${pkg.id}-${testDate}`,
+              pricing_breakdown: [
+                {
+                  type: "CHILD",
+                  quantity: passengerCounts.children,
+                  unit_price: 70,
+                },
+              ],
+            },
+          })
+          totalPassengers += passengerCounts.children
+        }
+
+        if (passengerCounts.infants > 0 && infantVariant) {
+          items.push({
+            variant_id: infantVariant.id,
+            quantity: 1,
+            unit_price: 0,
+            title: `${pkg.destination} - ${testDate} (Infants)`,
+            metadata: {
+              is_package: true,
+              package_id: pkg.id,
+              package_date: testDate,
+              package_destination: pkg.destination,
+              package_duration_days: pkg.duration_days,
+              total_passengers: passengerCounts.infants,
+              passengers: {
+                adults: 0,
+                children: 0,
+                infants: passengerCounts.infants,
+              },
+              group_id: `package-${pkg.id}-${testDate}`,
+              pricing_breakdown: [
+                {
+                  type: "INFANT",
+                  quantity: passengerCounts.infants,
+                  unit_price: 0,
+                },
+              ],
+            },
+          })
+          totalPassengers += passengerCounts.infants
         }
 
         // Create cart - tourism packages don't need shipping/fulfillment
@@ -205,105 +313,74 @@ medusaIntegrationTestRunner({
           customer_id: customer.id,
           sales_channel_id: salesChannel.id,
           region_id: region.id,
-          items: [
-            {
-              variant_id: adultVariant.id,
-              quantity: 1,
-              unit_price: 100,
-              title: `${pkg.destination} - ${testDate}`,
-              metadata: {
-                is_package: true,
-                package_id: pkg.id,
-                package_date: testDate,
-                package_destination: pkg.destination,
-                package_duration_days: pkg.duration_days,
-                total_passengers: passengerCount,
-                passengers: {
-                  adults: passengerCount,
-                  children: 0,
-                  infants: 0,
-                },
-                pricing_breakdown: [
-                  {
-                    type: "ADULT",
-                    quantity: passengerCount,
-                    unit_price: 100,
-                  },
-                ],
-              },
-        },
-      ],
-    })
+          items,
+        })
 
-    // Create payment collection for cart
-    await createPaymentCollectionForCartWorkflow(container).run({
-      input: {
-        cart_id: cart.id,
-      },
-    })
+        // Create payment collection for cart
+        await createPaymentCollectionForCartWorkflow(container).run({
+          input: {
+            cart_id: cart.id,
+          },
+        })
 
-    const { data: carts } = await query.graph({
-      entity: "cart",
-      fields: ["id", "total", "payment_collection.id"],
-      filters: { id: cart.id },
-    })
-    const cartWithPayment = carts[0]
+        const { data: carts } = await query.graph({
+          entity: "cart",
+          fields: ["id", "total", "payment_collection.id"],
+          filters: { id: cart.id },
+        })
+        const cartWithPayment = carts[0]
 
-    await paymentModule.createPaymentSession(
-      cartWithPayment.payment_collection.id,
-      {
-        provider_id: "pp_system_default",
-        currency_code: "usd",
-        amount: cartWithPayment.total,
-        data: {},
+        await paymentModule.createPaymentSession(
+          cartWithPayment.payment_collection.id,
+          {
+            provider_id: "pp_system_default",
+            currency_code: "usd",
+            amount: cartWithPayment.total,
+            data: {},
+          }
+        )
+
+        const { data: cartsWithItems } = await query.graph({
+          entity: "cart",
+          fields: ["id", "total", "items.*", "items.metadata"],
+          filters: { id: cart.id },
+        })
+
+        return { cart: cartsWithItems[0], totalPassengers }
       }
-    )
 
-    const { data: cartsWithItems } = await query.graph({
-      entity: "cart",
-      fields: ["id", "total", "items.*", "items.metadata"],
-      filters: { id: cart.id },
-    })
-
-    return cartsWithItems[0]
-  }
-
-      describe("Complete Purchase Flow", () => {
+      describe("Complete Purchase Flow - Success Cases", () => {
         it("should complete full purchase flow and create order and booking", async () => {
-          // Verify initial capacity
           const initialCapacity = await packageModuleService.getAvailableCapacity(
             pkg.id,
             new Date(testDate)
           )
           expect(initialCapacity).toBe(packageCapacity)
 
-          // Create cart with package
-          const customerEmail = "test@example.com"
-          const cart = await createCartWithPackage(customerEmail, 2)
+          const { cart, totalPassengers } = await createCartWithPackage(
+            "test@example.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
 
           expect(cart).toBeDefined()
           expect(cart.items).toHaveLength(1)
           expect(cart.items[0].metadata.is_package).toBe(true)
           expect(cart.items[0].metadata.package_id).toBe(pkg.id)
 
-          // Complete checkout using workflow
-          const result = await completeCartWithPackagesWorkflow(container).run({
+          const { result } = await completeCartWithPackagesWorkflow(container).run({
             input: {
               cart_id: cart.id,
             },
           })
 
-          // Verify workflow returned order
-          expect(result.result.order).toBeDefined()
-          expect(result.result.order.id).toBeDefined()
+          expect(result).toBeDefined()
+          expect((result as any).order).toBeDefined()
+          expect((result as any).order.id).toBeDefined()
+          expect((result as any).order.email).toBe("test@example.com")
+          expect((result as any).order.items).toHaveLength(1)
 
-          const orderId = result.result.order.id
+          const orderId = (result as any).order.id
 
-          // Verify order was created in Order module
-          expect(result.result.order.email).toBe(customerEmail)
-          expect(result.result.order.items).toHaveLength(1)
-
-          // Verify package booking was created
           const bookings = await packageModuleService.listPackageBookings({
             package_id: pkg.id,
             package_date: new Date(testDate),
@@ -314,7 +391,6 @@ medusaIntegrationTestRunner({
           expect(booking.order_id).toBe(orderId)
           expect(booking.status).toBe("pending")
 
-          // Verify capacity was reduced (service counts bookings, not passengers)
           const remainingCapacity = await packageModuleService.getAvailableCapacity(
             pkg.id,
             new Date(testDate)
@@ -323,17 +399,16 @@ medusaIntegrationTestRunner({
         })
 
         it("should create booking with correct metadata", async () => {
-          const cart = await createCartWithPackage("meta@example.com", 3)
+          const { cart } = await createCartWithPackage("meta@example.com", { adults: 3, children: 0, infants: 0 })
 
-          const result = await completeCartWithPackagesWorkflow(container).run({
+          const { result } = await completeCartWithPackagesWorkflow(container).run({
             input: {
               cart_id: cart.id,
             },
           })
 
-          const orderId = result.result.order.id
+          const orderId = (result as any).order.id
 
-          // Query booking with all details
           const { data: bookings } = await query.graph({
             entity: "package_booking",
             fields: ["id", "order_id", "package_date", "status", "line_items"],
@@ -496,79 +571,228 @@ medusaIntegrationTestRunner({
           await productModule.deleteProductVariants(variant2.id)
           await productModule.deleteProducts(product2.id)
         })
+
+        it("should complete full purchase flow for a single adult passenger", async () => {
+          const initialCapacity = await packageModuleService.getAvailableCapacity(
+            pkg.id,
+            new Date(testDate)
+          )
+          expect(initialCapacity).toBe(packageCapacity)
+
+          const { cart, totalPassengers } = await createCartWithPackage(
+            "single-adult@test.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
+
+          expect(cart).toBeDefined()
+          expect(cart.items).toHaveLength(1)
+          expect(cart.items[0].metadata.is_package).toBe(true)
+          expect(cart.items[0].metadata.package_id).toBe(pkg.id)
+
+          const { result } = await completeCartWithPackagesWorkflow(container).run({
+            input: {
+              cart_id: cart.id,
+            },
+          })
+
+          expect(result).toBeDefined()
+          expect((result as any).order).toBeDefined()
+          expect((result as any).order.id).toBeDefined()
+          expect((result as any).order.email).toBe("single-adult@test.com")
+          expect((result as any).order.items).toHaveLength(1)
+        })
+
+        it("should reject booking for blocked date", async () => {
+          await packageModuleService.updatePackages({
+            id: pkg.id,
+            blocked_dates: [testDate]
+          })
+
+          const { cart } = await createCartWithPackage(
+            "blocked-date@test.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
+
+          const { errors } = await completeCartWithPackagesWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("not available")
+
+          await packageModuleService.updatePackages({
+            id: pkg.id,
+            blocked_dates: []
+          })
+        })
+
+        it("should reject booking for blocked weekday", async () => {
+          const packageDateObj = new Date(testDate)
+          const dayOfWeek = packageDateObj.getDay()
+
+          await packageModuleService.updatePackages({
+            id: pkg.id,
+            blocked_week_days: [dayOfWeek.toString()]
+          })
+
+          const { cart } = await createCartWithPackage(
+            "blocked-weekday@test.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
+
+          const { errors } = await completeCartWithPackagesWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("not available")
+
+          await packageModuleService.updatePackages({
+            id: pkg.id,
+            blocked_week_days: []
+          })
+        })
+
+        it("should reject booking when capacity is exceeded", async () => {
+          for (let i = 0; i < packageCapacity; i++) {
+            const { cart } = await createCartWithPackage(
+              `capacity${i}@test.com`,
+              { adults: 1, children: 0, infants: 0 }
+            )
+            await completeCartWithPackagesWorkflow(container).run({
+              input: { cart_id: cart.id },
+            })
+            
+            await new Promise(resolve => setTimeout(resolve, 100))
+          }
+
+          const { cart } = await createCartWithPackage(
+            "exceed-capacity@test.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
+
+          const { errors } = await completeCartWithPackagesWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("spots available")
+        })
+
+        it("should reject booking when min months ahead not met", async () => {
+          await packageModuleService.updatePackages({
+            id: pkg.id,
+            booking_min_months_ahead: 12
+          })
+
+          const { cart } = await createCartWithPackage(
+            "min-months@test.com",
+            { adults: 1, children: 0, infants: 0 }
+          )
+
+          const { errors } = await completeCartWithPackagesWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("months in advance")
+
+          await packageModuleService.updatePackages({
+            id: pkg.id,
+            booking_min_months_ahead: 0
+          })
+        })
+
+        it("should reject booking for past dates", async () => {
+          const pastDate = "2020-01-01"
+
+          const customers = await customerModule.listCustomers({
+            email: "past-date@test.com",
+          })
+          let customer = customers[0] || await customerModule.createCustomers({
+            email: "past-date@test.com",
+            first_name: "Test",
+            last_name: "Customer",
+          })
+
+          const adultVariant = product.variants.find(
+            (v: any) => v.title === "Adult Ticket"
+          )
+
+          const cart = await cartModule.createCarts({
+            currency_code: "usd",
+            email: "past-date@test.com",
+            customer_id: customer.id,
+            sales_channel_id: salesChannel.id,
+            region_id: region.id,
+            items: [{
+              variant_id: adultVariant.id,
+              quantity: 1,
+              unit_price: 100,
+              title: `${pkg.destination} - ${pastDate}`,
+              metadata: {
+                is_package: true,
+                package_id: pkg.id,
+                package_date: pastDate,
+                total_passengers: 1,
+              },
+            }],
+          })
+
+          await createPaymentCollectionForCartWorkflow(container).run({
+            input: { cart_id: cart.id },
+          })
+
+          const { data: carts } = await query.graph({
+            entity: "cart",
+            fields: ["id", "total", "payment_collection.id"],
+            filters: { id: cart.id },
+          })
+
+          await paymentModule.createPaymentSession(
+            carts[0].payment_collection.id,
+            {
+              provider_id: "pp_system_default",
+              currency_code: "usd",
+              amount: carts[0].total,
+              data: {},
+            }
+          )
+
+          const { errors } = await completeCartWithPackagesWorkflow(container).run({
+            input: { cart_id: cart.id },
+            throwOnError: false,
+          })
+
+          expect(errors.length).toBeGreaterThan(0)
+          expect(errors[0].error.message).toContain("past dates")
+        })
       })
 
       describe("Capacity Validation", () => {
-        it("should reject booking when capacity is exceeded", async () => {
-          // Create carts for exactly capacity + 1 passengers
-          const carts: any[] = []
-          
-          // Create carts that together exceed capacity
-          for (let i = 0; i < packageCapacity + 1; i++) {
-            const cart = await createCartWithPackage(`capacity${i}@test.com`, 1)
-            carts.push(cart)
-          }
-
-          // Execute all checkouts sequentially to avoid race conditions
-          const results: PromiseSettledResult<any>[] = []
-          for (const cart of carts) {
-            try {
-              const result = await completeCartWithPackagesWorkflow(container).run({
-                input: {
-                  cart_id: cart.id,
-                },
-              })
-              results.push({ status: "fulfilled", value: result })
-            } catch (error) {
-              results.push({ status: "rejected", reason: error })
-            }
-          }
-
-          // Count successful bookings
-          const successful = results.filter(
-            (r) => r.status === "fulfilled"
-          ).length
-
-          // Should only allow up to capacity
-          expect(successful).toBeLessThanOrEqual(packageCapacity)
-
-          // Verify final bookings count
-          const bookings = await packageModuleService.listPackageBookings({
-            package_id: pkg.id,
-            package_date: new Date(testDate),
-          })
-
-          const activeBookings = bookings.filter(
-            (b) => b.status === "confirmed" || b.status === "pending"
-          )
-          expect(activeBookings.length).toBeLessThanOrEqual(packageCapacity)
-        })
-
         it("should validate capacity before allowing checkout", async () => {
-          // First fill up capacity
           for (let i = 0; i < packageCapacity; i++) {
-            const cart = await createCartWithPackage(`fill${i}@test.com`, 1)
+            const { cart } = await createCartWithPackage(`fill${i}@test.com`, { adults: 1, children: 0, infants: 0 })
             await completeCartWithPackagesWorkflow(container).run({
-              input: {
-                cart_id: cart.id,
-              },
+              input: { cart_id: cart.id },
             })
+            await new Promise(resolve => setTimeout(resolve, 100))
           }
 
-          // Verify capacity is full
           const capacity = await packageModuleService.getAvailableCapacity(
             pkg.id,
             new Date(testDate)
           )
           expect(capacity).toBe(0)
 
-          // Try to book one more - should fail
-          const extraCart = await createCartWithPackage("extra@test.com", 1)
-          
+          const { cart } = await createCartWithPackage("extra@test.com", { adults: 1, children: 0, infants: 0 })
+
           const { errors } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: extraCart.id,
-            },
+            input: { cart_id: cart.id },
             throwOnError: false,
           })
 
@@ -578,17 +802,16 @@ medusaIntegrationTestRunner({
 
       describe("Order and Booking Link", () => {
         it("should create link between order and package booking", async () => {
-          const cart = await createCartWithPackage("link@example.com", 1)
+          const { cart } = await createCartWithPackage("link@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const result = await completeCartWithPackagesWorkflow(container).run({
+          const { result } = await completeCartWithPackagesWorkflow(container).run({
             input: {
               cart_id: cart.id,
             },
           })
 
-          const orderId = result.result.order.id
+          const orderId = (result as any).order.id
 
-          // Query through link
           const { data: linkedBookings } = await query.graph({
             entity: "package_booking_order",
             fields: ["package_booking.*", "order.*"],
@@ -603,18 +826,16 @@ medusaIntegrationTestRunner({
         })
 
         it("should preserve order totals correctly", async () => {
-          const passengerCount = 3
-          const cart = await createCartWithPackage("totals@example.com", passengerCount)
+          const { cart } = await createCartWithPackage("totals@example.com", { adults: 3, children: 0, infants: 0 })
 
-          const result = await completeCartWithPackagesWorkflow(container).run({
+          const { result } = await completeCartWithPackagesWorkflow(container).run({
             input: {
               cart_id: cart.id,
             },
           })
 
-          const order = result.result.order
+          const order = (result as any).order
 
-          // Verify order has items and totals
           expect(order.items).toBeDefined()
           expect(order.items!.length).toBeGreaterThan(0)
           expect(order.total).toBeGreaterThan(0)
@@ -662,15 +883,15 @@ medusaIntegrationTestRunner({
 
       describe("Booking Status Flow", () => {
         it("should create booking with pending status initially", async () => {
-          const cart = await createCartWithPackage("pending@example.com", 1)
+          const { cart } = await createCartWithPackage("pending@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const result = await completeCartWithPackagesWorkflow(container).run({
+          const { result } = await completeCartWithPackagesWorkflow(container).run({
             input: {
               cart_id: cart.id,
             },
           })
 
-          const orderId = result.result.order.id
+          const orderId = (result as any).order.id
 
           const bookings = await packageModuleService.listPackageBookings({
             order_id: orderId,
@@ -681,27 +902,25 @@ medusaIntegrationTestRunner({
         })
 
         it("should allow updating booking status", async () => {
-          const cart = await createCartWithPackage("update@example.com", 1)
+          const { cart } = await createCartWithPackage("update@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const result = await completeCartWithPackagesWorkflow(container).run({
+          const { result } = await completeCartWithPackagesWorkflow(container).run({
             input: {
               cart_id: cart.id,
             },
           })
 
-          const orderId = result.result.order.id
+          const orderId = (result as any).order.id
 
           const bookings = await packageModuleService.listPackageBookings({
             order_id: orderId,
           })
 
-          // Update status to confirmed
           await packageModuleService.updatePackageBookings({
             id: bookings[0].id,
             status: "confirmed",
           })
 
-          // Verify status updated
           const updated = await packageModuleService.retrievePackageBooking(bookings[0].id)
           expect(updated.status).toBe("confirmed")
         })

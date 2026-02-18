@@ -53,10 +53,21 @@ class PackageModuleService extends MedusaService({
   ): Promise<number> {
     const pkg = await this.retrievePackage(packageId)
 
-    const bookings = await this.listPackageBookings({
+    // Normalize date to start and end of day for proper date-only matching
+    const startOfDay = new Date(packageDate)
+    startOfDay.setUTCHours(0, 0, 0, 0)
+    const endOfDay = new Date(packageDate)
+    endOfDay.setUTCHours(23, 59, 59, 999)
+
+    const allBookings = await this.listPackageBookings({
       package_id: packageId,
-      package_date: packageDate,
       status: ["confirmed", "pending"],
+    })
+
+    // Filter bookings manually by date range since MikroORM date queries can be unreliable
+    const bookings = allBookings.filter(booking => {
+      const bookingDate = new Date(booking.package_date)
+      return bookingDate >= startOfDay && bookingDate <= endOfDay
     })
 
     const reservedPassengers = bookings.reduce((total, booking) => {
@@ -65,7 +76,9 @@ class PackageModuleService extends MedusaService({
       const items = lineItemsData?.items || []
       
       const bookingPassengers = items.reduce((bookingTotal, item) => {
-        const passengers = item.metadata?.passengers || {}
+        // The items array contains the metadata objects directly (not nested under .metadata)
+        const itemData = item as any
+        const passengers = itemData.passengers || {}
         const adults = Number(passengers.adults) || 0
         const children = Number(passengers.children) || 0
         // Infants are EXCLUDED from capacity
@@ -75,7 +88,9 @@ class PackageModuleService extends MedusaService({
       return total + bookingPassengers
     }, 0)
 
-    return pkg.max_capacity - reservedPassengers
+    const availableCapacity = pkg.max_capacity - reservedPassengers
+    
+    return availableCapacity
   }
   async getPackageByMetadata(value: string) {
     const packageMod = await this.listPackages({
