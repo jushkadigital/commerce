@@ -59,7 +59,23 @@ class PackageModuleService extends MedusaService({
       status: ["confirmed", "pending"],
     })
 
-    return pkg.max_capacity - bookings.length
+    const reservedPassengers = bookings.reduce((total, booking) => {
+      // Handle potential missing line_items defensively
+      const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
+      const items = lineItemsData?.items || []
+      
+      const bookingPassengers = items.reduce((bookingTotal, item) => {
+        const passengers = item.metadata?.passengers || {}
+        const adults = Number(passengers.adults) || 0
+        const children = Number(passengers.children) || 0
+        // Infants are EXCLUDED from capacity
+        return bookingTotal + adults + children
+      }, 0)
+      
+      return total + bookingPassengers
+    }, 0)
+
+    return pkg.max_capacity - reservedPassengers
   }
   async getPackageByMetadata(value: string) {
     const packageMod = await this.listPackages({
