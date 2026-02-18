@@ -2,7 +2,7 @@ import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules } from "@medusajs/framework/utils"
 import { TOUR_MODULE } from "../../src/modules/tour"
 import TourModuleService from "../../src/modules/tour/service"
-import completeCartWithToursWorkflow from "../../src/workflows/create-tour-booking"
+import completeCartWithToursWorkflow from "../../src/modules/tour/workflows/create-tour-booking"
 import { generateTourLockKey } from "../../src/utils/locking"
 import { PassengerType } from "../../src/modules/tour/models/tour-variant"
 jest.setTimeout(120 * 1000)
