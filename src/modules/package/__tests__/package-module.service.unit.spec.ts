@@ -3,6 +3,8 @@ import { PassengerType } from "../models/package-variant"
 const mockListPackageBookings = jest.fn()
 const mockRetrievePackage = jest.fn()
 
+const availableDates = ["2026-03-15", "2026-03-16", "2026-03-17", "2026-12-25"]
+
 jest.mock("../service", () => {
   return jest.fn().mockImplementation(() => ({
     retrievePackage: mockRetrievePackage,
@@ -14,7 +16,22 @@ jest.mock("../service", () => {
         package_date: packageDate,
         status: ["confirmed", "pending"],
       })
-      return pkg.max_capacity - bookings.length
+      
+      const reservedPassengers = bookings.reduce((total: number, booking: any) => {
+        const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
+        const items = lineItemsData?.items || []
+        
+        const bookingPassengers = items.reduce((bookingTotal: number, item: any) => {
+          const passengers = item.metadata?.passengers || {}
+          const adults = Number(passengers.adults) || 0
+          const children = Number(passengers.children) || 0
+          return bookingTotal + adults + children
+        }, 0)
+        
+        return total + bookingPassengers
+      }, 0)
+      
+      return pkg.max_capacity - reservedPassengers
     }),
     validateBooking: jest.fn().mockImplementation(async (packageId: string, packageDate: Date, quantity: number) => {
       const pkg = await mockRetrievePackage(packageId)
@@ -254,7 +271,40 @@ describe("PackageModuleService", () => {
 
     it("should return reduced capacity when bookings exist", async () => {
       mockRetrievePackage.mockResolvedValue(mockPackage)
-      mockListPackageBookings.mockResolvedValue([{ id: "book_1" }, { id: "book_2" }, { id: "book_3" }])
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "book_1", 
+          package_id: "pkg_123", 
+          package_date: new Date("2026-03-15"), 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 2, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "book_2", 
+          package_id: "pkg_123", 
+          package_date: new Date("2026-03-15"), 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+      ])
 
       const result = await service.getAvailableCapacity("pkg_123", new Date("2026-03-15"))
 
@@ -263,7 +313,56 @@ describe("PackageModuleService", () => {
 
     it("should return zero capacity when fully booked", async () => {
       mockRetrievePackage.mockResolvedValue(mockPackage)
-      mockListPackageBookings.mockResolvedValue(Array(10).fill(null).map((_, i) => ({ id: `book_${i}` })))
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "book_1", 
+          package_id: "pkg_123", 
+          package_date: new Date("2026-03-15"), 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 3, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "book_2", 
+          package_id: "pkg_123", 
+          package_date: new Date("2026-03-15"), 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 1, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "book_3", 
+          package_id: "pkg_123", 
+          package_date: new Date("2026-03-15"), 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_789",
+                metadata: {
+                  passengers: { adults: 3, children: 2, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+      ])
 
       const result = await service.getAvailableCapacity("pkg_123", new Date("2026-03-15"))
 
@@ -275,12 +374,165 @@ describe("PackageModuleService", () => {
 
       await expect(service.getAvailableCapacity("pkg_invalid", new Date("2026-03-15"))).rejects.toThrow("Package not found")
     })
+
+    it("calculates capacity excluding infants", async () => {
+      const packageId = "pkg_with_infants"
+      const packageDate = new Date("2026-03-15")
+      const maxCapacity = 10
+
+      mockRetrievePackage.mockResolvedValue({
+        id: packageId,
+        max_capacity: maxCapacity,
+      })
+
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          package_id: packageId, 
+          package_date: packageDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 2, children: 1, infants: 1 }
+                }
+              }
+            ]
+          }
+        },
+      ])
+
+      const result = await service.getAvailableCapacity(packageId, packageDate)
+
+      // 2 adults + 1 child = 3 passengers (1 infant NOT counted)
+      expect(result).toBe(7)
+    })
+
+    it("handles missing metadata gracefully", async () => {
+      const packageId = "pkg_no_metadata"
+      const packageDate = new Date("2026-03-15")
+      const maxCapacity = 10
+
+      mockRetrievePackage.mockResolvedValue({
+        id: packageId,
+        max_capacity: maxCapacity,
+      })
+
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          package_id: packageId, 
+          package_date: packageDate, 
+          status: "confirmed",
+          line_items: null
+        },
+        { 
+          id: "booking_2", 
+          package_id: packageId, 
+          package_date: packageDate, 
+          status: "pending",
+          line_items: {
+            items: []
+          }
+        },
+        { 
+          id: "booking_3", 
+          package_id: packageId, 
+          package_date: packageDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: null
+              }
+            ]
+          }
+        },
+      ])
+
+      const result = await service.getAvailableCapacity(packageId, packageDate)
+
+      // All bookings have missing/null metadata, should count as 0 passengers
+      expect(result).toBe(10)
+    })
+
+    it("sums passengers across multiple bookings", async () => {
+      const packageId = "pkg_multiple_bookings"
+      const packageDate = new Date("2026-03-15")
+      const maxCapacity = 20
+
+      mockRetrievePackage.mockResolvedValue({
+        id: packageId,
+        max_capacity: maxCapacity,
+      })
+
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          package_id: packageId, 
+          package_date: packageDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 2, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          package_id: packageId, 
+          package_date: packageDate, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 3, children: 2, infants: 1 }
+                }
+              }
+            ]
+          }
+        },
+      ])
+
+      const result = await service.getAvailableCapacity(packageId, packageDate)
+
+      // Booking 1: 2 adults = 2
+      // Booking 2: 3 adults + 2 children = 5 (1 infant ignored)
+      // Total reserved: 7
+      expect(result).toBe(13)
+    })
   })
 
   describe("validateBooking", () => {
     it("should return valid true for valid booking", async () => {
       mockRetrievePackage.mockResolvedValue(mockPackage)
-      mockListPackageBookings.mockResolvedValue([])
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+      ])
 
       const result = await service.validateBooking("pkg_123", new Date("2026-03-15"), 3)
 
@@ -310,7 +562,128 @@ describe("PackageModuleService", () => {
 
     it("should reject booking when exceeding capacity", async () => {
       mockRetrievePackage.mockResolvedValue(mockPackage)
-      mockListPackageBookings.mockResolvedValue(Array(8).fill(null).map((_, i) => ({ id: `book_${i}` })))
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          package_id: "pkg_123", 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_3", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_789",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_4", 
+          package_id: "pkg_123", 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_abc",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_5", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_def",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_6", 
+          package_id: "pkg_123", 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_ghi",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_7", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_jkl",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_8", 
+          package_id: "pkg_123", 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_mno",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+      ])
 
       const result = await service.validateBooking("pkg_123", new Date("2026-03-15"), 5)
 
@@ -320,7 +693,113 @@ describe("PackageModuleService", () => {
 
     it("should accept booking at exact capacity limit", async () => {
       mockRetrievePackage.mockResolvedValue(mockPackage)
-      mockListPackageBookings.mockResolvedValue(Array(7).fill(null).map((_, i) => ({ id: `book_${i}` })))
+      mockListPackageBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          package_id: "pkg_123", 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_3", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_789",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_4", 
+          package_id: "pkg_123", 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_abc",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_5", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_def",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_6", 
+          package_id: "pkg_123", 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_ghi",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_7", 
+          package_id: "pkg_123", 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_jkl",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+      ])
 
       const result = await service.validateBooking("pkg_123", new Date("2026-03-15"), 3)
 
@@ -328,7 +807,7 @@ describe("PackageModuleService", () => {
     })
 
     it("should validate dates correctly ignoring time", async () => {
-      mockRetrievePackage.mockResolvedValue(packageWithDate)
+      mockRetrievePackage.mockResolvedValue(mockPackage)
       mockListPackageBookings.mockResolvedValue([])
 
       const result = await service.validateBooking("pkg_123", new Date("2026-03-15T08:00:00.000Z"), 1)

@@ -62,8 +62,22 @@ describe("TourModuleService", () => {
       })
 
       mockListTourBookings.mockResolvedValue([
-        { id: "booking_1", tour_id: tourId, tour_date: tourDate, status: "confirmed" },
-        { id: "booking_2", tour_id: tourId, tour_date: tourDate, status: "pending" },
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 2, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
       ])
 
       const result = await tourModuleService.getAvailableCapacity(tourId, tourDate)
@@ -97,7 +111,7 @@ describe("TourModuleService", () => {
     it("returns zero when capacity is full", async () => {
       const tourId = "tour_789"
       const tourDate = new Date("2026-03-15")
-      const maxCapacity = 3
+      const maxCapacity = 5
 
       mockRetrieveTour.mockResolvedValue({
         id: tourId,
@@ -105,9 +119,38 @@ describe("TourModuleService", () => {
       })
 
       mockListTourBookings.mockResolvedValue([
-        { id: "booking_1", tour_id: tourId, tour_date: tourDate, status: "confirmed" },
-        { id: "booking_2", tour_id: tourId, tour_date: tourDate, status: "pending" },
-        { id: "booking_3", tour_id: tourId, tour_date: tourDate, status: "confirmed" },
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 3, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 1, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
       ])
 
       const result = await tourModuleService.getAvailableCapacity(tourId, tourDate)
@@ -126,10 +169,38 @@ describe("TourModuleService", () => {
       })
 
       mockListTourBookings.mockResolvedValue([
-        { id: "booking_1", tour_id: tourId, tour_date: tourDate, status: "confirmed" },
-        { id: "booking_2", tour_id: tourId, tour_date: tourDate, status: "pending" },
-        { id: "booking_3", tour_id: tourId, tour_date: tourDate, status: "confirmed" },
-        { id: "booking_4", tour_id: tourId, tour_date: tourDate, status: "pending" },
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 2, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 1, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
       ])
 
       const result = await tourModuleService.getAvailableCapacity(tourId, tourDate)
@@ -145,6 +216,143 @@ describe("TourModuleService", () => {
 
       await expect(tourModuleService.getAvailableCapacity(tourId, tourDate)).rejects.toThrow("Tour not found")
     })
+
+    it("calculates capacity excluding infants", async () => {
+      const tourId = "tour_with_infants"
+      const tourDate = new Date("2026-03-15")
+      const maxCapacity = 10
+
+      mockRetrieveTour.mockResolvedValue({
+        id: tourId,
+        max_capacity: maxCapacity,
+      })
+
+      mockListTourBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 2, children: 1, infants: 1 }
+                }
+              }
+            ]
+          }
+        },
+      ])
+
+      const result = await tourModuleService.getAvailableCapacity(tourId, tourDate)
+
+      // 2 adults + 1 child = 3 passengers (1 infant NOT counted)
+      expect(result).toBe(7)
+    })
+
+    it("handles missing metadata gracefully", async () => {
+      const tourId = "tour_no_metadata"
+      const tourDate = new Date("2026-03-15")
+      const maxCapacity = 10
+
+      mockRetrieveTour.mockResolvedValue({
+        id: tourId,
+        max_capacity: maxCapacity,
+      })
+
+      mockListTourBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "confirmed",
+          line_items: null
+        },
+        { 
+          id: "booking_2", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "pending",
+          line_items: {
+            items: []
+          }
+        },
+        { 
+          id: "booking_3", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: null
+              }
+            ]
+          }
+        },
+      ])
+
+      const result = await tourModuleService.getAvailableCapacity(tourId, tourDate)
+
+      // All bookings have missing/null metadata, should count as 0 passengers
+      expect(result).toBe(10)
+    })
+
+    it("sums passengers across multiple bookings", async () => {
+      const tourId = "tour_multiple_bookings"
+      const tourDate = new Date("2026-03-15")
+      const maxCapacity = 20
+
+      mockRetrieveTour.mockResolvedValue({
+        id: tourId,
+        max_capacity: maxCapacity,
+      })
+
+      mockListTourBookings.mockResolvedValue([
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 2, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          tour_id: tourId, 
+          tour_date: tourDate, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 3, children: 2, infants: 1 }
+                }
+              }
+            ]
+          }
+        },
+      ])
+
+      const result = await tourModuleService.getAvailableCapacity(tourId, tourDate)
+
+      // Booking 1: 2 adults = 2
+      // Booking 2: 3 adults + 2 children = 5 (1 infant ignored)
+      // Total reserved: 7
+      expect(result).toBe(13)
+    })
   })
 
   describe("validateBooking", () => {
@@ -159,7 +367,21 @@ describe("TourModuleService", () => {
       })
 
       mockListTourBookings.mockResolvedValue([
-        { id: "booking_1", tour_id: tourId, status: "confirmed" },
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
       ])
 
       const result = await tourModuleService.validateBooking(tourId, tourDate, quantity)
@@ -186,13 +408,13 @@ describe("TourModuleService", () => {
 
     it("rejects booking for unavailable dates", async () => {
       const tourId = "tour_123"
-      const tourDate = new Date("2026-03-15")
       const unavailableDate = new Date("2026-12-25")
       const quantity = 1
 
       mockRetrieveTour.mockResolvedValue({
         id: tourId,
         max_capacity: 10,
+        blocked_dates: ["2026-12-25"],
       })
 
       const result = await tourModuleService.validateBooking(tourId, unavailableDate, quantity)
@@ -212,14 +434,126 @@ describe("TourModuleService", () => {
       })
 
       mockListTourBookings.mockResolvedValue([
-        { id: "booking_1", tour_id: tourId, status: "confirmed" },
-        { id: "booking_2", tour_id: tourId, status: "pending" },
-        { id: "booking_3", tour_id: tourId, status: "confirmed" },
-        { id: "booking_4", tour_id: tourId, status: "pending" },
-        { id: "booking_5", tour_id: tourId, status: "confirmed" },
-        { id: "booking_6", tour_id: tourId, status: "pending" },
-        { id: "booking_7", tour_id: tourId, status: "confirmed" },
-        { id: "booking_8", tour_id: tourId, status: "pending" },
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_3", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_789",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_4", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_abc",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_5", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_def",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_6", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_ghi",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_7", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_jkl",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_8", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_mno",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
       ])
 
       const result = await tourModuleService.validateBooking(tourId, tourDate, quantity)
@@ -240,14 +574,126 @@ describe("TourModuleService", () => {
       })
 
       mockListTourBookings.mockResolvedValue([
-        { id: "booking_1", tour_id: tourId, status: "confirmed" },
-        { id: "booking_2", tour_id: tourId, status: "pending" },
-        { id: "booking_3", tour_id: tourId, status: "confirmed" },
-        { id: "booking_4", tour_id: tourId, status: "pending" },
-        { id: "booking_5", tour_id: tourId, status: "confirmed" },
-        { id: "booking_6", tour_id: tourId, status: "pending" },
-        { id: "booking_7", tour_id: tourId, status: "confirmed" },
-        { id: "booking_8", tour_id: tourId, status: "pending" },
+        { 
+          id: "booking_1", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_123",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_2", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_456",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_3", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_789",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_4", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_abc",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_5", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_def",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_6", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_ghi",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_7", 
+          tour_id: tourId, 
+          status: "confirmed",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_jkl",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
+        { 
+          id: "booking_8", 
+          tour_id: tourId, 
+          status: "pending",
+          line_items: {
+            items: [
+              {
+                variant_id: "variant_mno",
+                metadata: {
+                  passengers: { adults: 1, children: 0, infants: 0 }
+                }
+              }
+            ]
+          }
+        },
       ])
 
       const result = await tourModuleService.validateBooking(tourId, tourDate, quantity)
