@@ -1,6 +1,18 @@
+// Detect test runs early and set NODE_ENV before dotenv or loadEnv runs
+// The npm test scripts set TEST_TYPE (e.g. integration:http, integration:modules, unit)
+if (
+  process.env.TEST_TYPE === 'integration:http' ||
+  process.env.TEST_TYPE === 'integration:modules' ||
+  process.env.TEST_TYPE === 'unit'
+) {
+  process.env.NODE_ENV = 'test'
+}
+
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 import dotenv from 'dotenv'
-dotenv.config({ path: process.cwd() + '/.env.development', override: true })
+// Don't let .env.development overwrite NODE_ENV when running tests.
+// Setting override: false ensures TEST_TYPE -> NODE_ENV='test' set above is preserved.
+dotenv.config({ path: process.cwd() + '/.env.development', override: false })
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 // ========================================================================
 // 1. DETECCIÓN DE MODO BUILD (CRÍTICO PARA DOCKER)
@@ -144,19 +156,28 @@ module.exports = defineConfig({
     },
 
     // --------------------------------------------------------------------
-    // EVENT BUS (RABBITMQ vs LOCAL)
+    // EVENT BUS (REDIS vs LOCAL - DEFAULT MEDUSA IMPLEMENTATION)
     // --------------------------------------------------------------------
     {
       key: Modules.EVENT_BUS,
-      // LOGICA: Si es Build -> Local. Si no -> Tu RabbitMQ custom
       resolve: DISABLE_REDIS
         ? "@medusajs/medusa/event-bus-local"
-        : "./src/modules/event-bus-rabbitmq",
+        : "@medusajs/medusa/event-bus-redis",
+      options: {
+        redisUrl: process.env.EVENTS_REDIS_URL,
+      },
+    },
+
+    // --------------------------------------------------------------------
+    // RABBITMQ MODULE (CUSTOM STANDALONE SERVICE)
+    // --------------------------------------------------------------------
+    ...(DISABLE_REDIS ? [] : [{
+      resolve: "./src/modules/event-bus-rabbitmq",
       options: {
         url: process.env.RABBITMQ_URL || 'amqp://admin:admin123@172.17.0.1:5672',
         exchange: "tourism-exchange",
       },
-    },
+    }]),
 
     // --------------------------------------------------------------------
     // WORKFLOW ENGINE (REDIS vs IN-MEMORY)
