@@ -1,0 +1,148 @@
+
+> medusa-starter-default@0.0.1 test:unit
+> TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+
+jest-haste-map: Haste module naming collision: medusa-starter-default
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>/package.json
+    * <rootDir>/.medusa/server/package.json
+
+FAIL src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+  ● TourModuleService › validateBooking › rejects booking for unavailable dates
+
+    TypeError: Cannot read properties of undefined (reading 'reduce')
+
+      60 |     })
+      61 |
+    > 62 |     const reservedPassengers = bookings.reduce((total, booking) => {
+         |                                         ^
+      63 |       // Handle potential missing line_items defensively
+      64 |       const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
+      65 |       const items = lineItemsData?.items || []
+
+      at TourModuleService.reduce [as getAvailableCapacity] (src/modules/tour/service.ts:62:41)
+      at TourModuleService.validateBooking (src/modules/tour/service.ts:128:31)
+      at Object.<anonymous> (src/modules/tour/__tests__/tour-module.service.unit.spec.ts:406:22)
+
+  ● TourModuleService › validateBooking › rejects booking exceeding available capacity
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      433 |       const result = await tourModuleService.validateBooking(tourId, tourDate, quantity)
+      434 |
+    > 435 |       expect(result.valid).toBe(false)
+          |                            ^
+      436 |       expect(result.reason).toContain("Only")
+      437 |       expect(result.reason).toContain("available")
+      438 |     })
+
+      at Object.toBe (src/modules/tour/__tests__/tour-module.service.unit.spec.ts:435:28)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 35 passed, 37 total
+Snapshots:   0 total
+Time:        1.908 s
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+> medusa-starter-default@0.0.1 test:unit
+> TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+
+FAIL src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+  ● TourModuleService › validateBooking › rejects booking for unavailable dates
+
+    TypeError: Cannot read properties of undefined (reading 'reduce')
+
+      60 |     })
+      61 |
+    > 62 |     const reservedPassengers = bookings.reduce((total, booking) => {
+         |                                         ^
+      63 |       // Handle potential missing line_items defensively
+      64 |       const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
+      65 |       const items = lineItemsData?.items || []
+
+      at TourModuleService.reduce [as getAvailableCapacity] (src/modules/tour/service.ts:62:41)
+      at TourModuleService.validateBooking (src/modules/tour/service.ts:128:31)
+      at Object.<anonymous> (src/modules/tour/__tests__/tour-module.service.unit.spec.ts:420:22)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 36 passed, 37 total
+Snapshots:   0 total
+Time:        2.221 s
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+> medusa-starter-default@0.0.1 test:unit
+> TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+
+PASS src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+
+Test Suites: 1 passed, 1 total
+Tests:       37 passed, 37 total
+Snapshots:   0 total
+Time:        2.377 s, estimated 3 s
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+=======================================================================
+TASK 3 SUMMARY: Tour Module Unit Tests Update
+=======================================================================
+
+FILE MODIFIED:
+- src/modules/tour/__tests__/tour-module.service.unit.spec.ts
+
+CHANGES APPLIED:
+
+1. UPDATED EXISTING TESTS (getAvailableCapacity):
+   - "calculates available capacity correctly" → Added line_items with 2 adults
+   - "returns zero when capacity is full" → Added line_items totaling 5 passengers (3+1+1)
+   - "returns negative when overbooked" → Added line_items totaling 4 passengers (2+1+1)
+
+2. NEW TEST CASES ADDED:
+   ✅ "calculates capacity excluding infants"
+      - Mock: 2 adults + 1 child + 1 infant
+      - Expected: 7 available (3 reserved, infant ignored)
+      - Validates business rule: infants DON'T count
+
+   ✅ "handles missing metadata gracefully"
+      - Mock: 3 bookings with null/missing line_items/metadata
+      - Expected: 10 available (0 reserved)
+      - Validates defensive null-handling
+
+   ✅ "sums passengers across multiple bookings"
+      - Mock: Booking A (2 adults), Booking B (3 adults + 2 children + 1 infant)
+      - Expected: 13 available (7 reserved total)
+      - Validates cross-booking summation
+
+3. FIXED UNRELATED TEST (validateBooking):
+   - "rejects booking for unavailable dates" → Added blocked_dates to mock
+   - All validateBooking tests → Added line_items to prevent crashes
+
+VERIFICATION:
+✅ ALL 37 TESTS PASS
+✅ Test coverage includes: basic capacity, infant exclusion, null safety, multiple bookings
+✅ Assertions match implementation (src/modules/tour/service.ts:50-79)
+
+TEST DATA STRUCTURE USED:
+```typescript
+line_items: {
+  items: [
+    {
+      variant_id: "variant_xxx",
+      metadata: {
+        passengers: { adults: N, children: N, infants: N }
+      }
+    }
+  ]
+}
+```
+
+EDGE CASES COVERED:
+- ✅ Infants excluded from capacity calculation
+- ✅ Null/undefined line_items (defensive fallback)
+- ✅ Empty line_items.items array
+- ✅ Null metadata within items
+- ✅ Multiple bookings with mixed passenger counts
+- ✅ Number coercion (undefined → 0)
+
+=======================================================================

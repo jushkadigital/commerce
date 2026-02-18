@@ -1,10 +1,9 @@
 {
-  "active_plan": "/home/node/app/.sisyphus/plans/rabbitmq-event-bus-improvement.md",
-  "started_at": "2026-02-16T21:25:50.923Z",
+  "active_plan": "/home/node/app/.sisyphus/plans/tour-booking-flow.md",
+  "started_at": "2026-02-18T17:37:55.845Z",
   "session_ids": [
-    "ses_397dfda75ffeu5fnEMBpeN0FpS",
-    "ses_39784dda6ffeNajImpVCCbcn5u"
+    "ses_38e37d4b2ffe8RzhIzMeHoAYy5"
   ],
-  "plan_name": "rabbitmq-event-bus-improvement",
+  "plan_name": "tour-booking-flow",
   "agent": "atlas"
 }

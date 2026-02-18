@@ -1,0 +1,11 @@
+
+> medusa-starter-default@0.0.1 test:unit
+> TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit src/modules/package/__tests__/package-module.service.unit.spec.ts
+
+PASS src/modules/package/__tests__/package-module.service.unit.spec.ts
+
+Test Suites: 1 passed, 1 total
+Tests:       32 passed, 32 total
+Snapshots:   0 total
+Time:        1.755 s, estimated 3 s
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

@@ -1,0 +1,45 @@
+import { Modules } from "@medusajs/framework/utils"
+import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
+
+export default async function handleProductSync({
+  event,
+  container
+}: SubscriberArgs<any>) {
+  const logger = container.resolve("logger")
+
+  logger.info(`PRODUCT CREATED`)
+  logger.info(`${JSON.stringify(event)}`)
+
+  try {
+    const productId = event.data?.id
+
+    if (!productId) {
+      logger.warn("Product ID not found in event data")
+      return
+    }
+
+    const productModuleService = container.resolve(Modules.PRODUCT)
+
+    const fullProduct = await productModuleService.retrieveProduct(productId, {
+      relations: ["variants", "images", "tags", "categories"]
+    })
+
+    logger.info(`Loaded full product: ${fullProduct.title}`)
+
+    const eventBusService = container.resolve(Modules.EVENT_BUS)
+
+    await eventBusService.emit({
+      name: "myCustomProductCreated",
+      data: fullProduct
+    })
+
+    logger.info(`Emitted myCustomProductCreated event for product: ${productId}`)
+  } catch (error) {
+    logger.error(`Error in productCreated subscriber: ${error}`)
+  }
+}
+
+export const config: SubscriberConfig = {
+  // Asegúrate que esta sea la routing key correcta que envía tu Quarkus
+  event: "",
+}
