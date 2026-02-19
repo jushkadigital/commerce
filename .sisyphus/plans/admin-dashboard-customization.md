@@ -219,7 +219,7 @@ Wave FINAL (Verification):
     Evidence: .sisyphus/evidence/task-3-grep-create.txt
   ```
 
-- [ ] 4. Update Tour Form & Details
+- [x] 4. Update Tour Form & Details
 
   **What to do**:
   - Modify `src/admin/components/tour-details-step.tsx`:

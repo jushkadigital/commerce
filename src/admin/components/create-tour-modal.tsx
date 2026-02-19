@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button, FocusModal, ProgressTabs, toast } from "@medusajs/ui"
 import { useQuery } from "@tanstack/react-query"
 import { sdk } from "../lib/sdk"
@@ -31,6 +31,11 @@ export const TourFormModal = ({
   const [description, setDescription] = useState("")
   const [duration, setDuration] = useState<number | "">("")
   const [capacity, setCapacity] = useState<number | "">("")
+
+  // --- New Fields ---
+  const [isSpecial, setIsSpecial] = useState(false)
+  const [bookingMinDays, setBookingMinDays] = useState<number | "">("")
+  const [blockedDates, setBlockedDates] = useState<string[]>([])
 
   // --- Step 2 Data ---
   // CORRECCIÓN 1: Inicializar como objeto vacío, NO null
@@ -86,7 +91,12 @@ export const TourFormModal = ({
       setDuration(tourToEdit.duration_days)
       setCapacity(tourToEdit.max_capacity)
 
-      // 2. LÓGICA DE PRECIOS CORREGIDA
+      // 2. Load new fields
+      setIsSpecial(tourToEdit.is_special || false)
+      setBookingMinDays(tourToEdit.booking_min_days_ahead ?? "")
+      setBlockedDates(tourToEdit.blocked_dates || [])
+
+      // 3. LÓGICA DE PRECIOS CORREGIDA
       if (tourToEdit.variants && tourToEdit.variants.length > 0) {
 
         const mappedPrices: Record<string, Record<string, number>> = {}
@@ -141,6 +151,9 @@ export const TourFormModal = ({
     setDescription("")
     setDuration("")
     setCapacity("")
+    setIsSpecial(false)
+    setBookingMinDays("")
+    setBlockedDates([])
     setPrices({})
     setCurrentStep("0")
   }
@@ -168,6 +181,9 @@ export const TourFormModal = ({
         description,
         duration_days: Number(duration),
         max_capacity: Number(capacity),
+        is_special: isSpecial,
+        booking_min_days_ahead: bookingMinDays === "" ? 0 : Number(bookingMinDays),
+        blocked_dates: blockedDates,
         prices: {
           // CORRECCIÓN 4: Acceso seguro con ?. y usando la clave correcta
           // Nota: Usa mayúscula "Adult" si así está en tu PricingStep (PASSENGER_TYPES)
@@ -194,8 +210,6 @@ export const TourFormModal = ({
     }
   }
 
-  const isStep1Completed = destination && duration && capacity
-
   const steps = [
     {
       label: "Details",
@@ -206,6 +220,10 @@ export const TourFormModal = ({
           description={description} setDescription={setDescription}
           duration={duration} setDuration={setDuration}
           capacity={capacity} setCapacity={setCapacity}
+          isSpecial={isSpecial} setIsSpecial={setIsSpecial}
+          bookingMinDays={bookingMinDays} setBookingMinDays={setBookingMinDays}
+          blockedDates={blockedDates} setBlockedDates={setBlockedDates}
+          thumbnail={tourToEdit?.thumbnail}
         />
       )
     },
