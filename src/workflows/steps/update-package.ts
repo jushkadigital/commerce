@@ -25,17 +25,19 @@ export const updatePackageStep = createStep(
 
     const previousPackage = await packageModuleService.retrievePackage(input.id)
 
-    const updatedPackages = await packageModuleService.updatePackages({
+    // 2. Update the record (updatePackages expects an array)
+    const [updatedPackage] = await packageModuleService.updatePackages([{
       id: input.id,
       ...input.data
-    })
+    }])
 
-    return new StepResponse(updatedPackages, previousPackage)
+    return new StepResponse(updatedPackage, previousPackage)
   },
   async (previousPackage, { container }) => {
     if (!previousPackage) return
     const packageModuleService: PackageModuleService = container.resolve(PACKAGE_MODULE)
-    await packageModuleService.updatePackages({
+    // Revert changes (pass array for consistency)
+    await packageModuleService.updatePackages([{ 
       id: previousPackage.id,
       destination: previousPackage.destination,
       description: previousPackage.description,
@@ -46,6 +48,6 @@ export const updatePackageStep = createStep(
       blocked_dates: previousPackage.blocked_dates,
       blocked_week_days: previousPackage.blocked_week_days,
       cancellation_deadline_hours: previousPackage.cancellation_deadline_hours,
-    })
+    }])
   }
 )

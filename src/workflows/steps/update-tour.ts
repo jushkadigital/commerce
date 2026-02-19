@@ -26,19 +26,19 @@ export const updateTourStep = createStep(
     // 1. Get previous data for compensation
     const previousTour = await tourModuleService.retrieveTour(input.id)
 
-    // 2. Update the record
-    const updatedTours = await tourModuleService.updateTours({
+    // 2. Update the record (updateTours expects an array)
+    const [updatedTour] = await tourModuleService.updateTours([{
       id: input.id,
       ...input.data
-    })
+    }])
 
-    return new StepResponse(updatedTours, previousTour)
+    return new StepResponse(updatedTour, previousTour)
   },
   async (previousTour, { container }) => {
     if (!previousTour) return
     const tourModuleService: TourModuleService = container.resolve(TOUR_MODULE)
-    // Revert changes
-    await tourModuleService.updateTours({
+    // Revert changes (pass array for consistency)
+    await tourModuleService.updateTours([{
       id: previousTour.id,
       destination: previousTour.destination,
       description: previousTour.description,
@@ -49,7 +49,6 @@ export const updateTourStep = createStep(
       blocked_dates: previousTour.blocked_dates,
       blocked_week_days: previousTour.blocked_week_days,
       cancellation_deadline_hours: previousTour.cancellation_deadline_hours,
-    })
+    }])
   }
 )
-
