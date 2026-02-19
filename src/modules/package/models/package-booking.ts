@@ -1,6 +1,5 @@
 import { model } from "@medusajs/framework/utils"
 import { Package } from "./package"
-import { PackageVariant } from "./package-variant"
 
 export const PackageBooking = model.define("package_booking", {
   id: model.id().primaryKey(),
