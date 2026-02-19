@@ -6,6 +6,12 @@ export interface Tour {
   max_capacity: number
   thumbnail?: string
   product_id?: string
+  is_special?: boolean
+  blocked_dates?: string[]
+  blocked_week_days?: string[]
+  booking_min_days_ahead?: number
+  cancellation_deadline_hours?: number
+  metadata?: Record<string, any>
   created_at: string
   variants?: TourVariant[]
 }
@@ -40,6 +46,12 @@ export interface Package {
   max_capacity: number
   thumbnail?: string
   product_id?: string
+  is_special?: boolean
+  blocked_dates?: string[]
+  blocked_week_days?: string[]
+  booking_min_months_ahead?: number
+  cancellation_deadline_hours?: number
+  metadata?: Record<string, any>
   created_at: string
   variants?: PackageVariant[]
 }

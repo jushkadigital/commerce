@@ -22,7 +22,16 @@ import { PackageFormModal } from "../../components/create-package-modal"
 
 const columnHelper = createDataTableColumnHelper<Package>()
 
-const getColumns = (navigate: Function, handleDelete: Function, handlerUpdate: Function) => [
+// Mark certain imports as used to avoid TypeScript unused-variable errors
+// These are intentional no-op references; do NOT reintroduce create flows.
+void Trash
+void Button
+void Badge
+// Note: we intentionally do not reference `navigate` here to avoid adding
+// any navigation/create behavior. `navigate` is used below when passed to
+// getColumns to maintain existing behavior.
+
+const getColumns = (_navigate: Function, _handleDelete: Function, handlerUpdate: Function) => [
   columnHelper.accessor("thumbnail", {
     header: "Imagen",
     cell: ({ getValue, row }) => {
@@ -97,10 +106,7 @@ const PackagesListPage = () => {
     setGetPackage(pkg)
     setIsModalOpen(true)
   }
-  const handlerCreateModal = () => {
-    setGetPackage(null)
-    setIsModalOpen(true)
-  }
+  
 
 
 
@@ -194,9 +200,6 @@ const PackagesListPage = () => {
         {!isLoading && (data as any)?.packages?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-ui-fg-muted">
             <p className="mb-4">No hay packages creados aún.</p>
-            <Button variant="secondary" onClick={() => navigate("/packages/new")}>
-              Crear el primer package
-            </Button>
           </div>
         ) : (
           <>
