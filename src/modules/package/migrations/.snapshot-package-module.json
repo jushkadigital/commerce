@@ -244,6 +244,15 @@
           "nullable": true,
           "mappedType": "json"
         },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "json"
+        },
         "package_date": {
           "name": "package_date",
           "type": "timestamptz",
