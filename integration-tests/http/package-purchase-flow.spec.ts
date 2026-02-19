@@ -30,7 +30,6 @@ medusaIntegrationTestRunner({
       let container: any
       let packageModuleService: PackageModuleService
       let productModule: any
-      let pricingModule: any
       let cartModule: any
       let salesChannelModule: any
       let regionModule: any
@@ -45,7 +44,6 @@ medusaIntegrationTestRunner({
       let product: any
       let region: any
       let salesChannel: any
-      let priceSet: any
       let productVariants: any[] = []
       const testDate = "2026-06-15"
       const packageCapacity = 10
@@ -54,7 +52,6 @@ medusaIntegrationTestRunner({
         container = getContainer()
         packageModuleService = container.resolve(PACKAGE_MODULE)
         productModule = container.resolve(Modules.PRODUCT)
-        pricingModule = container.resolve(Modules.PRICING)
         cartModule = container.resolve(Modules.CART)
         salesChannelModule = container.resolve(Modules.SALES_CHANNEL)
         regionModule = container.resolve(Modules.REGION)
