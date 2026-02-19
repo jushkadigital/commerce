@@ -145,11 +145,13 @@ medusaIntegrationTestRunner({
             duration_days: 0,
           }
 
-          await expect(
-            testValidateTourWorkflow(container).run({
-              input: invalidInput,
-            })
-          ).rejects.toThrow("Duration must be at least 1 day.")
+          const result = await testValidateTourWorkflow(container).run({
+            input: invalidInput,
+            throwOnError: false // ensure we get the result object even on error
+          })
+          console.log("DEBUG_WORKFLOW_RESULT:", JSON.stringify(result, null, 2))
+          // Fail the test intentionally so we see the output
+          throw new Error("Debugging workflow result")
         })
 
         it("should throw error when duration_days is negative", async () => {
