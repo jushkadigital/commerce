@@ -7,6 +7,7 @@ export const PackageBooking = model.define("package_booking", {
   order_id: model.text(),
   package: model.belongsTo(() => Package),
   line_items: model.json().nullable(),
+  metadata: model.json().nullable(),
   package_date: model.dateTime(),
   status: model.enum(["pending", "confirmed", "cancelled", "completed"]).default("pending"),
 }).indexes([
