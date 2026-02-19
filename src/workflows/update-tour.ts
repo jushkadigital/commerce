@@ -23,6 +23,11 @@ export type UpdateTourWorkflowInput = {
     infant?: number
     currency_code?: string
   }
+  is_special?: boolean
+  booking_min_days_ahead?: number
+  blocked_dates?: string[]
+  blocked_week_days?: string[]
+  cancellation_deadline_hours?: number
 }
 
 export const updateTourWorkflow = createWorkflow(
@@ -48,6 +53,11 @@ export const updateTourWorkflow = createWorkflow(
         duration_days: input.duration_days,
         max_capacity: input.max_capacity,
         thumbnail: input.thumbnail
+        ,is_special: input.is_special
+        ,booking_min_days_ahead: input.booking_min_days_ahead
+        ,blocked_dates: input.blocked_dates
+        ,blocked_week_days: input.blocked_week_days
+        ,cancellation_deadline_hours: input.cancellation_deadline_hours
       }
     })
 
@@ -110,6 +120,11 @@ export const updateTourWorkflow = createWorkflow(
         "duration_days",
         "max_capacity",
         "thumbnail",
+        "is_special",
+        "booking_min_days_ahead",
+        "blocked_dates",
+        "blocked_week_days",
+        "cancellation_deadline_hours",
         "product_id"
       ],
       filters: { id: input.id }
@@ -122,4 +137,3 @@ export const updateTourWorkflow = createWorkflow(
 )
 
 export default updateTourWorkflow
-

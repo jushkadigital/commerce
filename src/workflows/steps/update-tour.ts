@@ -10,6 +10,11 @@ export type UpdateTourStepInput = {
     duration_days?: number
     max_capacity?: number
     thumbnail?: string
+    is_special?: boolean
+    booking_min_days_ahead?: number
+    blocked_dates?: string[]
+    blocked_week_days?: string[]
+    cancellation_deadline_hours?: number
   }
 }
 
@@ -39,8 +44,12 @@ export const updateTourStep = createStep(
       description: previousTour.description,
       duration_days: previousTour.duration_days,
       max_capacity: previousTour.max_capacity,
+      is_special: previousTour.is_special,
+      booking_min_days_ahead: previousTour.booking_min_days_ahead,
+      blocked_dates: previousTour.blocked_dates,
+      blocked_week_days: previousTour.blocked_week_days,
+      cancellation_deadline_hours: previousTour.cancellation_deadline_hours,
     })
   }
 )
-
 

@@ -17,6 +17,11 @@ export type UpdatePackageWorkflowInput = {
   duration_days?: number
   max_capacity?: number
   thumbnail?: string
+  is_special?: boolean
+  booking_min_months_ahead?: number
+  blocked_dates?: string[]
+  blocked_week_days?: string[]
+  cancellation_deadline_hours?: number
   prices?: {
     adult?: number
     child?: number
@@ -29,39 +34,45 @@ export const updatePackageWorkflow = createWorkflow(
   "update-package",
   (input: UpdatePackageWorkflowInput) => {
 
-    const { data: packages } = useQueryGraphStep({
+    const packages = useQueryGraphStep({
       entity: "package",
       fields: ["id", "product_id"],
       filters: { id: input.id }
-    })
+    }).data as any
 
-    const pkg = transform({ packages }, (data) => data.packages[0])
+    const pkg = transform({ packages }, function (data: any) { return data.packages[0] })
 
-    const updatedPackage = updatePackageStep({
+    updatePackageStep({
       id: input.id,
       data: {
         destination: input.destination,
         description: input.description,
         duration_days: input.duration_days,
         max_capacity: input.max_capacity,
-        thumbnail: input.thumbnail
+        thumbnail: input.thumbnail,
+        is_special: input.is_special,
+        booking_min_months_ahead: input.booking_min_months_ahead,
+        blocked_dates: input.blocked_dates,
+        blocked_week_days: input.blocked_week_days,
+        cancellation_deadline_hours: input.cancellation_deadline_hours,
       }
     })
 
-    const productUpdateInput = transform(
+    const productUpdateInput: any = transform(
       { input, pkg },
-      (data) => {
+      function (data: any) {
         if (!data.pkg.product_id) return []
 
         const updateData: any = { id: data.pkg.product_id }
         let hasUpdates = false
 
         if (data.input.destination || data.input.duration_days) {
-          const dest = data.input.destination || "Package"
-          const dur = data.input.duration_days || "X"
-
           if (data.input.destination) {
-            updateData.title = `${data.input.destination} ${data.input.duration_days ? `- ${data.input.duration_days} Days` : ''}`
+            const parts: string[] = [data.input.destination]
+            if (data.input.duration_days) {
+              parts.push(`- ${data.input.duration_days} Days`)
+            }
+            updateData.title = parts.join(" ")
             hasUpdates = true
           }
         }
@@ -95,6 +106,11 @@ export const updatePackageWorkflow = createWorkflow(
         "duration_days",
         "max_capacity",
         "thumbnail",
+        "is_special",
+        "booking_min_months_ahead",
+        "blocked_dates",
+        "blocked_week_days",
+        "cancellation_deadline_hours",
         "product_id"
       ],
       filters: { id: input.id }

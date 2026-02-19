@@ -38,6 +38,7 @@ const UpdateTourSchema = z.object({
   description: z.string().optional(),
   duration_days: z.coerce.number().optional(), // 'coerce' convierte strings a números automáticamente
   max_capacity: z.coerce.number().optional(),
+  is_special: z.boolean().optional(),
   thumbnail: z.string().optional(),
   prices: z.object({
     adult: z.coerce.number().optional(),
@@ -45,6 +46,10 @@ const UpdateTourSchema = z.object({
     infant: z.coerce.number().optional(),
     currency_code: z.string().optional(),
   }).optional(),
+  booking_min_days_ahead: z.coerce.number().optional(),
+  blocked_dates: z.array(z.string()).optional(),
+  blocked_week_days: z.array(z.string()).optional(),
+  cancellation_deadline_hours: z.coerce.number().optional(),
 })
 
 
