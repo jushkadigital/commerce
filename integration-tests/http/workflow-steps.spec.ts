@@ -543,6 +543,7 @@ medusaIntegrationTestRunner({
         })
 
         describe("Data Integrity", () => {
+          it("should preserve dates and basic integrity when creating a tour", async () => {
             const product = await productModule.createProducts({
               title: "Dates Test Tour",
               status: "published",
