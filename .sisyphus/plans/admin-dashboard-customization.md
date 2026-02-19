@@ -263,7 +263,7 @@ Wave FINAL (Verification):
     Evidence: .sisyphus/evidence/task-4-tour-qa.png
   ```
 
-- [ ] 5. Update Package Form & Details
+- [x] 5. Update Package Form & Details
 
   **What to do**:
   - Modify `src/admin/components/package-details-step.tsx`:

@@ -29,6 +29,9 @@ export const PackageFormModal = ({
   const [description, setDescription] = useState("")
   const [duration, setDuration] = useState<number | "">("")
   const [capacity, setCapacity] = useState<number | "">("")
+  const [isSpecial, setIsSpecial] = useState(false)
+  const [bookingMinMonths, setBookingMinMonths] = useState<number | "">("")
+  const [blockedDates, setBlockedDates] = useState<string[]>([])
 
   const [prices, setPrices] = useState<Record<string, Record<string, number>>>({})
 
@@ -75,6 +78,9 @@ export const PackageFormModal = ({
       setDescription(packageToEdit.description || "")
       setDuration(packageToEdit.duration_days)
       setCapacity(packageToEdit.max_capacity)
+      setIsSpecial(packageToEdit.is_special || false)
+      setBookingMinMonths(packageToEdit.booking_min_months_ahead ?? "")
+      setBlockedDates(packageToEdit.blocked_dates || [])
 
       if (packageToEdit.variants && packageToEdit.variants.length > 0) {
         const mappedPrices: Record<string, Record<string, number>> = {}
@@ -114,6 +120,9 @@ export const PackageFormModal = ({
     setDescription("")
     setDuration("")
     setCapacity("")
+    setIsSpecial(false)
+    setBookingMinMonths("")
+    setBlockedDates([])
     setPrices({})
     setCurrentStep("0")
   }
@@ -139,6 +148,9 @@ export const PackageFormModal = ({
         description,
         duration_days: Number(duration),
         max_capacity: Number(capacity),
+        is_special: isSpecial,
+        booking_min_months_ahead: bookingMinMonths === "" ? 0 : Number(bookingMinMonths),
+        blocked_dates: blockedDates,
         prices: {
           adult: prices["Adult"]?.[priceKey] || prices["adult"]?.[priceKey] || 0,
           child: prices["Child"]?.[priceKey] || prices["child"]?.[priceKey] || 0,
@@ -162,8 +174,6 @@ export const PackageFormModal = ({
     }
   }
 
-  const isStep1Completed = destination && duration && capacity
-
   const steps = [
     {
       label: "Details",
@@ -174,6 +184,10 @@ export const PackageFormModal = ({
           description={description} setDescription={setDescription}
           duration={duration} setDuration={setDuration}
           capacity={capacity} setCapacity={setCapacity}
+          isSpecial={isSpecial} setIsSpecial={setIsSpecial}
+          bookingMinMonths={bookingMinMonths} setBookingMinMonths={setBookingMinMonths}
+          blockedDates={blockedDates} setBlockedDates={setBlockedDates}
+          thumbnail={packageToEdit?.thumbnail}
         />
       )
     },

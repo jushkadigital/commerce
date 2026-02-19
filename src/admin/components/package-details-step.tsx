@@ -1,4 +1,5 @@
-import { Heading, Input, Label, Text, Textarea } from "@medusajs/ui"
+import { Heading, Input, Label, Text, Textarea, Switch } from "@medusajs/ui"
+import { BlockedDatesComponent } from "./blocked-dates-component"
 
 interface PackageDetailsStepProps {
   destination: string
@@ -9,6 +10,13 @@ interface PackageDetailsStepProps {
   setDuration: (v: number | "") => void
   capacity: number | ""
   setCapacity: (v: number | "") => void
+  isSpecial: boolean
+  setIsSpecial: (v: boolean) => void
+  bookingMinMonths: number | ""
+  setBookingMinMonths: (v: number | "") => void
+  blockedDates: string[]
+  setBlockedDates: (v: string[]) => void
+  thumbnail?: string
 }
 
 export const PackageDetailsStep = ({
@@ -20,6 +28,13 @@ export const PackageDetailsStep = ({
   setDuration,
   capacity,
   setCapacity,
+  isSpecial,
+  setIsSpecial,
+  bookingMinMonths,
+  setBookingMinMonths,
+  blockedDates,
+  setBlockedDates,
+  thumbnail,
 }: PackageDetailsStepProps) => {
   return (
     <div className="flex flex-col gap-y-8">
@@ -31,6 +46,17 @@ export const PackageDetailsStep = ({
       </div>
 
       <div className="flex flex-col gap-4">
+        {thumbnail && (
+          <div className="flex flex-col gap-2">
+            <Label>Thumbnail</Label>
+            <img 
+              src={thumbnail} 
+              alt="Package thumbnail" 
+              className="w-full h-48 object-cover rounded-md border border-ui-border-base" 
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <Label>Destination</Label>
@@ -38,6 +64,7 @@ export const PackageDetailsStep = ({
               placeholder="e.g. Machu Picchu"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
+              disabled
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -48,6 +75,7 @@ export const PackageDetailsStep = ({
               placeholder="1"
               value={duration}
               onChange={(e) => setDuration(e.target.value === "" ? "" : Number(e.target.value))}
+              disabled
             />
           </div>
         </div>
@@ -70,6 +98,48 @@ export const PackageDetailsStep = ({
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            disabled
+          />
+        </div>
+
+        <div className="flex items-center gap-3 py-2">
+          <Switch
+            checked={isSpecial}
+            onCheckedChange={setIsSpecial}
+            id="is-special-package"
+          />
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="is-special-package" className="cursor-pointer">
+              Mark as Special Package
+            </Label>
+            <Text className="text-ui-fg-subtle text-xs">
+              Special packages receive highlighted placement in listings
+            </Text>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>Minimum Months Ahead for Booking</Label>
+          <Input
+            type="number"
+            min={0}
+            placeholder="0"
+            value={bookingMinMonths}
+            onChange={(e) => setBookingMinMonths(e.target.value === "" ? "" : Number(e.target.value))}
+          />
+          <Text className="text-ui-fg-subtle text-xs">
+            Number of months customers must book in advance (0 for immediate booking)
+          </Text>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label className="text-base font-medium">Blocked Dates</Label>
+          <Text className="text-ui-fg-subtle text-xs mb-2">
+            Select dates when this package is unavailable for booking
+          </Text>
+          <BlockedDatesComponent
+            value={blockedDates}
+            onChange={setBlockedDates}
           />
         </div>
       </div>

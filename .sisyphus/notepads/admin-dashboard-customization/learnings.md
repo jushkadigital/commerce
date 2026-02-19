@@ -77,3 +77,81 @@ Thu Feb 19 03:57:20 UTC 2026
 - ✅ ZERO LSP diagnostics in both modified files
 - ✅ Build passes (frontend successful, unrelated backend errors pre-existing)
 - ✅ All requirements met per task specification
+
+## Task 5: Package Form Business Logic & New Fields
+
+### Implementation Summary
+**Timestamp**: Thu Feb 19 2026
+**Modified Files**: `package-details-step.tsx`, `create-package-modal.tsx`
+
+### Key Implementation Details
+1. **New Fields Added**:
+   - `is_special` (Switch) - marks packages for highlighted placement
+   - `booking_min_months_ahead` (number input) - **CRITICAL: Packages use MONTHS, Tours use DAYS**
+   - `blocked_dates` (array of date strings) - using BlockedDatesComponent
+   - `thumbnail` (read-only image display) - conditional rendering
+
+2. **Business Logic Restrictions**:
+   - `destination`, `description`, `duration` are now READ-ONLY via `disabled` prop
+   - Fields remain in state/payload (needed for update operations)
+   - Capacity remains editable
+
+3. **State Management Pattern**:
+   ```typescript
+   const [isSpecial, setIsSpecial] = useState(false)
+   const [bookingMinMonths, setBookingMinMonths] = useState<number | "">("")
+   const [blockedDates, setBlockedDates] = useState<string[]>([])
+   ```
+
+4. **Data Loading Pattern** (from packageToEdit):
+   ```typescript
+   setIsSpecial(packageToEdit.is_special || false)
+   setBookingMinMonths(packageToEdit.booking_min_months_ahead ?? "")
+   setBlockedDates(packageToEdit.blocked_dates || [])
+   ```
+
+5. **Payload Construction**:
+   ```typescript
+   is_special: isSpecial,
+   booking_min_months_ahead: bookingMinMonths === "" ? 0 : Number(bookingMinMonths),
+   blocked_dates: blockedDates
+   ```
+
+6. **Prop Passing**:
+   - Thumbnail uses `packageToEdit?.thumbnail` (not `thumbnail_url`)
+   - All new props passed to `<PackageDetailsStep />`
+
+### Critical Differences: Package vs Tour
+| Aspect | Package | Tour |
+|--------|---------|------|
+| Booking field | `booking_min_months_ahead` | `booking_min_days_ahead` |
+| Thumbnail source | `thumbnail` | `thumbnail_url` |
+| Label text | "Package Details", "Special Package" | "Tour Details", "Special Tour" |
+| Helper text | "months customers must book" | "days customers must book" |
+
+### Component Integration
+- **Switch Component**: `checked` + `onCheckedChange`, ID: `is-special-package`
+- **BlockedDatesComponent**: Fully functional from Task 2, reused seamlessly
+- **Thumbnail Display**: Conditional `{thumbnail && ...}` with consistent styling
+- **Helper Text**: Used `Text` component with `text-ui-fg-subtle text-xs` classes
+
+### Verification Results
+- ✅ **ZERO LSP diagnostics** in both modified files
+- ✅ **Frontend build successful** (34.81s)
+- ✅ **Backend errors pre-existing**, unrelated to admin changes
+- ✅ All requirements met per task specification
+- ✅ Evidence saved to `.sisyphus/evidence/task-5-package-update.txt`
+
+### Code Quality Notes
+- Removed unused `isStep1Completed` variable (consistent with Tour implementation)
+- Maintained consistent prop naming and state patterns
+- Used precise typing: `number | ""` for number inputs
+- Followed existing code structure and conventions
+
+### Design Consistency
+- Matched Tour implementation patterns exactly (except MONTHS vs DAYS)
+- Used same UI components and layout structure
+- Maintained consistent spacing (gap-2, gap-3, gap-4, py-2)
+- Applied border styling for thumbnail: `border border-ui-border-base`
+- Kept descriptive helper text for user guidance
+
