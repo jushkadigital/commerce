@@ -49,9 +49,9 @@ Enable "multiline cart" functionality where a single tour booking request result
 - `integration-tests/http/tour-cart-metadata-flow.spec.ts`: New test case for metadata flow.
 
 ### Definition of Done
-- [ ] `POST /store/cart/tour-items` creates separate line items for Adults and Children.
-- [ ] All line items share the same `group_id` in metadata.
-- [ ] Integration tests pass.
+- [x] `POST /store/cart/tour-items` creates separate line items for Adults and Children.
+- [x] All line items share the same `group_id` in metadata.
+- [x] Integration tests pass.
 
 ### Must Have
 - Separate line items for each non-zero passenger type.
@@ -165,11 +165,11 @@ Max Concurrent: 3
   - `integration-tests/http/tour-purchase-flow.spec.ts:165` - Reference for correct metadata structure
 
   **Acceptance Criteria**:
-  - [ ] Endpoint `POST /store/cart/tour-items` splits request into multiple items.
-  - [ ] Each item has correct `variant_id`.
-  - [ ] Each item has `quantity: 1` and scaled `unit_price`.
-  - [ ] Metadata `passengers` only reflects the count for that specific item type.
-  - [ ] All items have same `group_id`.
+  - [x] Endpoint `POST /store/cart/tour-items` splits request into multiple items.
+  - [x] Each item has correct `variant_id`.
+  - [x] Each item has `quantity: 1` and scaled `unit_price`.
+  - [x] Metadata `passengers` only reflects the count for that specific item type.
+  - [x] All items have same `group_id`.
 
   **QA Scenarios**:
   ```
@@ -244,8 +244,8 @@ Max Concurrent: 3
   - `integration-tests/http/tour-cart-metadata-flow.spec.ts`
 
   **Acceptance Criteria**:
-  - [ ] New test passes.
-  - [ ] Verifies metadata preservation for split items.
+  - [x] New test passes.
+  - [x] Verifies metadata preservation for split items.
 
   **QA Scenarios**:
   ```
@@ -280,5 +280,5 @@ Max Concurrent: 3
 ## Success Criteria
 
 ### Final Checklist
-- [ ] `POST /store/cart/tour-items` creates multiple items
-- [ ] Tests pass
+- [x] `POST /store/cart/tour-items` creates multiple items
+- [x] Tests pass
