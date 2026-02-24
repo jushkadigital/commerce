@@ -2,7 +2,7 @@ import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createPaymentCollectionForCartWorkflow } from "@medusajs/medusa/core-flows"
 import completeCartWithToursWorkflow from "../../src/modules/tour/workflows/create-tour-booking"
-import { TOUR_MODULE } from "../../src/modules/tour"
+import { TOUR_MODULE, PassengerType } from "../../src/modules/tour"
 import type TourModuleService from "../../src/modules/tour/service"
 import handleOrderPlaced from "../../src/subscribers/order-placed"
 
@@ -88,6 +88,18 @@ medusaIntegrationTestRunner({
           duration_days: 1,
           max_capacity: 20,
         })
+
+        await tourModuleService.createTourVariants({
+          tour_id: tour.id,
+          variant_id: adultVariant.id,
+          passenger_type: PassengerType.ADULT,
+        })
+
+        await tourModuleService.createTourVariants({
+          tour_id: tour.id,
+          variant_id: childVariant.id,
+          passenger_type: PassengerType.CHILD,
+        })
       })
 
       afterEach(async () => {
@@ -96,6 +108,7 @@ medusaIntegrationTestRunner({
           if (bookings.length > 0) {
             await tourModuleService.deleteTourBookings(bookings.map((b) => b.id))
           }
+          await tourModuleService.deleteTourVariants({ tour_id: tour.id })
           await tourModuleService.deleteTours(tour.id)
           await productModule.deleteProductVariants(adultVariant.id)
           await productModule.deleteProductVariants(childVariant.id)
