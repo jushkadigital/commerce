@@ -177,32 +177,81 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
-    // 7. Create single line item with total price and structured metadata
-    const singleLineItem = {
-      title: `${tour.destination} - ${tour_date}`,
-      quantity: 1,
-      unit_price: totalPrice,
-      metadata: {
-        is_tour: true,
-        tour_id: tour.id,
-        tour_date,
-        tour_destination: tour.destination,
-        tour_duration_days: tour.duration_days,
-        total_passengers: totalPassengers,
-        passengers: {
-          adults,
-          children,
-          infants,
+    // 7. Build separate line items per passenger type to avoid double-counting
+    const groupId = `tour-${tour.id}-${tour_date}`
+
+    const itemsToAdd: any[] = []
+
+    // Helper to push item
+    const pushItem = (
+      variantId: string,
+      count: number,
+      unitPrice: number,
+      typeLabel: string,
+      passengersObj: { adults: number; children: number; infants: number }
+    ) => {
+      if (count <= 0) return
+
+      itemsToAdd.push({
+        variant_id: variantId,
+        quantity: 1,
+        unit_price: unitPrice * count,
+        title: `${tour.destination} - ${tour_date} (${typeLabel})`,
+        metadata: {
+          is_tour: true,
+          tour_id: tour.id,
+          tour_date,
+          tour_destination: tour.destination,
+          tour_duration_days: tour.duration_days,
+          total_passengers: count,
+          passengers: passengersObj,
+          group_id: groupId,
+          pricing_breakdown: [
+            {
+              type: typeLabel.toUpperCase(),
+              quantity: count,
+              unit_price: unitPrice,
+            },
+          ],
+          customer_name: customer?.name,
+          customer_email: customer?.email,
+          customer_phone: customer?.phone,
         },
-        pricing_breakdown: pricingBreakdown,
-        customer_name: customer?.name,
-        customer_email: customer?.email,
-        customer_phone: customer?.phone,
-      },
+      })
     }
 
-    // 8. Add item to cart
-    await cartModule.addLineItems(cart_id, [singleLineItem] as any)
+    if (adults > 0) {
+      const adultVariant = variantMap.get(PassengerType.ADULT)!
+      const unitPrice = priceMap.get(adultVariant.variant_id) || 0
+      pushItem(adultVariant.variant_id, adults, unitPrice, "Adults", {
+        adults,
+        children: 0,
+        infants: 0,
+      })
+    }
+
+    if (children > 0) {
+      const childVariant = variantMap.get(PassengerType.CHILD)!
+      const unitPrice = priceMap.get(childVariant.variant_id) || 0
+      pushItem(childVariant.variant_id, children, unitPrice, "Children", {
+        adults: 0,
+        children,
+        infants: 0,
+      })
+    }
+
+    if (infants > 0) {
+      const infantVariant = variantMap.get(PassengerType.INFANT)!
+      const unitPrice = priceMap.get(infantVariant.variant_id) || 0
+      pushItem(infantVariant.variant_id, infants, unitPrice, "Infants", {
+        adults: 0,
+        children: 0,
+        infants,
+      })
+    }
+
+    // 8. Add items to cart
+    await cartModule.addLineItems(cart_id, itemsToAdd as any)
 
     // 6. Retrieve updated cart
     const updatedCart = await cartModule.retrieveCart(cart_id, {
