@@ -18,7 +18,6 @@ medusaIntegrationTestRunner({
       let cartModule: any
       let salesChannelModule: any
       let regionModule: any
-      let customerModule: any
       let orderModule: any
       let paymentModule: any
       let remoteLink: any
@@ -39,7 +38,6 @@ medusaIntegrationTestRunner({
         cartModule = container.resolve(Modules.CART)
         salesChannelModule = container.resolve(Modules.SALES_CHANNEL)
         regionModule = container.resolve(Modules.REGION)
-        customerModule = container.resolve(Modules.CUSTOMER)
         orderModule = container.resolve(Modules.ORDER)
         paymentModule = container.resolve(Modules.PAYMENT)
         remoteLink = container.resolve(ContainerRegistrationKeys.LINK)
@@ -147,21 +145,6 @@ medusaIntegrationTestRunner({
         customerEmail: string,
         passengerCounts: { adults: number; children: number; infants: number } = { adults: 1, children: 0, infants: 0 }
       ) {
-        const customers = await customerModule.listCustomers({
-          email: customerEmail,
-        })
-
-        let customer
-        if (customers.length === 0) {
-          customer = await customerModule.createCustomers({
-            email: customerEmail,
-            first_name: "Test",
-            last_name: "Customer",
-          })
-        } else {
-          customer = customers[0]
-        }
-
         const adultVariant = product.variants.find(
           (v: any) => v.title === "Adult Ticket"
         )
@@ -275,7 +258,6 @@ medusaIntegrationTestRunner({
         const cart = await cartModule.createCarts({
           currency_code: "usd",
           email: customerEmail,
-          customer_id: customer.id,
           sales_channel_id: salesChannel.id,
           region_id: region.id,
           items,
@@ -364,6 +346,82 @@ medusaIntegrationTestRunner({
           expect(remainingCapacity).toBe(tourCapacity - 1)
         })
 
+        it("should handle mixed passenger types via API endpoint", async () => {
+          // Create an empty cart first via API
+          const createRes = await api.post(`/store/carts`, {
+            email: "mixed-api@test.com",
+            region_id: region.id,
+            sales_channel_id: salesChannel.id,
+            currency_code: "usd",
+          })
+
+          expect(createRes.status).toEqual(200)
+          const cartId = createRes.data.cart.id
+
+          // Call the new endpoint to add tour items with mixed passengers
+          const body = {
+            cart_id: cartId,
+            tour_id: tour.id,
+            tour_date: testDate,
+            adults: 2,
+            children: 2,
+            infants: 0,
+          }
+
+          const addRes = await api.post(`/store/cart/tour-items`, body)
+          expect(addRes.status).toEqual(200)
+          const cart = addRes.data
+
+          // Cart should have 2 separate line items (adult + child)
+          expect(cart.items).toBeDefined()
+          // Filter only tour items
+          const tourItems = cart.items.filter((i: any) => i.metadata?.is_tour)
+          expect(tourItems).toHaveLength(2)
+
+          const adultItem = tourItems.find((i: any) => i.metadata.pricing_breakdown?.[0]?.type === "ADULT")
+          const childItem = tourItems.find((i: any) => i.metadata.pricing_breakdown?.[0]?.type === "CHILD")
+
+          expect(adultItem).toBeDefined()
+          expect(childItem).toBeDefined()
+
+          // Verify metadata.passengers structure
+          expect(adultItem.metadata.passengers).toEqual({ adults: 2, children: 0, infants: 0 })
+          expect(childItem.metadata.passengers).toEqual({ adults: 0, children: 2, infants: 0 })
+
+          // Verify group_id shared
+          expect(adultItem.metadata.group_id).toBeDefined()
+          expect(adultItem.metadata.group_id).toEqual(childItem.metadata.group_id)
+
+          // Create payment collection for this cart
+          await createPaymentCollectionForCartWorkflow(container).run({ input: { cart_id: cartId } })
+
+          const { data: cartsWithPayment } = await query.graph({ entity: "cart", fields: ["id", "total", "payment_collection.id"], filters: { id: cartId } })
+          const cartWithPayment = cartsWithPayment[0]
+
+          await paymentModule.createPaymentSession(cartWithPayment.payment_collection.id, {
+            provider_id: "pp_system_default",
+            currency_code: "usd",
+            amount: cartWithPayment.total,
+            data: {},
+          })
+
+          // Complete checkout using the workflow
+          const { result } = await completeCartWithToursWorkflow(container).run({ input: { cart_id: cartId } })
+          expect(result).toBeDefined()
+          const order = (result as any).order
+          expect(order).toBeDefined()
+          expect(order.items).toHaveLength(2)
+
+          // Verify booking created with two line items
+          const bookings = await tourModuleService.listTourBookings({ tour_id: tour.id, tour_date: new Date(testDate) })
+          // There should be 1 booking that contains 2 line items (grouped)
+          expect(bookings.length).toBeGreaterThan(0)
+          const booking = bookings.find((b: any) => b.order_id === order.id)
+          expect(booking).toBeDefined()
+          // booking.line_items should contain the two created items
+          expect(booking!.line_items).toHaveLength(2)
+        })
+
         it("should create booking with correct metadata", async () => {
           const { cart } = await createCartWithTour("meta@example.com", { adults: 3, children: 0, infants: 0 })
 
@@ -436,14 +494,6 @@ medusaIntegrationTestRunner({
             passenger_type: PassengerType.ADULT,
           })
 
-          // Get customer
-          const customer = await customerModule.createCustomers({
-            email: "multi@example.com",
-            first_name: "Test",
-            last_name: "Customer",
-          })
-
-          // Get adult variants for both tours
           const adultVariant1 = product.variants.find(
             (v: any) => v.title === "Adult Ticket"
           )
@@ -452,7 +502,6 @@ medusaIntegrationTestRunner({
           const cart = await cartModule.createCarts({
             currency_code: "usd",
             email: "multi@example.com",
-            customer_id: customer.id,
             sales_channel_id: salesChannel.id,
             region_id: region.id,
             items: [
@@ -679,15 +728,6 @@ medusaIntegrationTestRunner({
         it("should reject booking for past dates", async () => {
           const pastDate = "2020-01-01"
 
-          const customers = await customerModule.listCustomers({
-            email: "past-date@test.com",
-          })
-          let customer = customers[0] || await customerModule.createCustomers({
-            email: "past-date@test.com",
-            first_name: "Test",
-            last_name: "Customer",
-          })
-
           const adultVariant = product.variants.find(
             (v: any) => v.title === "Adult Ticket"
           )
@@ -695,9 +735,10 @@ medusaIntegrationTestRunner({
           const cart = await cartModule.createCarts({
             currency_code: "usd",
             email: "past-date@test.com",
-            customer_id: customer.id,
             sales_channel_id: salesChannel.id,
             region_id: region.id,
+
+
             items: [{
               variant_id: adultVariant.id,
               quantity: 1,
