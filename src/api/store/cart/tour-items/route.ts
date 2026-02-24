@@ -208,7 +208,15 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           group_id: groupId,
           pricing_breakdown: [
             {
-              type: typeLabel.toUpperCase(),
+              // Map plural labels to singular PassengerType-like constants
+              type:
+                typeLabel === "Adults"
+                  ? "ADULT"
+                  : typeLabel === "Children"
+                  ? "CHILD"
+                  : typeLabel === "Infants"
+                  ? "INFANT"
+                  : typeLabel.toUpperCase(),
               quantity: count,
               unit_price: unitPrice,
             },

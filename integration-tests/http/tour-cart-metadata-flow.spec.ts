@@ -333,7 +333,8 @@ medusaIntegrationTestRunner({
 
           const addRes = await api.post(`/store/cart/tour-items`, body)
           expect(addRes.status).toEqual(200)
-          const cart = addRes.data
+          // endpoint returns { cart, summary }
+          const cart = addRes.data.cart
 
           // Cart should have 2 separate line items (adult + child)
           expect(cart.items).toBeDefined()
