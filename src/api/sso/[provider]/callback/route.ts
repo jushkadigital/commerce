@@ -15,15 +15,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     // --- CORRECCIÓN CRÍTICA AQUÍ ---
     // Usamos validateCallback, que es el método que procesa el 'code'
     // y devuelve la identidad del usuario.
-    const { success, authIdentity, error } = await authService.validateCallback(
-      provider,
-      {
-        url: req.url,
-        headers: req.headers as unknown as Record<string, string>,
-        query: req.query,
-        protocol: req.protocol,
-      }
-    )
+  const { success, authIdentity, error } = await authService.validateCallback(
+    provider,
+    {
+      url: req.url,
+      headers: req.headers as unknown as Record<string, string>,
+      query: req.query as unknown as Record<string, string>,
+      protocol: req.protocol,
+    }
+  )
 
     if (!success || !authIdentity) {
       console.error("[SSO Callback] Falló validación:", error)

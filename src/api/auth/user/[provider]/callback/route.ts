@@ -7,11 +7,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const authService = req.scope.resolve(Modules.AUTH)
 
   const { success, authIdentity, error } = await authService.validateCallback(
-    "keycloak-admin", // El ID de tu provider
+    "keycloak-admin",
     {
       url: req.url,
       headers: req.headers as unknown as Record<string, string>,
-      query: req.query,
+      query: req.query as unknown as Record<string, string>,
       protocol: req.protocol,
     }
   )

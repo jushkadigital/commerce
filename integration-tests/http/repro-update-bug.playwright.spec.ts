@@ -61,19 +61,25 @@ test.describe('Repro: update payload includes new Tour/Package fields', () => {
     })
 
     // Use a blank page and directly POST to the endpoint to simulate update
-    await page.goto('about:blank')
+    await page.goto('/')
     await page.evaluate(async () => {
-      await fetch('/admin/tours/tour_123', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          is_special: true,
-          booking_min_days_ahead: 7,
-          blocked_dates: ['2026-03-15'],
-          blocked_week_days: ['0', '6'],
-          cancellation_deadline_hours: 48,
-        }),
-      })
+      console.log('Current URL inside evaluate:', window.location.href);
+      try {
+        await fetch('http://localhost:9000/admin/tours/tour_123', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            is_special: true,
+            booking_min_days_ahead: 7,
+            blocked_dates: ['2026-03-15'],
+            blocked_week_days: ['0', '6'],
+            cancellation_deadline_hours: 48,
+          }),
+        })
+      } catch (e) {
+        console.error('Fetch error:', e)
+        throw e
+      }
     })
 
     // Verify captured payload contains all fields
@@ -109,19 +115,25 @@ test.describe('Repro: update payload includes new Tour/Package fields', () => {
     })
 
     // Use a blank page and directly POST to the endpoint to simulate update
-    await page.goto('about:blank')
+    await page.goto('/')
     await page.evaluate(async () => {
-      await fetch('/admin/packages/pkg_789', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          is_special: true,
-          booking_min_months_ahead: 2,
-          blocked_dates: ['2026-06-01'],
-          blocked_week_days: ['0'],
-          cancellation_deadline_hours: 72,
-        }),
-      })
+      console.log('Current URL inside evaluate:', window.location.href);
+      try {
+        await fetch('http://localhost:9000/admin/packages/pkg_789', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            is_special: true,
+            booking_min_months_ahead: 2,
+            blocked_dates: ['2026-06-01'],
+            blocked_week_days: ['0'],
+            cancellation_deadline_hours: 72,
+          }),
+        })
+      } catch (e) {
+        console.error('Fetch error:', e)
+        throw e
+      }
     })
 
     // Verify captured payload contains all fields

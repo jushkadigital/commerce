@@ -1,6 +1,6 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { createPaymentCollectionForCartWorkflow } from "@medusajs/medusa/core-flows"
+import { createPaymentCollectionForCartWorkflow, createApiKeysWorkflow, linkSalesChannelsToApiKeyWorkflow } from "@medusajs/medusa/core-flows"
 import { PACKAGE_MODULE } from "../../src/modules/package"
 import PackageModuleService from "../../src/modules/package/service"
 import completeCartWithPackagesWorkflow from "../../src/workflows/create-package-booking"
@@ -38,6 +38,7 @@ medusaIntegrationTestRunner({
       let paymentModule: any
       let remoteLink: any
       let query: any
+      let publishableApiKeyToken: string
 
       // Test data
       let pkg: any
@@ -96,6 +97,7 @@ medusaIntegrationTestRunner({
           destination: "Cusco",
           description: "3-day adventure package in Cusco",
           duration_days: 3,
+          thumbnail: "https://example.com/cusco-package-thumb.jpg",
           max_capacity: packageCapacity,
         })
 
@@ -132,6 +134,31 @@ medusaIntegrationTestRunner({
         // Re-fetch product with variants
         product = await productModule.retrieveProduct(product.id, {
           relations: ["variants"],
+        })
+
+        // Create publishable API key for store endpoints
+        const { result: publishableApiKeyResult } = await createApiKeysWorkflow(
+          container
+        ).run({
+          input: {
+            api_keys: [
+              {
+                title: `package-store-api-${Date.now()}`,
+                type: "publishable",
+                created_by: "integration-test",
+              },
+            ],
+          },
+        })
+
+        const publishableApiKey = publishableApiKeyResult[0]
+        publishableApiKeyToken = publishableApiKey.token
+
+        await linkSalesChannelsToApiKeyWorkflow(container).run({
+          input: {
+            id: publishableApiKey.id,
+            add: [salesChannel.id],
+          },
         })
       })
 

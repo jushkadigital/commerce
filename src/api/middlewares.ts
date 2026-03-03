@@ -31,6 +31,10 @@ export default defineMiddlewares({
       middlewares: [authenticate("user", ["session", "bearer"])],
     },
     {
+      matcher: "/admin/package-bookings*",
+      middlewares: [authenticate("user", ["session", "bearer"])],
+    },
+    {
       // Permite crear usuario admin después de autenticarse con Keycloak
       // El token tiene auth_identity_id pero no actor_id (usuario aún no existe)
       matcher: "/admin/keycloak-auth/users",
@@ -44,10 +48,34 @@ export default defineMiddlewares({
       matcher: "/admin/bookings",
       methods: ["GET"],
       middlewares: [
-        validateAndTransformQuery(createFindParams(), {
+        validateAndTransformQuery(createFindParams().merge(z.object({
+          type: z.enum(["tour"]).optional(),
+          tour_date: z.object({
+            gte: z.string().optional(),
+            lte: z.string().optional(),
+          }).optional(),
+        })), {
           isList: true,
           defaults: ["id", "order_id", "tour_id", "tour_date", "status",
-            "line_items.*"
+            "line_items.*", "tour.*", "metadata"
+          ],
+        })
+      ],
+    },
+    {
+      matcher: "/admin/package-bookings",
+      methods: ["GET"],
+      middlewares: [
+        validateAndTransformQuery(createFindParams().merge(z.object({
+          type: z.enum(["package"]).optional(),
+          package_date: z.object({
+            gte: z.string().optional(),
+            lte: z.string().optional(),
+          }).optional(),
+        })), {
+          isList: true,
+          defaults: ["id", "order_id", "package_date", "status",
+            "line_items.*", "package.*", "metadata"
           ],
         })
       ],

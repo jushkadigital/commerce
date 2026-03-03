@@ -125,3 +125,8 @@ All acceptance criteria met. All Must Have features implemented. All guardrails 
 - Maintenance burden reduced
 - Unified data model for tours and packages
 - 9 files changed, +1 insertion, -1144 deletions
+
+## Event Bus Emit Signature (2026-03-03)
+- **Issue**: `eventBus.emit` was called with `(string, object)`, causing TS2345 "string not assignable to Message".
+- **Resolution**: Changed to `eventBus.emit({ name: string, data: object })` to match `EventBusTypes.Message` interface used by `RabbitMQEventBusService` (and likely the default Medusa event bus contract in v2/modules).
+- **Pattern**: When using `container.resolve("event_bus")`, always pass a full message object to `.emit()`.

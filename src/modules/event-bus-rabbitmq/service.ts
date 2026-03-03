@@ -2,12 +2,13 @@
 import {
   InternalModuleDeclaration,
   EventBusTypes,
-  Logger
+  Logger,
+  IEventBusModuleService
 } from "@medusajs/types"
-import { AbstractEventBusModuleService } from "@medusajs/utils" // O desde donde importes la clase base
+import { AbstractEventBusModuleService, Modules } from "@medusajs/utils"
 import amqp from "amqplib"
 
-const WHITELISTED_EVENTS = ["product.created", "product.updated", "myCustomProductCreated"]
+const WHITELISTED_EVENTS = ["product.created", "product.updated"]
 
 type RabbitMQOptions = {
   url: string
@@ -16,6 +17,7 @@ type RabbitMQOptions = {
 
 type InjectedDependencies = {
   logger: Logger
+  [Modules.EVENT_BUS]?: IEventBusModuleService
 }
 
 export default class RabbitMQEventBusService extends AbstractEventBusModuleService {
@@ -24,28 +26,47 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
   protected options_: RabbitMQOptions
   protected logger_: Logger
   protected isReady_: boolean = false
-  protected queueName_: string = "" // <--- NUEVA PROPIEDAD
+  protected queueName_: string = ""
   protected pendingBindings_: Map<string, string> = new Map()
   protected productModuleService_: any
   protected moduleDeclaration_: InternalModuleDeclaration
+  protected medusaEventBus_: IEventBusModuleService | null = null
+  protected cradle_: InjectedDependencies
 
-  // Almacén temporal para eventos agrupados (Transacciones)
   protected stagedEvents_: Map<string, EventBusTypes.Message<unknown>[]> = new Map()
 
   constructor(
-    { logger }: InjectedDependencies,
+    cradle: InjectedDependencies,
     moduleOptions: RabbitMQOptions,
     moduleDeclaration: InternalModuleDeclaration
   ) {
-    // 1. Llamamos al constructor padre con los argumentos exactos que requiere
-    super({}, moduleOptions, moduleDeclaration)
+    super(cradle, moduleOptions, moduleDeclaration)
 
-    this.logger_ = logger
+    this.cradle_ = cradle
+    this.logger_ = cradle.logger
     this.options_ = moduleOptions
     this.moduleDeclaration_ = moduleDeclaration
 
-    // Iniciamos conexión
+    const eventBus = cradle[Modules.EVENT_BUS]
+    if (eventBus) {
+      this.medusaEventBus_ = eventBus
+      this.logger_.info("Medusa Event Bus injected via constructor")
+    } else {
+      this.logger_.warn("Medusa Event Bus not available at construction, will resolve lazily")
+    }
+
     this.connect()
+  }
+
+  private getMedusaEventBus(): IEventBusModuleService | null {
+    if (this.medusaEventBus_) return this.medusaEventBus_
+
+    const eventBus = this.cradle_[Modules.EVENT_BUS]
+    if (eventBus) {
+      this.medusaEventBus_ = eventBus
+      this.logger_.info("Medusa Event Bus resolved lazily")
+    }
+    return this.medusaEventBus_
   }
 
   async connect() {
@@ -62,10 +83,12 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
       await this.channel_.assertExchange(exchange, "topic", { durable: true })
 
       // Crear cola exclusiva para esta instancia de Medusa
-      const q = await this.channel_.assertQueue("", { exclusive: true })
+      const q = await this.channel_.assertQueue("commerce_sync_queue", { durable: true })
       this.queueName_ = q.queue
 
-
+      // Binding wildcard para recibir TODOS los eventos del exchange
+      await this.channel_.bindQueue(this.queueName_, exchange, "#")
+      this.logger_.info(`Queue bound to exchange "${exchange}" with routing key "#"`)
 
       // Consumidor: Escucha mensajes de RabbitMQ e invoca suscriptores locales
       this.channel_.consume(q.queue, async (msg) => {
@@ -73,7 +96,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
         const routingKey = msg.fields.routingKey
         let rawContent: any
-        
+
         try {
           rawContent = JSON.parse(msg.content.toString())
         } catch (err) {
@@ -107,7 +130,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
         }
 
         this.logger_.info("🟢 [DEBUG] Mensaje crudo recibido en RabbitMQ Service")
-        
+
         // A. Call interceptors (if available)
         if (typeof this.callInterceptors === 'function') {
           try {
@@ -134,16 +157,29 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
             }
           })
         )
+
+        // D. Re-emit to Medusa's official Event Bus (triggers src/subscribers/*)
+        const eventBus = this.getMedusaEventBus()
+        if (eventBus) {
+          try {
+            await eventBus.emit(message)
+            this.logger_.info(`Re-emitted ${routingKey} to Medusa Event Bus`)
+          } catch (err) {
+            this.logger_.error(`Failed to re-emit ${routingKey} to Medusa Event Bus: ${err}`)
+          }
+        } else {
+          this.logger_.warn(`Medusa Event Bus not available, cannot re-emit ${routingKey}`)
+        }
       }, { noAck: true })
 
       this.isReady_ = true
-      
+
       // Process pending bindings
       for (const [eventName, routingKey] of this.pendingBindings_.entries()) {
         await this.channel_.bindQueue(this.queueName_, exchange, routingKey)
       }
       this.pendingBindings_.clear()
-      
+
       this.logger_.info("RabbitMQ Event Bus is ready.")
       this.logger_.info(`Conectado a RabbitMQ. Cola: ${this.queueName_}`)
     } catch (err) {
@@ -152,7 +188,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
   }
 
   // --- IMPLEMENTACIÓN DE MÉTODOS ABSTRACTOS ---
-  
+
   private async enrichProductEvent(event: EventBusTypes.Message<any>): Promise<EventBusTypes.Message<any>> {
     if (!['product.created', 'product.updated'].includes(event.name)) {
       return event
@@ -168,7 +204,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
     try {
       if (!this.productModuleService_) {
         const container = (this.moduleDeclaration_ as any)?.scope?.cradle
-        
+
         if (container?.productModuleService) {
           this.productModuleService_ = container.productModuleService
         } else {
@@ -195,7 +231,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
       return event
     }
   }
-  
+
   subscribe(
     eventName: string | symbol,
     subscriber: EventBusTypes.Subscriber,
@@ -206,7 +242,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
 
     this.logger_.info("SUBS")
     this.logger_.info(`${this.isReady_}`)
-    
+
     // B. Si RabbitMQ ya está listo, creamos el binding inmediatamente
     if (this.isReady_ && this.queueName_ && typeof eventName === 'string') {
       const exchange = this.options_.exchange || "tourism-exchange"
@@ -318,7 +354,7 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
     for (const event of events) {
       try {
         const enrichedEvent = await this.enrichProductEvent(event)
-        
+
         const buffer = Buffer.from(JSON.stringify(enrichedEvent))
         this.channel_.publish(exchange, enrichedEvent.name, buffer)
       } catch (err) {

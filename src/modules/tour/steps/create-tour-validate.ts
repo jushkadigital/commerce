@@ -15,6 +15,8 @@ export const validateTourStep = createStep(
 
 
 
+    console.log("ValidateTourStep Input:", JSON.stringify(input))
+
     if (input.duration_days < 1) {
       throw new Error("Duration must be at least 1 day.")
     }

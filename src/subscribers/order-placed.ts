@@ -62,8 +62,12 @@ export default async function handleOrderPlaced({
       },
     }))
 
-    const createdBookings =
+    const createdBookingsRaw =
       await tourModuleService.createTourBookings(bookingsToCreate)
+    // createdBookingsRaw might be a single object or an array depending on implementation
+    const createdBookings = Array.isArray(createdBookingsRaw)
+      ? createdBookingsRaw
+      : [createdBookingsRaw]
 
     logger.info(
       `[order.placed] Created ${createdBookings.length} tour booking(s) for order ${orderId}: ${createdBookings.map((b: any) => b.id).join(", ")}`
@@ -98,17 +102,21 @@ export default async function handleOrderPlaced({
         // Placeholder addresses per plan. Do not throw on failure.
         // Resend SDK returns an object with { data, error }.
         // Await the send call and log result.
-        const res = await resend.emails.send({
-          from: "bookings@yourdomain.com",
-          to: ["operator@example.com"],
-          subject,
-          html,
-        })
+        if (resend) {
+          const res = await resend.emails.send({
+            from: "bookings@yourdomain.com",
+            to: ["operator@example.com"],
+            subject,
+            html,
+          })
 
-        if (res?.error) {
-          logger.error(`Failed to send email for booking ${booking.id}:`, res.error)
+          if (res?.error) {
+            logger.error(`Failed to send email for booking ${booking.id}:`, res.error)
+          } else {
+            logger.info(`Email sent for booking ${booking.id}`)
+          }
         } else {
-          logger.info(`Email sent for booking ${booking.id}`)
+          logger.warn(`Resend client not initialized, skipping email for booking ${booking.id}`)
         }
       } catch (error) {
         logger.error(`Failed to send email for booking ${booking.id}:`, error)

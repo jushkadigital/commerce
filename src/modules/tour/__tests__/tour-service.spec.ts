@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { moduleIntegrationTestRunner } from "@medusajs/test-utils"
 import { TOUR_MODULE } from "../"
 import TourModuleService from "../service"

@@ -8,7 +8,6 @@ import {
   useQueryGraphStep
 } from "@medusajs/medusa/core-flows"
 import { updatePackageStep } from "./steps/update-package"
-import { updatePackagePricesStep } from "./steps/update-package-prices"
 
 export type UpdatePackageWorkflowInput = {
   id: string
@@ -23,6 +22,13 @@ export type UpdatePackageWorkflowInput = {
     infant?: number
     currency_code?: string
   }
+
+}
+
+type ProductUpdate = {
+  id: string
+  title?: string
+  description?: string
 }
 
 export const updatePackageNoPriceWorkflow = createWorkflow(
@@ -49,17 +55,14 @@ export const updatePackageNoPriceWorkflow = createWorkflow(
     })
 
     const productUpdateInput = transform(
-      { input, pkg },
-      (data) => {
+      { input, pkg } as any,
+      (data: { input: UpdatePackageWorkflowInput; pkg: any }): ProductUpdate[] => {
         if (!data.pkg.product_id) return []
 
-        const updateData: any = { id: data.pkg.product_id }
+        const updateData: ProductUpdate = { id: data.pkg.product_id }
         let hasUpdates = false
 
         if (data.input.destination || data.input.duration_days) {
-          const dest = data.input.destination || "Package"
-          const dur = data.input.duration_days || "X"
-
           if (data.input.destination) {
             updateData.title = `${data.input.destination} ${data.input.duration_days ? `- ${data.input.duration_days} Days` : ''}`
             hasUpdates = true

@@ -4,6 +4,7 @@ import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
 import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows"
 import { TOUR_MODULE } from "../modules/tour"
 
+import { extractText } from "../utils/parserRichText"
 // La data que esperas recibir de RabbitMQ (Ajusta si la estructura cambia para clientes)
 type RecieveData = {
   externalId: string
@@ -37,11 +38,11 @@ const gaga = await createTourWorkflow(container).run({
 
   const newTour = await tourModule.updateTours([{
     id: gege.id,
-    destination: event.data.changes.title,
-    description: event.data.changes.meta.description,
-    duration_days: event.data.changes.durationGeneral,
-    max_capacity: event.data.changes.layout?.find(ele => ele.blockType == "dataTour")?.groupSize.value || 15,
-    thumbnail: event.data.changes.meta.image.sizes.og.url,
+    destination: event.data.data.destination,
+    description: extractText(event.data.data.description.root),
+    duration_days: event.data.data.duration_days,
+    max_capacity: event.data.data.max_capacity,
+    thumbnail: event.data.data.thumbnail
   }])
 
 

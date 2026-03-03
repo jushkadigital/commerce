@@ -50,10 +50,38 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             tour_date: item.metadata.tour_date,
             passenger_name: item.metadata.passenger_name,
             passenger_type: item.metadata.passenger_type,
+            group_id: item.metadata.group_id,
+            total_passengers: Number(item.metadata?.total_passengers ?? item.quantity ?? 0),
             quantity: item.quantity,
             unit_price: item.unit_price,
             total: item.total,
           }))
+
+        const seenGroups = new Set<string>()
+        const totalPassengers = tourItems.reduce((sum: number, item: any) => {
+          const groupId = typeof item.group_id === "string" ? item.group_id : undefined
+          const passengers = Number(item.total_passengers)
+
+          if (groupId && Number.isFinite(passengers) && passengers > 0) {
+            if (seenGroups.has(groupId)) {
+              return sum
+            }
+
+            seenGroups.add(groupId)
+            return sum + passengers
+          }
+
+          if (Number.isFinite(passengers) && passengers > 0) {
+            return sum + passengers
+          }
+
+          const quantity = Number(item.quantity)
+          if (Number.isFinite(quantity) && quantity > 0) {
+            return sum + quantity
+          }
+
+          return sum
+        }, 0)
 
         enrichedOrders.push({
           id: order.id,
@@ -74,7 +102,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             : null,
           tour_items: tourItems,
           bookings: orderBookings,
-          total_passengers: tourItems.length,
+          total_passengers: totalPassengers,
           tours_count: new Set(tourItems.map((i: any) => i.tour_id)).size,
         })
       } catch (error) {

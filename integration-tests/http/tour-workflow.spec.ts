@@ -187,6 +187,48 @@ medusaIntegrationTestRunner({
 
           await cleanupTour(result.tour.id)
         })
+
+        it("should persist prices for all created product variants", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Pricing Persistence Tour",
+            duration_days: 1,
+            max_capacity: 10,
+            prices: {
+              adult: 210,
+              child: 130,
+              infant: 25,
+              currency_code: "PEN",
+            },
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+          const variantIds = (result.tour.variants || [])
+            .map((variant: any) => variant.variant_id)
+            .filter(Boolean)
+
+          expect(variantIds).toHaveLength(3)
+
+          const { data: variantsWithPrices } = await query.graph({
+            entity: "product_variant",
+            fields: ["id", "price_set.id", "price_set.prices.currency_code", "price_set.prices.amount"],
+            filters: {
+              id: variantIds,
+            },
+          })
+
+          expect(variantsWithPrices).toHaveLength(3)
+
+          for (const variant of variantsWithPrices) {
+            expect(variant.price_set?.id).toBeDefined()
+            expect((variant.price_set?.prices || []).length).toBeGreaterThan(0)
+
+            const currencyCodes = (variant.price_set?.prices || []).map((price: any) => price.currency_code)
+            expect(currencyCodes).toContain("pen")
+            expect(currencyCodes).toContain("usd")
+          }
+
+          await cleanupTour(result.tour.id)
+        })
       })
 
       describe("Product and Variant Structure", () => {

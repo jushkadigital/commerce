@@ -30,13 +30,15 @@ export const validateTourBookingStep = createStep(
     
     logger.info(`[VALIDATE] Cart found with ${cart.items?.length || 0} items`)
     
-    const tourItems = cart.items?.filter(
-      (item: any) => item.metadata?.is_tour === true
-    ) || []
+    const tourItems = (cart.items || []).filter(
+      (item: any) => item && item.metadata?.is_tour === true
+    )
     
     logger.info(`[VALIDATE] Found ${tourItems.length} tour items`)
 
     for (const item of tourItems) {
+      if (!item) continue
+
       const metadata = item.metadata as {
         tour_id?: string
         tour_date?: string

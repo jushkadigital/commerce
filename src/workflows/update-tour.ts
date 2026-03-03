@@ -30,6 +30,12 @@ export type UpdateTourWorkflowInput = {
   cancellation_deadline_hours?: number
 }
 
+type ProductUpdate = {
+  id: string
+  title?: string
+  description?: string
+}
+
 export const updateTourWorkflow = createWorkflow(
   "update-tour",
   (input: UpdateTourWorkflowInput) => {
@@ -64,12 +70,12 @@ export const updateTourWorkflow = createWorkflow(
     // --- Step 3: Sincronizar Producto de Medusa ---
     // Si cambia el destino, duración o descripción, actualizamos el producto
     const productUpdateInput = transform(
-      { input, tour },
-      (data) => {
+      { input, tour } as any,
+      (data: { input: UpdateTourWorkflowInput; tour: any }): ProductUpdate[] => {
         // Si el tour no tiene producto linkeado o no hay cambios visuales, no hacemos nada
         if (!data.tour.product_id) return []
 
-        const updateData: any = { id: data.tour.product_id }
+        const updateData: ProductUpdate = { id: data.tour.product_id }
         let hasUpdates = false
 
         if (data.input.destination || data.input.duration_days) {

@@ -3,6 +3,7 @@ import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
 // CAMBIO IMPORTANTE: Importamos el workflow de CLIENTES, no de usuarios admin
 import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows"
 import createTourWorkflow from "../workflows/create-tour"
+import { extractText } from "../utils/parserRichText"
 
 // La data que esperas recibir de RabbitMQ (Ajusta si la estructura cambia para clientes)
 type RecieveData = {
@@ -33,19 +34,19 @@ const gaga = await createTourWorkflow(container).run({
 
   const { result } = await createTourWorkflow(container).run({
     input: {
-      destination: event.data.data.title,
-      description: event.data.data.meta.description,
-      duration_days: event.data.data.durationGeneral,
-      max_capacity: event.data.data.layout?.find(ele => ele.blockType == "dataTour")?.groupSize.value ?? 15,
-      thumbnail: event.data.data.meta.image.sizes.og.url ?? '',
+      destination: event.data.data.destination,
+      description: extractText(event.data.data.description.root),
+      duration_days: event.data.data.duration_days,
+      max_capacity: event.data.data.max_capacity,
+      thumbnail: event.data.data.thumbnail,
       metadata: {
-        payloadId: event.data.id
+        payloadId: event.data.id + "tour"
       },
       prices: {
-        adult: 0,
+        ...(event.data.data.price ? { adult: event.data.data.price } : { adult: 0 }),
         child: 0,
         infant: 0,
-        currency_code: "PEN",
+        currency_code: "pen",
       },
     }
   })

@@ -68,7 +68,7 @@ export const createPackageWorkflow = createWorkflow(
         description: data.input.description,
         status: ProductStatus.PUBLISHED,
         thumbnail: data.input.thumbnail,
-        metadata: data.input.metadata ?? null,
+        external_id: data.input.metadata?.payloadId,
         options: [
           {
             title: "Passenger Type",
@@ -83,7 +83,7 @@ export const createPackageWorkflow = createWorkflow(
             options: { "Passenger Type": "Adult" },
             prices: [
               { amount: data.input.prices.adult, currency_code: currency },
-              { amount: Math.round(data.input.prices.adult * usdRate), currency_code: "USD" }
+              { amount: Math.round(data.input.prices.adult * usdRate), currency_code: "usd" }
             ]
           },
           {
@@ -93,7 +93,7 @@ export const createPackageWorkflow = createWorkflow(
             options: { "Passenger Type": "Child" },
             prices: [
               { amount: data.input.prices.child, currency_code: currency },
-              { amount: Math.round(data.input.prices.child * usdRate), currency_code: "USD" }
+              { amount: Math.round(data.input.prices.child * usdRate), currency_code: "usd" }
             ]
           },
           {
@@ -103,7 +103,7 @@ export const createPackageWorkflow = createWorkflow(
             options: { "Passenger Type": "Infant" },
             prices: [
               { amount: data.input.prices.infant, currency_code: currency },
-              { amount: Math.round(data.input.prices.infant * usdRate), currency_code: "USD" }
+              { amount: Math.round(data.input.prices.infant * usdRate), currency_code: "usd" }
             ]
           }
         ]

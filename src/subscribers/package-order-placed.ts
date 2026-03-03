@@ -22,7 +22,9 @@ export default async function handlePackageOrderPlaced({
     }
 
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
-    const { data: [order] } = await query.graph({
+    const {
+      data: [order],
+    } = await query.graph({
       entity: "order",
       fields: ["id", "items.*"],
       filters: { id: orderId },
@@ -62,25 +64,29 @@ export default async function handlePackageOrderPlaced({
       },
     }))
 
-    const createdBookings =
+    const createdBookingsRaw =
       await packageModuleService.createPackageBookings(bookingsToCreate)
+    const createdBookings = Array.isArray(createdBookingsRaw)
+      ? createdBookingsRaw
+      : [createdBookingsRaw]
 
     logger.info(
-      `[order.placed] Created ${createdBookings.length} package booking(s) for order ${orderId}: ${createdBookings.map((b: any) => b.id).join(", ")}`
+      `[order.placed] Created ${createdBookings.length} package booking(s) for order ${orderId}: ${createdBookings
+        .map((b: any) => b.id)
+        .join(", ")}`
     )
 
-    // Send notification emails for each created booking. Failures are logged
-    // and do not interrupt the subscriber flow.
     for (const booking of createdBookings) {
       try {
-        // Ensure TypeScript understands this is an array; bookings may come as loose objects
         const passengersArr = (booking.line_items?.passengers as any[]) || []
-        const passengersHtml = Array.isArray(passengersArr) ? passengersArr
-          .map((p: any) => {
-            const passport = p.passport ? ` - Passport: ${p.passport}` : ""
-            return `${p.name} (${p.type})${passport}`
-          })
-          .join("</li><li>") : ""
+        const passengersHtml = Array.isArray(passengersArr)
+          ? passengersArr
+              .map((p: any) => {
+                const passport = p.passport ? ` - Passport: ${p.passport}` : ""
+                return `${p.name} (${p.type})${passport}`
+              })
+              .join("</li><li>")
+          : ""
 
         const formattedDate = booking.package_date
           ? new Date(booking.package_date).toISOString()
@@ -95,20 +101,26 @@ export default async function handlePackageOrderPlaced({
 <h3>Passengers:</h3>
 <ul><li>${passengersHtml}</li></ul>`
 
-        // Placeholder addresses per plan. Do not throw on failure.
-        // Resend SDK returns an object with { data, error }.
-        // Await the send call and log result.
-        const res = await resend.emails.send({
-          from: "bookings@yourdomain.com",
-          to: ["operator@example.com"],
-          subject,
-          html,
-        })
+        if (resend) {
+          const emailResult = await resend.emails.send({
+            from: "bookings@yourdomain.com",
+            to: ["operator@example.com"],
+            subject,
+            html,
+          })
 
-        if (res?.error) {
-          logger.error(`Failed to send email for package booking ${booking.id}:`, res.error)
+          if (emailResult?.error) {
+            logger.error(
+              `Failed to send email for package booking ${booking.id}:`,
+              emailResult.error
+            )
+          } else {
+            logger.info(`Email sent for package booking ${booking.id}`)
+          }
         } else {
-          logger.info(`Email sent for package booking ${booking.id}`)
+          logger.warn(
+            `Resend client not initialized, skipping email for package booking ${booking.id}`
+          )
         }
       } catch (error) {
         logger.error(`Failed to send email for package booking ${booking.id}:`, error)

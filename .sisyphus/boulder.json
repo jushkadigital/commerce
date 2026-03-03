@@ -1,9 +1,6 @@
 {
-  "active_plan": "/home/node/app/.sisyphus/plans/tour-booking-flow.md",
-  "started_at": "2026-02-18T17:37:55.845Z",
-  "session_ids": [
-    "ses_38e37d4b2ffe8RzhIzMeHoAYy5"
-  ],
-  "plan_name": "tour-booking-flow",
-  "agent": "atlas"
+  "active_plan": "/home/node/app/.sisyphus/plans/complex-reservations-ui.md",
+  "started_at": "2026-03-03T15:49:09.779Z",
+  "session_ids": ["ses_34ba86be8ffe7Oj7Hz47pP77JH"],
+  "plan_name": "complex-reservations-ui"
 }

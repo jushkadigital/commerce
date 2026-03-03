@@ -1,7 +1,4 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { Modules } from "@medusajs/framework/utils"
-import PackageModuleService from "../../../modules/package/service"
-import { PACKAGE_MODULE } from "../../../modules/package"
 import createPackageWorkflow from "../../../workflows/create-package"
 import { z } from "zod"
 
@@ -52,8 +49,13 @@ export async function POST(
   res: MedusaResponse
 ) {
 
+  const input = {
+    ...req.validatedBody,
+    metadata: req.validatedBody.metadata ?? undefined,
+  }
+
   const { result } = await createPackageWorkflow(req.scope).run({
-    input: req.validatedBody,
+    input,
   })
 
   // Retornamos el resultado directamente (el workflow ya devuelve el objeto completo)

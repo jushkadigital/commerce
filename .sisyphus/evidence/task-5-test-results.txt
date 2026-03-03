@@ -1,0 +1,9 @@
+[1A[2K[2m[WebServer] [22m- Creating server
+
+[1A[2K[2m[WebServer] [22m[32m✔[39m Server is ready on port: 9000 – 6417ms
+
+Error: No tests found.
+Make sure that arguments are regular expressions matching test files.
+You may need to escape symbols like "$" or "*" and quote the arguments.
+
+[1A[2K

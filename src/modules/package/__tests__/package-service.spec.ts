@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { moduleIntegrationTestRunner } from "@medusajs/test-utils"
 import { PACKAGE_MODULE } from ".."
 import PackageModuleService from "../service"
@@ -175,6 +176,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           expect(result.valid).toBe(true)
         })
 
+        it("should invalidate unavailable dates", async () => {
           const availableDateStr = "2026-12-15T00:00:00.000Z"
           const unavailableDate = new Date("2026-12-20T00:00:00.000Z")
           

@@ -61,9 +61,17 @@ export const POST = async (
 ) => {
   const { id } = req.params
 
-  console.log(req.params)
+  console.log("========== TOUR UPDATE REQUEST ==========")
+  console.log("Tour ID:", id)
+  console.log("Request Body (RAW):", JSON.stringify(req.body, null, 2))
+  console.log("=========================================")
+  
   // 1. Validar los datos de entrada
   const validatedBody = UpdateTourSchema.parse(req.body)
+  
+  console.log("========== AFTER VALIDATION ==========")
+  console.log("Validated Body:", JSON.stringify(validatedBody, null, 2))
+  console.log("=======================================")
 
   // 2. Ejecutar el workflow de actualización
   const { result, errors } = await updateTourWorkflow(req.scope).run({

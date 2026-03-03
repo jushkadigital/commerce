@@ -24,7 +24,7 @@ const IS_TEST = process.env.NODE_ENV === 'test';
 const DISABLE_REDIS = IS_BUILD || IS_TEST;
 
 console.log("NODE_ENV =", process.env.NODE_ENV)
-console.log("NODE_ENV =", process.env.NODE_ENV)
+console.log("RABBITMQ", process.env.RABBITMQ_URL)
 console.log("CWD =", process.cwd())
 console.log("IS_BUILD MODE =", IS_BUILD) // Log para confirmar en consola
 

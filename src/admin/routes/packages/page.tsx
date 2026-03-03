@@ -121,6 +121,7 @@ const PackagesListPage = () => {
         offset: pagination.pageIndex * pagination.pageSize,
         limit: pagination.pageSize,
         order: "-created_at",
+        fields: "id,destination,description,duration_days,max_capacity,thumbnail,is_special,booking_min_months_ahead,blocked_dates,blocked_week_days,cancellation_deadline_hours,product_id,created_at,updated_at,variants.*,variants.product_variant.price_set.*,variants.product_variant.price_set.prices.*",
       }
     }),
   })

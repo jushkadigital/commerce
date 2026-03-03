@@ -1,7 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { Modules } from "@medusajs/framework/utils"
-import PackageModuleService from "../../../modules/package/service"
-import { PACKAGE_MODULE } from "../../../modules/package"
+
 
 
 export async function GET(
@@ -10,15 +8,39 @@ export async function GET(
 ) {
   const query = req.scope.resolve("query")
 
+
+  const filtersSource = {
+    ...(req.filterableFields || {}),
+  } as Record<string, any>
+
+  const package_date = filtersSource.package_date as
+    | { gte?: string; lte?: string }
+    | undefined
+
+  delete filtersSource.package_date
+  delete filtersSource.type
+
+  const filters: Record<string, any> = { ...filtersSource }
+
+
+  if (package_date) {
+    filters.package_date = {}
+    if (package_date.gte) {
+      filters.package_date.$gte = package_date.gte
+    }
+    if (package_date.lte) {
+      filters.package_date.$lte = package_date.lte
+    }
+  }
+
   const {
     data: packagesBooking,
     metadata
   } = await query.graph({
     entity: "package_booking",
     ...req.queryConfig,
+    filters,
   })
-
-  console.log(packagesBooking)
 
   res.json({
     packages_booking: packagesBooking,

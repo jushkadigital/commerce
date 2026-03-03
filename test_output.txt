@@ -1,0 +1,886 @@
+
+> medusa-starter-default@0.0.1 test:integration:http
+> NODE_ENV=test TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit --no-cache integration-tests/http/package-purchase-flow.spec.ts
+
+jest-haste-map: Haste module naming collision: medusa-starter-default
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>/package.json
+    * <rootDir>/.medusa/server/package.json
+
+(node:208856) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.log
+    NODE_ENV = test
+
+      at Object.log (medusa-config.ts:26:9)
+
+  console.log
+    NODE_ENV = test
+
+      at Object.log (medusa-config.ts:27:9)
+
+  console.log
+    CWD = /home/node/app
+
+      at Object.log (medusa-config.ts:28:9)
+
+  console.log
+    IS_BUILD MODE = false
+
+      at Object.log (medusa-config.ts:29:9)
+
+  console.log
+    KEYCLOAK_CLIENT_ID: 5f2947dd-a3e7-4759-9f0b-4bd32e7898b8
+
+      at Object.log (medusa-config.ts:37:9)
+
+  console.log
+    BACKEND_URL: http://localhost:9000
+
+      at Object.log (medusa-config.ts:38:9)
+
+  console.log
+    MEDUSA_BACKEND_URL: http://localhost:9000
+
+      at Object.log (medusa-config.ts:39:9)
+
+  console.log
+    DATABASE_URL: postgres://medusa-starter:medusa-password@localhost:5432/medusa-starter
+
+      at Object.log (medusa-config.ts:40:9)
+
+{"level":"info","message":"Disabling admin as we run integration tests","timestamp":"2026-02-19 06:40:25"}
+{"level":"info","message":"redisUrl not found. A fake redis instance will be used.","timestamp":"2026-02-19 06:40:25"}
+{"level":"info","message":"Creating database medusa-01khta1qe10wf5xm59w2a1fd5g-integration-1","timestamp":"2026-02-19 06:40:25"}
+{"level":"info","message":"Creating migrations table 'mikro_orm_migrations'...","timestamp":"2026-02-19 06:40:25"}
+{"level":"info","message":"Migrations table created successfully","timestamp":"2026-02-19 06:40:25"}
+{"level":"info","message":"Migrating database with core migrations and links medusa-01khta1qe10wf5xm59w2a1fd5g-integration-1","timestamp":"2026-02-19 06:40:25"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"MODULE: stock_location","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ● Migrating Migration20240307161216","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ✔ Migrated Migration20240307161216","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ● Migrating Migration20241210073813","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ✔ Migrated Migration20241210073813","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ● Migrating Migration20250106142624","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ✔ Migrated Migration20250106142624","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ● Migrating Migration20250120110820","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ✔ Migrated Migration20250120110820","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"MODULE: inventory","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ● Migrating Migration20240307132720","timestamp":"2026-02-19 06:40:27"}
+{"level":"info","message":"  ✔ Migrated Migration20240307132720","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240719123015","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240719123015","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241213063611","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241213063611","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20251010131115","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20251010131115","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"MODULE: product","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating InitialSetup20240401153642","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated InitialSetup20240401153642","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240601111544","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240601111544","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration202408271511","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration202408271511","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241122120331","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241122120331","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241125090957","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241125090957","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20250411073236","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20250411073236","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20250516081326","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20250516081326","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20250910154539","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20250910154539","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20250911092221","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20250911092221","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20250929204438","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20250929204438","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20251008132218","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20251008132218","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20251011090511","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20251011090511","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"MODULE: pricing","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20230929122253","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20230929122253","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240322094407","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240322094407","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240322113359","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240322113359","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240322120125","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240322120125","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240626133555","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240626133555","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240704094505","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240704094505","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241127114534","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241127114534","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241127223829","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241127223829","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241128055359","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241128055359","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241212190401","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241212190401","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20250408145122","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20250408145122","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20250409122219","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20250409122219","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20251009110625","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20251009110625","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20251112192723","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20251112192723","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"MODULE: promotion","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240227120221","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240227120221","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240617102917","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240617102917","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20240624153824","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20240624153824","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ● Migrating Migration20241211061114","timestamp":"2026-02-19 06:40:28"}
+{"level":"info","message":"  ✔ Migrated Migration20241211061114","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250113094144","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250113094144","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250120110700","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250120110700","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250226130616","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250226130616","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250508081510","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250508081510","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250828075407","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250828075407","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250909083125","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250909083125","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250916120552","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250916120552","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250917143818","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250917143818","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250919122137","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250919122137","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251006000000","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251006000000","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251015113934","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251015113934","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251107050148","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251107050148","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"MODULE: customer","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240124154000","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240124154000","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240524123112","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240524123112","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240602110946","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240602110946","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20241211074630","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20241211074630","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251010130829","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251010130829","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"MODULE: sales_channel","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240115152146","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240115152146","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"MODULE: cart","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240222170223","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240222170223","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240831125857","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240831125857","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20241106085918","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20241106085918","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20241205095237","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20241205095237","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20241216183049","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20241216183049","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20241218091938","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20241218091938","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250120115059","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250120115059","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250212131240","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250212131240","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250326151602","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250326151602","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250508081553","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250508081553","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251017153909","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251017153909","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251208130704","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251208130704","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"MODULE: region","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240205173216","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240205173216","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240624200006","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240624200006","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20250120110744","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20250120110744","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"MODULE: api_key","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating InitialSetup20240221144943","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated InitialSetup20240221144943","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240604080145","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240604080145","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20241205122700","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20241205122700","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251015123842","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251015123842","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"MODULE: store","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating InitialSetup20240227075933","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated InitialSetup20240227075933","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240621145944","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240621145944","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20241206083313","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20241206083313","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251202184737","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251202184737","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20251212161429","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20251212161429","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"MODULE: tax","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ● Migrating Migration20240227090331","timestamp":"2026-02-19 06:40:29"}
+{"level":"info","message":"  ✔ Migrated Migration20240227090331","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240710135844","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240710135844","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240924114005","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240924114005","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20241212052837","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20241212052837","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"MODULE: currency","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating InitialSetup20240228133303","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated InitialSetup20240228133303","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240624082354","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240624082354","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"MODULE: payment","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240225134525","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240225134525","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240806072619","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240806072619","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20241211151053","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20241211151053","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250115160517","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250115160517","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250120110552","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250120110552","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250123122334","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250123122334","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250206105639","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250206105639","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250207132723","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250207132723","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250625084134","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250625084134","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250924135437","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250924135437","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250929124701","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250929124701","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"MODULE: payment","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"MODULE: payment","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"MODULE: order","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240219102530","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240219102530","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240604100512","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240604100512","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240715102100","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240715102100","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240715174100","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240715174100","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240716081800","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240716081800","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240801085921","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240801085921","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240821164505","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240821164505","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240821170920","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240821170920","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240827133639","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240827133639","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240902195921","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240902195921","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240913092514","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240913092514","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20240930122627","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20240930122627","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20241014142943","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20241014142943","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20241106085223","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20241106085223","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20241129124827","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20241129124827","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20241217162224","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20241217162224","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250326151554","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250326151554","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250522181137","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250522181137","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250702095353","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250702095353","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250704120229","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250704120229","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20250910130000","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20250910130000","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20251016160403","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20251016160403","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20251016182939","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20251016182939","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20251017155709","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20251017155709","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20251114100559","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20251114100559","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20251125164002","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20251125164002","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20251210112909","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20251210112909","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ● Migrating Migration20251210112924","timestamp":"2026-02-19 06:40:30"}
+{"level":"info","message":"  ✔ Migrated Migration20251210112924","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20251225120947","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20251225120947","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: settings","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20250717162007","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20250717162007","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20240205025928","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20240205025928","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20240529080336","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20240529080336","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20241202100304","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20241202100304","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: auth","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: user","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20240214033943","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20240214033943","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20240703095850","timestamp":"2026-02-19 06:40:31"}
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+{"level":"info","message":"  ✔ Migrated Migration20240703095850","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20241202103352","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20241202103352","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"MODULE: fulfillment","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20240311145700_InitialSetupMigration","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20240311145700_InitialSetupMigration","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20240821170957","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20240821170957","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20240917161003","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20240917161003","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20241217110416","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20241217110416","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20250113122235","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20250113122235","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ● Migrating Migration20250120115002","timestamp":"2026-02-19 06:40:31"}
+{"level":"info","message":"  ✔ Migrated Migration20250120115002","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250822130931","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250822130931","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250825132614","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250825132614","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20251114133146","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20251114133146","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: fulfillment","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: fulfillment","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: notification","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20240509083918_InitialSetupMigration","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20240509083918_InitialSetupMigration","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20240628075401","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20240628075401","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20240830094712","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20240830094712","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250120110514","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250120110514","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20251028172715","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20251028172715","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20251121123942","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20251121123942","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20251121150408","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20251121150408","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: notification","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: notification","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: cache","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: event_bus","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: workflows","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20231228143900","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20231228143900","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20241206101446","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20241206101446","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250128174331","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250128174331","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250505092459","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250505092459","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250819104213","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250819104213","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250819110924","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250819110924","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20250908080305","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20250908080305","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: locking","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: file","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: file","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: file","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: caching","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Skipped. Database is up-to-date for module.","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: tourModule","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20260206073934","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20260206073934","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20260209173550","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20260209173550","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20260209211228","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20260209211228","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20260210235107","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20260210235107","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20260212204221","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20260212204221","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"MODULE: packageModule","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ● Migrating Migration20260127204825","timestamp":"2026-02-19 06:40:32"}
+{"level":"info","message":"  ✔ Migrated Migration20260127204825","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ● Migrating Migration20260209173822","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ✔ Migrated Migration20260209173822","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ● Migrating Migration20260209211229","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ✔ Migrated Migration20260209211229","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ● Migrating Migration20260212204240","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ✔ Migrated Migration20260212204240","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ● Migrating Migration20260219000749","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"  ✔ Migrated Migration20260219000749","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"No link to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/links. skipped.","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" cart_payment_collection","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" cart_promotion","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" location_fulfillment_provider","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" location_fulfillment_set","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" order_cart","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" order_fulfillment","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" order_payment_collection","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" order_promotion","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" return_fulfillment","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" product_sales_channel","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" product_variant_inventory_item","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" product_variant_price_set","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" publishable_api_key_sales_channel","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" region_payment_provider","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" sales_channel_stock_location","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" shipping_option_price_set","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" product_shipping_profile","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" customer_account_holder","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" packagemodule_package_booking_order_order","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" packagemodule_package_product_product","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" packagemodule_package_variant_product_product_variant","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" tourmodule_tour_booking_order_order","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" tourmodule_tour_product_product","timestamp":"2026-02-19 06:40:33"}
+{"level":"info","message":"Sync links: \"create\" tourmodule_tour_variant_product_product_variant","timestamp":"2026-02-19 06:40:33"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:34"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:34"}
+{"level":"info","message":"redisUrl not found. A fake redis instance will be used.","timestamp":"2026-02-19 06:40:34"}
+{"level":"info","message":"No link to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/links. skipped.","timestamp":"2026-02-19 06:40:34"}
+{"level":"info","message":"No workflow to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/workflows. skipped.","timestamp":"2026-02-19 06:40:35"}
+  console.log
+    {
+      __id: '49nli5sovfe',
+      __type: 'Symbol(WorkflowStepTransformer)',
+      __resolver: [AsyncFunction: returnFn],
+      __temporary_storage_key: null
+    }
+
+      at Object.log (src/workflows/update-tour-no-prices.ts:41:13)
+          at Array.map (<anonymous>)
+          at async Promise.allSettled (index 1)
+
+{"level":"info","message":"No subscriber to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/subscribers. skipped.","timestamp":"2026-02-19 06:40:35"}
+{"level":"info","message":"No job to load from /home/node/app/node_modules/@medusajs/medusa/dist/jobs. skipped.","timestamp":"2026-02-19 06:40:35"}
+{"level":"info","message":"No job to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/jobs. skipped.","timestamp":"2026-02-19 06:40:35"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA22NQ6E3KRG4YEJ24RBB7","timestamp":"2026-02-19 06:40:37"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:37"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:37"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA22H3GT7WXBYXDM2253WD for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:37"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:37"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA22H3GT7WXBYXDM2253WD-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA22H3GT7WXBYXDM2253WD-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA22H3GT7WXBYXDM2253WD\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA22HXM5M58XB5FGWTFEFY\",\"variant\":{\"id\":\"variant_01KHTA22HXM5M58XB5FGWTFEFY\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA22GB82GPQ52W3QDYJMTK\",\"product\":{\"id\":\"prod_01KHTA22GB82GPQ52W3QDYJMTK\"},\"created_at\":\"2026-02-19T06:40:36.926Z\",\"updated_at\":\"2026-02-19T06:40:36.926Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA22GE5ER6GY3J8GVJ2SST\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA22GFTHZM4TCAHEV18F7R\",\"option\":{\"id\":\"opt_01KHTA22GFTHZM4TCAHEV18F7R\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA22GB82GPQ52W3QDYJMTK\",\"product\":{\"id\":\"prod_01KHTA22GB82GPQ52W3QDYJMTK\"},\"created_at\":\"2026-02-19T06:40:36.880Z\",\"updated_at\":\"2026-02-19T06:40:36.880Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:36.880Z\",\"updated_at\":\"2026-02-19T06:40:36.880Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:37"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:38"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:38"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA24H13VHMPMX7NTTEZN0S","timestamp":"2026-02-19 06:40:39"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:39"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:39"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA24DFR084PDPC19K3YCXY for date 2026-06-15 with 3 passengers","timestamp":"2026-02-19 06:40:39"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:39"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA24DFR084PDPC19K3YCXY-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA24DFR084PDPC19K3YCXY-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA24DFR084PDPC19K3YCXY\",\"passengers\":{\"adults\":3,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":3,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":3,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA24E410PYF459JDAR17A6\",\"variant\":{\"id\":\"variant_01KHTA24E410PYF459JDAR17A6\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA24D17T1X01WYTWW14HXT\",\"product\":{\"id\":\"prod_01KHTA24D17T1X01WYTWW14HXT\"},\"created_at\":\"2026-02-19T06:40:38.853Z\",\"updated_at\":\"2026-02-19T06:40:38.853Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA24D286Z0J3BEM77P17DF\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA24D21Y5Q25B051R2Z12B\",\"option\":{\"id\":\"opt_01KHTA24D21Y5Q25B051R2Z12B\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA24D17T1X01WYTWW14HXT\",\"product\":{\"id\":\"prod_01KHTA24D17T1X01WYTWW14HXT\"},\"created_at\":\"2026-02-19T06:40:38.818Z\",\"updated_at\":\"2026-02-19T06:40:38.818Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:38.819Z\",\"updated_at\":\"2026-02-19T06:40:38.819Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:39"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA26783DAQ6YEJ2AH3CXR4","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[VALIDATE] Cart found with 2 items","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[VALIDATE] Found 2 package items","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA262GDED8K299ERM62QC9 for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2663C1WCAZDFP6WWXT8F for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:40"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA262GDED8K299ERM62QC9-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA262GDED8K299ERM62QC9-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA262GDED8K299ERM62QC9\",\"package_date\":\"2026-06-15\",\"total_passengers\":1},\"quantity\":1,\"variant_id\":\"variant_01KHTA2633WBCD1PD221XSHT37\",\"variant\":{\"id\":\"variant_01KHTA2633WBCD1PD221XSHT37\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2622NJZJMEZYB4BSQPEJ\",\"product\":{\"id\":\"prod_01KHTA2622NJZJMEZYB4BSQPEJ\"},\"created_at\":\"2026-02-19T06:40:40.547Z\",\"updated_at\":\"2026-02-19T06:40:40.547Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2622JRYEGSHVP263616P\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA262328WJJ7WM6P1Z9EHR\",\"option\":{\"id\":\"opt_01KHTA262328WJJ7WM6P1Z9EHR\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2622NJZJMEZYB4BSQPEJ\",\"product\":{\"id\":\"prod_01KHTA2622NJZJMEZYB4BSQPEJ\"},\"created_at\":\"2026-02-19T06:40:40.515Z\",\"updated_at\":\"2026-02-19T06:40:40.515Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:40.516Z\",\"updated_at\":\"2026-02-19T06:40:40.516Z\",\"deleted_at\":null}]}}]},{\"type\":\"package-01KHTA2663C1WCAZDFP6WWXT8F-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2663C1WCAZDFP6WWXT8F-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2663C1WCAZDFP6WWXT8F\",\"package_date\":\"2026-06-15\",\"total_passengers\":1},\"quantity\":1,\"variant_id\":\"variant_01KHTA266K8X5AM29RPKMDZ2SM\",\"variant\":{\"id\":\"variant_01KHTA266K8X5AM29RPKMDZ2SM\",\"title\":\"Adult Ticket\",\"sku\":\"LIMA-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":false,\"manage_inventory\":true,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA265QT3FTJAKDY5BHP2Y6\",\"product\":{\"id\":\"prod_01KHTA265QT3FTJAKDY5BHP2Y6\"},\"created_at\":\"2026-02-19T06:40:40.660Z\",\"updated_at\":\"2026-02-19T06:40:40.660Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA265QN4M9CPTQAZ7HNCE5\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA265REXK60RQAT3MMN5VG\",\"option\":{\"id\":\"opt_01KHTA265REXK60RQAT3MMN5VG\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA265QT3FTJAKDY5BHP2Y6\",\"product\":{\"id\":\"prod_01KHTA265QT3FTJAKDY5BHP2Y6\"},\"created_at\":\"2026-02-19T06:40:40.632Z\",\"updated_at\":\"2026-02-19T06:40:40.632Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:40.632Z\",\"updated_at\":\"2026-02-19T06:40:40.632Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:40"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:41"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:41"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA27WC720MYX2CXW33FSRG","timestamp":"2026-02-19 06:40:42"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:42"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:42"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA27RQQKEGGEKQCSX83Z8S for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:42"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:42"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA27RQQKEGGEKQCSX83Z8S-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA27RQQKEGGEKQCSX83Z8S-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA27RQQKEGGEKQCSX83Z8S\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA27S9EAJKDH3CW299EABV\",\"variant\":{\"id\":\"variant_01KHTA27S9EAJKDH3CW299EABV\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA27R0CWGZ72ENR74EXW12\",\"product\":{\"id\":\"prod_01KHTA27R0CWGZ72ENR74EXW12\"},\"created_at\":\"2026-02-19T06:40:42.281Z\",\"updated_at\":\"2026-02-19T06:40:42.281Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA27R1TJ1HH364DGR3G93R\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA27R1FVG74FYDZRYV2021\",\"option\":{\"id\":\"opt_01KHTA27R1FVG74FYDZRYV2021\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA27R0CWGZ72ENR74EXW12\",\"product\":{\"id\":\"prod_01KHTA27R0CWGZ72ENR74EXW12\"},\"created_at\":\"2026-02-19T06:40:42.242Z\",\"updated_at\":\"2026-02-19T06:40:42.242Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:42.242Z\",\"updated_at\":\"2026-02-19T06:40:42.242Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:42"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:43"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:43"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA29EE2N2DV6M80STFE8FB","timestamp":"2026-02-19 06:40:44"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:44"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:44"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA29B1B2PJQECHKPZZNKF9 for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:44"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":false,\"reason\":\"This date is not available for booking\"}","timestamp":"2026-02-19 06:40:44"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:45"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:45"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2AVBF72PNWHQEV9F23MG","timestamp":"2026-02-19 06:40:45"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:45"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:45"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2AQZX49ZQXHGD6A0T0K4 for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:45"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":false,\"reason\":\"Packages are not available on Mondays\"}","timestamp":"2026-02-19 06:40:45"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:46"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:46"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2C950PWNC6X9HHVG0CHD","timestamp":"2026-02-19 06:40:46"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:46"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:46"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:46"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:46"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2CNTN6VHKG9PM5NBDY4Y","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2D2D5NGHPCMNE4WJA49W","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:47"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2DED9QM77EVPPRT1BC7C","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2DTGGAH0KBM8YWBGS14P","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2E6BDKJ4FEPTRZJP5KF2","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:48"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2EJ0N0CX6SNZEYVYTRXV","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2EXW16F46KWP272KAAH1","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:49"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2FAB2G0N4SX6KGNM8PN5","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2FP5QXZ79X82VD1RKQMX","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2C5NA3E5CJPBJJ38H5XP-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2C5NA3E5CJPBJJ38H5XP\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"variant\":{\"id\":\"variant_01KHTA2C6CGMBKNRE1T34CZ97D\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.796Z\",\"updated_at\":\"2026-02-19T06:40:46.796Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2C56FTJ1VVAJPTTQQGZC\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"option\":{\"id\":\"opt_01KHTA2C57DSM9W4FQFY24V9S3\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\",\"product\":{\"id\":\"prod_01KHTA2C56PDDV1ECYSHPC208Y\"},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:46.759Z\",\"updated_at\":\"2026-02-19T06:40:46.759Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2G1P3P3H1N0AGANJH9YS","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2C5NA3E5CJPBJJ38H5XP for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:50"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":false,\"reason\":\"Only 0 spots available\"}","timestamp":"2026-02-19 06:40:50"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:51"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:51"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2HEAQHD5PZ1FCPF8N4V1","timestamp":"2026-02-19 06:40:52"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:52"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:52"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2HB426D83BQ88JR7X6JE for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:52"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":false,\"reason\":\"Bookings must be made at least 12 months in advance\"}","timestamp":"2026-02-19 06:40:52"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:53"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:53"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2JRJE5W3T7TYHV4JRNA0","timestamp":"2026-02-19 06:40:53"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:53"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:53"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2JNHYD9QWQCXMYGN4KXS for date 2020-01-01 with 1 passengers","timestamp":"2026-02-19 06:40:53"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":false,\"reason\":\"Cannot book packages for past dates\"}","timestamp":"2026-02-19 06:40:53"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:54"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:54"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2M399T1EE3TQ3F76G6GD","timestamp":"2026-02-19 06:40:54"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:54"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:54"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:54"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2MF7REH08RWYGA2D1VJV","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2MVBQHAXMZPZ55X0EDPT","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:55"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2N7QVHD22079W6TEMGD7","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2NM5SKQERY93Q6XD1RH1","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2NZPPG2E3GPADWAF6AJ9","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:56"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2PAPFCK35H0RZ8CY8VKX","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2PP16BAY8854MP4YQSE8","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:57"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2Q1S7PA4W9Z5FKT2MXBE","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2QD1S7GYFWT4A7HC3XCA","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2M0EYXV2MSE7G3Z6RRYS-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2M0EYXV2MSE7G3Z6RRYS\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"variant\":{\"id\":\"variant_01KHTA2M0ZNKZ1CC92SKCTR3RB\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.815Z\",\"updated_at\":\"2026-02-19T06:40:54.815Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2M0383XW9GTA2CVE58DV\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"option\":{\"id\":\"opt_01KHTA2M0383XK9V6D76CYY80W\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\",\"product\":{\"id\":\"prod_01KHTA2M02QNK2410F1ZDDQQKD\"},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:40:54.788Z\",\"updated_at\":\"2026-02-19T06:40:54.788Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2QS235QHRB8TNF3KGM55","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2M0EYXV2MSE7G3Z6RRYS for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:40:58"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":false,\"reason\":\"Only 0 spots available\"}","timestamp":"2026-02-19 06:40:58"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:40:59"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:40:59"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2S8KXJDG56K2YMF3BPDA","timestamp":"2026-02-19 06:41:00"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:41:00"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:41:00"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2S50D38BBYD8SW4MKARC for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:41:00"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:41:00"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2S50D38BBYD8SW4MKARC-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2S50D38BBYD8SW4MKARC-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2S50D38BBYD8SW4MKARC\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2S5TAH5VDACN4V9BSGJP\",\"variant\":{\"id\":\"variant_01KHTA2S5TAH5VDACN4V9BSGJP\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2S4HQXGNBJCQK4T7SE4P\",\"product\":{\"id\":\"prod_01KHTA2S4HQXGNBJCQK4T7SE4P\"},\"created_at\":\"2026-02-19T06:41:00.090Z\",\"updated_at\":\"2026-02-19T06:41:00.090Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2S4JNZJNGBNPERDPNT6V\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2S4J9B6VPV2YT31TKDPR\",\"option\":{\"id\":\"opt_01KHTA2S4J9B6VPV2YT31TKDPR\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2S4HQXGNBJCQK4T7SE4P\",\"product\":{\"id\":\"prod_01KHTA2S4HQXGNBJCQK4T7SE4P\"},\"created_at\":\"2026-02-19T06:41:00.051Z\",\"updated_at\":\"2026-02-19T06:41:00.051Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:41:00.051Z\",\"updated_at\":\"2026-02-19T06:41:00.051Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:41:00"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:41:01"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:41:01"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA2TS2PHEEAVN38NHAN6XN","timestamp":"2026-02-19 06:41:01"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:41:01"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:41:01"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA2TP0SCAZ4E77T4V31CNE for date 2026-06-15 with 3 passengers","timestamp":"2026-02-19 06:41:01"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:41:01"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA2TP0SCAZ4E77T4V31CNE-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA2TP0SCAZ4E77T4V31CNE-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA2TP0SCAZ4E77T4V31CNE\",\"passengers\":{\"adults\":3,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":3,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":3,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA2TPM7CSWY4GS88TYFKG3\",\"variant\":{\"id\":\"variant_01KHTA2TPM7CSWY4GS88TYFKG3\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA2TNM51JWN6G6MHE7HW4B\",\"product\":{\"id\":\"prod_01KHTA2TNM51JWN6G6MHE7HW4B\"},\"created_at\":\"2026-02-19T06:41:01.653Z\",\"updated_at\":\"2026-02-19T06:41:01.653Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA2TNNA9ZF4R69FNGWR7BD\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA2TNNTZ8K10CXDBDGPVRZ\",\"option\":{\"id\":\"opt_01KHTA2TNNTZ8K10CXDBDGPVRZ\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA2TNM51JWN6G6MHE7HW4B\",\"product\":{\"id\":\"prod_01KHTA2TNM51JWN6G6MHE7HW4B\"},\"created_at\":\"2026-02-19T06:41:01.621Z\",\"updated_at\":\"2026-02-19T06:41:01.621Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:41:01.621Z\",\"updated_at\":\"2026-02-19T06:41:01.621Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:41:01"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:41:03"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:41:03"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart invalid_cart_id","timestamp":"2026-02-19 06:41:03"}
+{"level":"error","message":"[VALIDATE] Cart invalid_cart_id not found","timestamp":"2026-02-19 06:41:03"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:41:04"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:41:04"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:41:05"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:41:05"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:41:07"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:41:07"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA30CHPQMQWS36F7SZDMCV","timestamp":"2026-02-19 06:41:07"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:41:07"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:41:07"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA308TH40NPMYDJPXQ9A21 for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:41:07"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:41:07"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA308TH40NPMYDJPXQ9A21-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA308TH40NPMYDJPXQ9A21-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA308TH40NPMYDJPXQ9A21\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA3097HRVE2FCYMM2CGTDJ\",\"variant\":{\"id\":\"variant_01KHTA3097HRVE2FCYMM2CGTDJ\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA308FGJ890FM68TKXMMN7\",\"product\":{\"id\":\"prod_01KHTA308FGJ890FM68TKXMMN7\"},\"created_at\":\"2026-02-19T06:41:07.368Z\",\"updated_at\":\"2026-02-19T06:41:07.368Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA308FZKG72G1QVRSFBFM6\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA308GQTG7C2NZFCBJ2T5Z\",\"option\":{\"id\":\"opt_01KHTA308GQTG7C2NZFCBJ2T5Z\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA308FGJ890FM68TKXMMN7\",\"product\":{\"id\":\"prod_01KHTA308FGJ890FM68TKXMMN7\"},\"created_at\":\"2026-02-19T06:41:07.344Z\",\"updated_at\":\"2026-02-19T06:41:07.344Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:41:07.344Z\",\"updated_at\":\"2026-02-19T06:41:07.344Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:41:07"}
+{"level":"warn","message":"Local Event Bus installed. This is not recommended for production.","timestamp":"2026-02-19 06:41:08"}
+{"level":"info","message":"Locking module: Using \"in-memory\" as default.","timestamp":"2026-02-19 06:41:08"}
+{"level":"info","message":"[VALIDATE] Starting validation for cart cart_01KHTA3214QFJ625N734X7GHH1","timestamp":"2026-02-19 06:41:09"}
+{"level":"info","message":"[VALIDATE] Cart found with 1 items","timestamp":"2026-02-19 06:41:09"}
+{"level":"info","message":"[VALIDATE] Found 1 package items","timestamp":"2026-02-19 06:41:09"}
+{"level":"info","message":"[VALIDATE] Validating package 01KHTA31Y2Z048H91CQ260V34A for date 2026-06-15 with 1 passengers","timestamp":"2026-02-19 06:41:09"}
+{"level":"info","message":"[VALIDATE] Validation result: {\"valid\":true}","timestamp":"2026-02-19 06:41:09"}
+{"level":"info","message":"[{\"type\":\"package-01KHTA31Y2Z048H91CQ260V34A-2026-06-15\",\"items\":[{\"metadata\":{\"group_id\":\"package-01KHTA31Y2Z048H91CQ260V34A-2026-06-15\",\"is_package\":true,\"package_id\":\"01KHTA31Y2Z048H91CQ260V34A\",\"passengers\":{\"adults\":1,\"infants\":0,\"children\":0},\"package_date\":\"2026-06-15\",\"total_passengers\":1,\"pricing_breakdown\":[{\"type\":\"ADULT\",\"quantity\":1,\"unit_price\":100}],\"package_destination\":\"Cusco\",\"package_duration_days\":3},\"quantity\":1,\"variant_id\":\"variant_01KHTA31YJ8Y3C55HB8XR8SC5K\",\"variant\":{\"id\":\"variant_01KHTA31YJ8Y3C55HB8XR8SC5K\",\"title\":\"Adult Ticket\",\"sku\":\"CUSCO-ADULT-001\",\"barcode\":null,\"ean\":null,\"upc\":null,\"allow_backorder\":true,\"manage_inventory\":false,\"hs_code\":null,\"origin_country\":null,\"mid_code\":null,\"material\":null,\"weight\":null,\"length\":null,\"height\":null,\"width\":null,\"metadata\":null,\"variant_rank\":0,\"thumbnail\":null,\"product_id\":\"prod_01KHTA31XM2QG6SGVFHXAMM3PX\",\"product\":{\"id\":\"prod_01KHTA31XM2QG6SGVFHXAMM3PX\"},\"created_at\":\"2026-02-19T06:41:09.074Z\",\"updated_at\":\"2026-02-19T06:41:09.074Z\",\"deleted_at\":null,\"options\":[{\"id\":\"optval_01KHTA31XMHH7TT98R3B9NHJ1M\",\"value\":\"Adult\",\"metadata\":null,\"option_id\":\"opt_01KHTA31XMQAAP42ND0AKXNN1J\",\"option\":{\"id\":\"opt_01KHTA31XMQAAP42ND0AKXNN1J\",\"title\":\"Passenger Type\",\"metadata\":null,\"product_id\":\"prod_01KHTA31XM2QG6SGVFHXAMM3PX\",\"product\":{\"id\":\"prod_01KHTA31XM2QG6SGVFHXAMM3PX\"},\"created_at\":\"2026-02-19T06:41:09.045Z\",\"updated_at\":\"2026-02-19T06:41:09.045Z\",\"deleted_at\":null},\"created_at\":\"2026-02-19T06:41:09.045Z\",\"updated_at\":\"2026-02-19T06:41:09.045Z\",\"deleted_at\":null}]}}]}]","timestamp":"2026-02-19 06:41:09"}
+PASS integration-tests/http/package-purchase-flow.spec.ts (48.409 s)
+    Package Purchase Flow E2E
+      Complete Purchase Flow - Success Cases
+        ✓ should complete full purchase flow and create order and booking (1075 ms)
+        ✓ should create booking with correct metadata (1768 ms)
+        ✓ should handle multiple packages in same cart (1762 ms)
+        ✓ should complete full purchase flow for a single adult passenger (1622 ms)
+        ✓ should reject booking for blocked date (1432 ms)
+        ✓ should reject booking for blocked weekday (1486 ms)
+        ✓ should reject booking when capacity is exceeded (5284 ms)
+        ✓ should reject booking when min months ahead not met (1380 ms)
+        ✓ should reject booking for past dates (1357 ms)
+      Capacity Validation
+        ✓ should validate capacity before allowing checkout (5200 ms)
+      Order and Booking Link
+        ✓ should create link between order and package booking (1650 ms)
+        ✓ should preserve order totals correctly (1568 ms)
+      Error Handling
+        ✓ should handle invalid cart id gracefully (1274 ms)
+        ✓ should validate booking for a valid future date with available capacity (1264 ms)
+        ✓ should validate booking date is not in the past (1572 ms)
+      Booking Status Flow
+        ✓ should create booking with pending status initially (1723 ms)
+        ✓ should allow updating booking status (1608 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       17 passed, 17 total
+Snapshots:   0 total
+Time:        48.481 s
+Ran all test suites matching /integration-tests\/http\/package-purchase-flow.spec.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

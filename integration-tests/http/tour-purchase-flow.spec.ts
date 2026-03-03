@@ -1,6 +1,10 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createPaymentCollectionForCartWorkflow } from "@medusajs/medusa/core-flows"
+import {
+  createApiKeysWorkflow,
+  linkSalesChannelsToApiKeyWorkflow,
+} from "@medusajs/medusa/core-flows"
 import { TOUR_MODULE, PassengerType } from "../../src/modules/tour"
 import TourModuleService from "../../src/modules/tour/service"
 import completeCartWithToursWorkflow from "../../src/modules/tour/workflows/create-tour-booking"
@@ -22,6 +26,7 @@ medusaIntegrationTestRunner({
       let paymentModule: any
       let remoteLink: any
       let query: any
+      let publishableApiKeyToken: string
 
       let tour: any
       let product: any
@@ -74,6 +79,7 @@ medusaIntegrationTestRunner({
           destination: "Cusco",
           description: "Full day city tour of Cusco",
           duration_days: 1,
+          thumbnail: "https://example.com/cusco-tour-thumb.jpg",
           max_capacity: tourCapacity,
         })
 
@@ -107,6 +113,30 @@ medusaIntegrationTestRunner({
 
         product = await productModule.retrieveProduct(product.id, {
           relations: ["variants"],
+        })
+
+        const { result: publishableApiKeyResult } = await createApiKeysWorkflow(
+          container
+        ).run({
+          input: {
+            api_keys: [
+              {
+                title: `tour-store-api-${Date.now()}`,
+                type: "publishable",
+                created_by: "integration-test",
+              },
+            ],
+          },
+        })
+
+        const publishableApiKey = publishableApiKeyResult[0]
+        publishableApiKeyToken = publishableApiKey.token
+
+        await linkSalesChannelsToApiKeyWorkflow(container).run({
+          input: {
+            id: publishableApiKey.id,
+            add: [salesChannel.id],
+          },
         })
       })
 
@@ -461,6 +491,431 @@ medusaIntegrationTestRunner({
           expect(booking!.line_items!.items).toHaveLength(2)
         })
 
+        it("should create multivariant line items in same cart via store API endpoint", async () => {
+          const created = await cartModule.createCarts({
+            email: "mixed-store-api@test.com",
+            region_id: region.id,
+            sales_channel_id: salesChannel.id,
+            currency_code: "usd",
+          })
+
+          const cartId = created.id
+
+          const adultProductVariant = product.variants.find(
+            (v: any) => v.title === "Adult Ticket"
+          )
+          const childProductVariant = product.variants.find(
+            (v: any) => v.title === "Child Ticket"
+          )
+
+          expect(adultProductVariant).toBeDefined()
+          expect(childProductVariant).toBeDefined()
+
+          const adultThumbnail = "https://example.com/thumb-adult.jpg"
+          const childThumbnail = "https://example.com/thumb-child.jpg"
+
+          const addRes = await api.post(
+            "/store/cart/tour-items",
+            {
+              cart_id: cartId,
+              tour_date: testDate,
+              items: [
+                {
+                  variant_id: adultProductVariant.id,
+                  quantity: 2,
+                  unit_price: 150,
+                  thumbnail: adultThumbnail,
+                  metadata: { tour_date: testDate },
+                },
+                {
+                  variant_id: childProductVariant.id,
+                  quantity: 2,
+                  unit_price: 100,
+                  thumbnail: childThumbnail,
+                  metadata: { tour_date: testDate },
+                },
+              ],
+            },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKeyToken,
+              },
+            }
+          )
+
+          expect(addRes.status).toBe(200)
+          expect(addRes.data?.cart?.id).toBe(cartId)
+          expect(addRes.data?.summary?.tour_id).toBe(tour.id)
+
+          const { data: cartsWithItems } = await query.graph({
+            entity: "cart",
+            fields: ["id", "items.*", "items.metadata"],
+            filters: { id: cartId },
+          })
+
+          const cart = cartsWithItems[0]
+          const tourItems = cart.items.filter((i: any) => i.metadata?.is_tour)
+
+          expect(tourItems).toHaveLength(2)
+
+          const adultItem = tourItems.find(
+            (i: any) => i.metadata?.passenger_type === "ADULT"
+          )
+          const childItem = tourItems.find(
+            (i: any) => i.metadata?.passenger_type === "CHILD"
+          )
+
+          expect(adultItem).toBeDefined()
+          expect(childItem).toBeDefined()
+          expect(adultItem.is_custom_price).not.toBe(true)
+          expect(childItem.is_custom_price).not.toBe(true)
+          expect(adultItem.unit_price).toBeGreaterThan(0)
+          expect(childItem.unit_price).toBeGreaterThan(0)
+          expect(adultItem.thumbnail).toBe(adultThumbnail)
+          expect(childItem.thumbnail).toBe(childThumbnail)
+
+          expect(adultItem.metadata.passengers).toEqual({
+            adults: 2,
+            children: 0,
+            infants: 0,
+          })
+          expect(adultItem.metadata.line_passengers).toBe(2)
+          expect(adultItem.metadata.total_passengers).toBe(4)
+          expect(childItem.metadata.passengers).toEqual({
+            adults: 0,
+            children: 2,
+            infants: 0,
+          })
+          expect(childItem.metadata.line_passengers).toBe(2)
+          expect(childItem.metadata.total_passengers).toBe(4)
+
+          expect(Array.isArray(adultItem.metadata.variant_breakdown)).toBe(true)
+          expect(adultItem.metadata.variant_breakdown).toHaveLength(2)
+          expect(adultItem.metadata.variant_breakdown).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "ADULT",
+                variant_id: adultProductVariant.id,
+                quantity: 2,
+              }),
+              expect.objectContaining({
+                type: "CHILD",
+                variant_id: childProductVariant.id,
+                quantity: 2,
+              }),
+            ])
+          )
+          expect(childItem.metadata.variant_breakdown).toEqual(adultItem.metadata.variant_breakdown)
+
+          expect(adultItem.metadata.group_id).toEqual(childItem.metadata.group_id)
+        })
+
+        it("should return prices with quantities after adding multivariant tour items", async () => {
+          const created = await cartModule.createCarts({
+            email: "multivariant-prices@test.com",
+            region_id: region.id,
+            sales_channel_id: salesChannel.id,
+            currency_code: "usd",
+          })
+
+          const cartId = created.id
+
+          const adultProductVariant = product.variants.find(
+            (v: any) => v.title === "Adult Ticket"
+          )
+          const childProductVariant = product.variants.find(
+            (v: any) => v.title === "Child Ticket"
+          )
+
+          expect(adultProductVariant).toBeDefined()
+          expect(childProductVariant).toBeDefined()
+
+          const adultThumbnail = "https://example.com/thumb-adult-price.jpg"
+          const childThumbnail = "https://example.com/thumb-child-price.jpg"
+
+          const variantPriceById = new Map<string, number>([
+            [adultProductVariant.id, 150],
+            [childProductVariant.id, 100],
+          ])
+
+          const addRes = await api.post(
+            "/store/cart/tour-items",
+            {
+              cart_id: cartId,
+              tour_date: testDate,
+              items: [
+                {
+                  variant_id: adultProductVariant.id,
+                  quantity: 3,
+                  unit_price: 150,
+                  thumbnail: adultThumbnail,
+                  metadata: { tour_date: testDate },
+                },
+                {
+                  variant_id: childProductVariant.id,
+                  quantity: 2,
+                  unit_price: 100,
+                  thumbnail: childThumbnail,
+                  metadata: { tour_date: testDate },
+                },
+              ],
+            },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKeyToken,
+              },
+            }
+          )
+
+          expect(addRes.status).toBe(200)
+
+          const { data: cartsWithItems } = await query.graph({
+            entity: "cart",
+            fields: [
+              "id",
+              "item_subtotal",
+              "items.id",
+              "items.thumbnail",
+              "items.quantity",
+              "items.unit_price",
+              "items.total",
+              "items.subtotal",
+              "items.metadata",
+            ],
+            filters: { id: cartId },
+          })
+
+          const cart = cartsWithItems[0]
+          const tourItems = cart.items.filter((i: any) => i.metadata?.is_tour)
+
+          expect(tourItems).toHaveLength(2)
+
+          const adultItem = tourItems.find(
+            (i: any) => i.metadata?.passenger_type === "ADULT"
+          )
+          const childItem = tourItems.find(
+            (i: any) => i.metadata?.passenger_type === "CHILD"
+          )
+
+          expect(adultItem).toBeDefined()
+          expect(childItem).toBeDefined()
+
+          expect(adultItem.quantity).toBe(3)
+          expect(childItem.quantity).toBe(2)
+
+          const adultVariantPrice = variantPriceById.get(adultProductVariant.id)!
+          const childVariantPrice = variantPriceById.get(childProductVariant.id)!
+
+          const toNumber = (value: any) => Number(value)
+
+          const adultUnitPrice = toNumber(adultItem.unit_price)
+          const childUnitPrice = toNumber(childItem.unit_price)
+
+          expect(adultUnitPrice).toBe(adultVariantPrice)
+          expect(childUnitPrice).toBe(childVariantPrice)
+          expect(adultItem.thumbnail).toBe(adultThumbnail)
+          expect(childItem.thumbnail).toBe(childThumbnail)
+
+          const resolveLineTotal = (item: any) => {
+            if (item.subtotal !== undefined && item.subtotal !== null) {
+              return toNumber(item.subtotal)
+            }
+
+            if (item.total !== undefined && item.total !== null) {
+              return toNumber(item.total)
+            }
+
+            throw new Error(`Line item ${item.id} does not expose subtotal/total`)
+          }
+
+          const adultLineTotal = resolveLineTotal(adultItem)
+          const childLineTotal = resolveLineTotal(childItem)
+
+          expect(adultLineTotal).toBe(adultVariantPrice * toNumber(adultItem.quantity))
+          expect(childLineTotal).toBe(childVariantPrice * toNumber(childItem.quantity))
+          expect(toNumber(cart.item_subtotal)).toBe(adultLineTotal + childLineTotal)
+
+          const adultVariantBreakdown = adultItem.metadata.variant_breakdown.find(
+            (v: any) => v.type === "ADULT"
+          )
+          const childVariantBreakdown = childItem.metadata.variant_breakdown.find(
+            (v: any) => v.type === "CHILD"
+          )
+
+          expect(adultVariantBreakdown).toBeDefined()
+          expect(childVariantBreakdown).toBeDefined()
+
+          expect(adultVariantBreakdown.quantity).toBe(3)
+          expect(childVariantBreakdown.quantity).toBe(2)
+          expect(toNumber(adultVariantBreakdown.unit_price)).toBe(adultVariantPrice)
+          expect(toNumber(childVariantBreakdown.unit_price)).toBe(childVariantPrice)
+          expect(toNumber(adultVariantBreakdown.line_total)).toBe(adultLineTotal)
+          expect(toNumber(childVariantBreakdown.line_total)).toBe(childLineTotal)
+        })
+
+        it("should inherit tour thumbnail when no override provided", async () => {
+          const created = await cartModule.createCarts({
+            email: "thumbnail-inherit@test.com",
+            region_id: region.id,
+            sales_channel_id: salesChannel.id,
+            currency_code: "usd",
+          })
+
+          const cartId = created.id
+
+          const adultProductVariant = product.variants.find(
+            (v: any) => v.title === "Adult Ticket"
+          )
+
+          expect(adultProductVariant).toBeDefined()
+
+          // Add items WITHOUT providing thumbnail override
+          const addRes = await api.post(
+            "/store/cart/tour-items",
+            {
+              cart_id: cartId,
+              tour_date: testDate,
+              items: [
+                {
+                  variant_id: adultProductVariant.id,
+                  quantity: 2,
+                  unit_price: 150,
+                  metadata: { tour_date: testDate },
+                },
+              ],
+            },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKeyToken,
+              },
+            }
+          )
+
+          expect(addRes.status).toBe(200)
+
+          const { data: cartsWithItems } = await query.graph({
+            entity: "cart",
+            fields: ["id", "items.*", "items.metadata"],
+            filters: { id: cartId },
+          })
+
+          const cart = cartsWithItems[0]
+          const tourItems = cart.items.filter((i: any) => i.metadata?.is_tour)
+
+          expect(tourItems).toHaveLength(1)
+          const adultItem = tourItems[0]
+
+          // The cart item should inherit the tour's thumbnail
+          expect(adultItem.thumbnail).toBe(tour.thumbnail)
+          expect(adultItem.thumbnail).toBe("https://example.com/cusco-tour-thumb.jpg")
+        })
+
+        it("should validate product and variant thumbnails in cart retrieval", async () => {
+          const created = await cartModule.createCarts({
+            email: "variant-thumbnails@test.com",
+            region_id: region.id,
+            sales_channel_id: salesChannel.id,
+            currency_code: "usd",
+          })
+
+          const cartId = created.id
+
+          const adultProductVariant = product.variants.find(
+            (v: any) => v.title === "Adult Ticket"
+          )
+          const childProductVariant = product.variants.find(
+            (v: any) => v.title === "Child Ticket"
+          )
+
+          const customAdultThumbnail = "https://example.com/custom-adult.jpg"
+          const customChildThumbnail = "https://example.com/custom-child.jpg"
+
+          expect(adultProductVariant).toBeDefined()
+          expect(childProductVariant).toBeDefined()
+
+          // Add items WITH custom thumbnail overrides
+          const addRes = await api.post(
+            "/store/cart/tour-items",
+            {
+              cart_id: cartId,
+              tour_date: testDate,
+              items: [
+                {
+                  variant_id: adultProductVariant.id,
+                  quantity: 1,
+                  unit_price: 150,
+                  thumbnail: customAdultThumbnail,
+                  metadata: { tour_date: testDate },
+                },
+                {
+                  variant_id: childProductVariant.id,
+                  quantity: 1,
+                  unit_price: 100,
+                  thumbnail: customChildThumbnail,
+                  metadata: { tour_date: testDate },
+                },
+              ],
+            },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKeyToken,
+              },
+            }
+          )
+
+          expect(addRes.status).toBe(200)
+
+          // Retrieve cart with product and variant details
+          const { data: cartsWithDetails } = await query.graph({
+            entity: "cart",
+            fields: [
+              "id",
+              "items.*",
+              "items.thumbnail",
+              "items.product.*",
+              "items.product.thumbnail",
+              "items.variant.*",
+              "items.variant.thumbnail",
+              "items.metadata",
+            ],
+            filters: { id: cartId },
+          })
+
+          const cart = cartsWithDetails[0]
+          const tourItems = cart.items.filter((i: any) => i.metadata?.is_tour)
+
+          expect(tourItems).toHaveLength(2)
+
+          const adultItem = tourItems.find(
+            (i: any) => i.metadata?.passenger_type === "ADULT"
+          )
+          const childItem = tourItems.find(
+            (i: any) => i.metadata?.passenger_type === "CHILD"
+          )
+
+          expect(adultItem).toBeDefined()
+          expect(childItem).toBeDefined()
+
+          // Cart item thumbnails should use the custom overrides
+          expect(adultItem.thumbnail).toBe(customAdultThumbnail)
+          expect(childItem.thumbnail).toBe(customChildThumbnail)
+
+          // Product and variant should also have thumbnail information
+          // Product inherits from tour, variant inherits from product
+          if (adultItem.product) {
+            expect(adultItem.product.thumbnail).toBeDefined()
+          }
+          if (adultItem.variant) {
+            expect(adultItem.variant).toBeDefined()
+          }
+          if (childItem.product) {
+            expect(childItem.product.thumbnail).toBeDefined()
+          }
+          if (childItem.variant) {
+            expect(childItem.variant).toBeDefined()
+          }
+        })
+
         it("should create booking with correct metadata", async () => {
           const { cart } = await createCartWithTour("meta@example.com", { adults: 3, children: 0, infants: 0 })
 
@@ -469,7 +924,6 @@ medusaIntegrationTestRunner({
               cart_id: cart.id,
             },
           })
-
           const orderId = (result as any).order.id
 
           // Query booking with all details

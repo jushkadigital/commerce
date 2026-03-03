@@ -58,7 +58,7 @@ export const createTourWorkflow = createWorkflow(
       input,
       stores
     }, (data) => {
-      const currency = data.input.prices.currency_code || "PEN"
+      const currency = (data.input.prices.currency_code || "pen").toLowerCase()
       const usdRate = 0.27
       // Generamos SKU basado en destino
       const skuPrefix = data.input.destination.toLowerCase().replace(/[^a-z0-9]+/g, "-")
@@ -82,7 +82,7 @@ export const createTourWorkflow = createWorkflow(
             options: { "Passenger Type": "Adult" },
             prices: [
               { amount: data.input.prices.adult, currency_code: currency },
-              { amount: Math.round(data.input.prices.adult * usdRate), currency_code: "USD" }
+              { amount: Math.round(data.input.prices.adult * usdRate), currency_code: "usd" }
             ]
           },
           {
@@ -92,7 +92,7 @@ export const createTourWorkflow = createWorkflow(
             options: { "Passenger Type": "Child" },
             prices: [
               { amount: data.input.prices.child, currency_code: currency },
-              { amount: Math.round(data.input.prices.child * usdRate), currency_code: "USD" }
+              { amount: Math.round(data.input.prices.child * usdRate), currency_code: "usd" }
             ]
           },
           {
@@ -102,7 +102,7 @@ export const createTourWorkflow = createWorkflow(
             options: { "Passenger Type": "Infant" },
             prices: [
               { amount: data.input.prices.infant, currency_code: currency },
-              { amount: Math.round(data.input.prices.infant * usdRate), currency_code: "USD" }
+              { amount: Math.round(data.input.prices.infant * usdRate), currency_code: "usd" }
             ]
           }
         ]

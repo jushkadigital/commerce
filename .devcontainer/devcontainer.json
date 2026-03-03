@@ -38,6 +38,7 @@
   "postCreateCommand": "sudo mkdir -p /home/node/app && sudo chown -R ubuntu:ubuntu /home/node && sudo chown ubuntu:ubuntu /mnt/opencode-auth.json",
   // Puertos que la CLI de devcontainers expondrá (si aplica en tu entorno)
   "forwardPorts": [
-    9000
+    9000,
+    8088
   ]
 }

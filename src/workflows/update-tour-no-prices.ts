@@ -25,6 +25,12 @@ export type UpdateTourWorkflowInput = {
   }
 }
 
+type ProductUpdate = {
+  id: string
+  title?: string
+  description?: string
+}
+
 export const updateTourNoPriceWorkflow = createWorkflow(
   "update-tour-no-price",
   (input: UpdateTourWorkflowInput) => {
@@ -38,7 +44,7 @@ export const updateTourNoPriceWorkflow = createWorkflow(
 
     // Transformamos el array a objeto simple
     const tour = transform({ tours }, (data) => data.tours[0])
-    console.log(tour)
+
 
     // --- Step 2: Actualizar la entidad Tour (Custom Module) ---
     const updatedTour = updateTourStep({
@@ -55,12 +61,12 @@ export const updateTourNoPriceWorkflow = createWorkflow(
     // --- Step 3: Sincronizar Producto de Medusa ---
     // Si cambia el destino, duración o descripción, actualizamos el producto
     const productUpdateInput = transform(
-      { input, tour },
-      (data) => {
+      { input, tour } as any,
+      (data: { input: UpdateTourWorkflowInput; tour: any }): ProductUpdate[] => {
         // Si el tour no tiene producto linkeado o no hay cambios visuales, no hacemos nada
         if (!data.tour.product_id) return []
 
-        const updateData: any = { id: data.tour.product_id }
+        const updateData: ProductUpdate = { id: data.tour.product_id }
         let hasUpdates = false
 
         if (data.input.destination || data.input.duration_days) {
