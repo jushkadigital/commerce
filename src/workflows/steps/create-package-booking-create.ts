@@ -26,6 +26,7 @@ export const createPackageBookingsStep = createStep(
       order_id: string
       package_id: string
       line_items: Record<string, unknown>
+      metadata?: Record<string, unknown>
       package_date: Date
     }[] = []
 
@@ -46,6 +47,10 @@ export const createPackageBookingsStep = createStep(
       
       const packageId = metadata?.package_id || firstItem?.variant?.package_variant?.package_id
       const packageDate = metadata?.package_date || firstItem?.metadata?.package_date
+      const groupId =
+        typeof firstItem?.metadata?.group_id === "string"
+          ? firstItem.metadata.group_id
+          : undefined
       
       if (!packageId || !packageDate) continue
       
@@ -53,6 +58,7 @@ export const createPackageBookingsStep = createStep(
         order_id,
         package_id: packageId,
         line_items: { items: item.items.map(ele => ele.metadata) },
+        metadata: groupId ? { group_id: groupId } : undefined,
         package_date: new Date(packageDate),
       })
     }

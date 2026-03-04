@@ -7,6 +7,7 @@ export const TourBooking = model.define("tour_booking", {
   order_id: model.text(),
   tour: model.belongsTo(() => Tour),
   line_items: model.json().nullable(),
+  metadata: model.json().nullable(),
   tour_date: model.dateTime(),
   status: model.enum(["pending", "confirmed", "cancelled", "completed"]).default("pending"),
 }).indexes([

@@ -9,7 +9,7 @@ import {
   Tabs,
 } from "@medusajs/ui"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { sdk } from "../../lib/sdk"
 import { Booking } from "../../types"
 import dayjs from "dayjs"
@@ -37,6 +37,44 @@ function getBookingDateKey(value: unknown): string | null {
   }
 
   return parsed.format("YYYY-MM-DD")
+}
+
+function getVariantGroupId(booking: any, fallback: string): string {
+  const fromMetadata = booking?.metadata?.group_id
+  if (typeof fromMetadata === "string" && fromMetadata.length > 0) {
+    return fromMetadata
+  }
+
+  return fallback
+}
+
+function getBookingQuantity(booking: any): number {
+  const lineQuantity = Number(booking?.line_items?.quantity)
+  if (Number.isFinite(lineQuantity) && lineQuantity > 0) {
+    return lineQuantity
+  }
+
+  const metadataQuantity = Number(booking?.metadata?.line_passengers)
+  if (Number.isFinite(metadataQuantity) && metadataQuantity > 0) {
+    return metadataQuantity
+  }
+
+  const passengers = booking?.line_items?.passengers
+  if (Array.isArray(passengers) && passengers.length > 0) {
+    return passengers.length
+  }
+
+  return 1
+}
+
+function shortGroupLabel(groupId: string): string {
+  return groupId.length > 10 ? groupId.slice(-10).toUpperCase() : groupId.toUpperCase()
+}
+
+type VariantGroupSummary = {
+  groupId: string
+  items: any[]
+  totalQuantity: number
 }
 
 const BookingListPage = () => {
@@ -111,7 +149,7 @@ const BookingListPage = () => {
         return acc
       }
 
-      ;(acc[dateKey] ||= []).push(booking)
+      ; (acc[dateKey] ||= []).push(booking)
       return acc
     }, {} as Record<string, any[]>)
   }, [tourData, packageData])
@@ -129,10 +167,96 @@ const BookingListPage = () => {
 
   const bookingsCount = Object.values(currentMonthBookings).flat().length
 
+  const selectedOrderIds = useMemo(() => {
+    if (!selectedBooking?.items?.length) {
+      return [] as string[]
+    }
+
+    const ids = selectedBooking.items
+      .map((item: any) => item?.order_id)
+      .filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
+
+    return Array.from(new Set(ids)).sort()
+  }, [selectedBooking])
+
+  const { data: ordersById, isLoading: ordersLoading } = useQuery({
+    queryKey: ["booking-order-details", selectedOrderIds],
+    enabled: isModalOpen && selectedOrderIds.length > 0,
+    queryFn: async () => {
+      const entries = await Promise.all(
+        selectedOrderIds.map(async (orderId) => {
+          try {
+            const response = await sdk.client.fetch(`/admin/orders/${orderId}`)
+            return [orderId, (response as any)?.order || null] as const
+          } catch (error) {
+            return [orderId, null] as const
+          }
+        })
+      )
+
+      return Object.fromEntries(entries) as Record<string, any>
+    },
+  })
+
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedBooking(null)
   }
+
+  const modalTitle = useMemo(() => {
+    if (!selectedBooking?.items?.length) {
+      return "Reserva"
+    }
+
+    const hasTour = selectedBooking.items.some(
+      (item: any) => item?.bookingType === "tour"
+    )
+    const hasPackage = selectedBooking.items.some(
+      (item: any) => item?.bookingType === "package"
+    )
+
+    if (hasTour && hasPackage) {
+      return "Reserva"
+    }
+
+    if (hasTour) {
+      return "Tour - Reserva"
+    }
+
+    if (hasPackage) {
+      return "Package - Reserva"
+    }
+
+    return "Reserva"
+  }, [selectedBooking])
+
+  const selectedVariantGroups = useMemo(() => {
+    if (!selectedBooking?.items?.length) {
+      return [] as VariantGroupSummary[]
+    }
+
+    return Object.values(
+      (selectedBooking.items as any[]).reduce(
+        (acc: Record<string, VariantGroupSummary>, item: any, idx: number) => {
+          const groupId = getVariantGroupId(item, `booking-group-${idx}`)
+
+          if (!acc[groupId]) {
+            acc[groupId] = {
+              groupId,
+              items: [],
+              totalQuantity: 0,
+            }
+          }
+
+          acc[groupId].items.push(item)
+          acc[groupId].totalQuantity += getBookingQuantity(item)
+
+          return acc
+        },
+        {}
+      )
+    ) as VariantGroupSummary[]
+  }, [selectedBooking])
 
   return (
     <div className="flex flex-col gap-y-2 h-full w-full">
@@ -141,7 +265,7 @@ const BookingListPage = () => {
           <Heading level="h1">Reservas ({bookingsCount})</Heading>
         </div>
       </Container>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
         <div className="lg:col-span-8 h-full">
           <Container className="h-full flex flex-col overflow-hidden">
@@ -156,7 +280,7 @@ const BookingListPage = () => {
                 <Button variant="secondary" size="small" onClick={handleNextMonth}>→</Button>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-7 gap-1 mb-2">
               {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
                 <div key={day} className="text-center text-xs font-medium text-ui-fg-subtle py-2">
@@ -167,42 +291,42 @@ const BookingListPage = () => {
 
             <div className="grid grid-cols-7 gap-1 auto-rows-fr overflow-y-auto">
               {isLoading ? (
-                 <div className="col-span-7 flex items-center justify-center py-12">
-                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-ui-fg-interactive border-t-transparent" />
-                 </div>
+                <div className="col-span-7 flex items-center justify-center py-12">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-ui-fg-interactive border-t-transparent" />
+                </div>
               ) : (() => {
                 const year = currentMonth.year()
                 const month = currentMonth.month()
                 const daysInMonth = currentMonth.daysInMonth()
                 const firstDayOfMonth = dayjs(new Date(year, month, 1)).day()
-                
+
                 // Adjust for Monday start (0=Sun -> 6, 1=Mon -> 0)
                 const startOffset = (firstDayOfMonth + 6) % 7
-                
-                const days = []
-                
+
+                const days: ReactNode[] = []
+
                 // Empty slots
                 for (let i = 0; i < startOffset; i++) {
                   days.push(<div key={`empty-${i}`} className="min-h-[80px] bg-ui-bg-subtle/30 rounded-md" />)
                 }
-                
+
                 // Days
                 for (let i = 1; i <= daysInMonth; i++) {
                   const date = dayjs(new Date(year, month, i))
                   const isSelected = selectedDate?.isSame(date, 'day')
                   const isToday = date.isSame(dayjs(), 'day')
-                  
+
                   const dateKey = date.format("YYYY-MM-DD")
                   const hasBookings = !!bookingsByDate[dateKey]
 
                   days.push(
-                    <div 
+                    <div
                       key={i}
                       onClick={() => handleDateClick(date)}
                       className={clx(
                         "min-h-[80px] p-2 rounded-md border cursor-pointer transition-all hover:bg-ui-bg-subtle-hover flex flex-col gap-1 relative",
-                        isSelected 
-                          ? "border-ui-border-interactive ring-1 ring-ui-border-interactive bg-ui-bg-base" 
+                        isSelected
+                          ? "border-ui-border-interactive ring-1 ring-ui-border-interactive bg-ui-bg-base"
                           : "border-ui-border-base bg-ui-bg-base",
                         isToday && !isSelected && "bg-ui-bg-subtle"
                       )}
@@ -228,7 +352,7 @@ const BookingListPage = () => {
 
           </Container>
         </div>
-        
+
         <div className="lg:col-span-4 h-full">
           <Container className="h-full flex flex-col">
             <Heading level="h2" className="mb-4">Detalles del dia</Heading>
@@ -258,24 +382,47 @@ const BookingListPage = () => {
                       )
                     }
 
-                    // Helper to generate stable tab value
-                    const getTabValue = (b: any, idx: number) => 
-                      b.id ? String(b.id) : `${b.bookingType}-${b.order_id || 'no-order'}-${idx}`
+                    type BookingGroup = {
+                      orderId: string | null
+                      items: any[]
+                    }
 
-                    // Default to first booking
-                    const defaultTabValue = getTabValue(bookings[0], 0)
+                    const groupedBookings: BookingGroup[] = Object.values(
+                      (bookings as any[]).reduce((acc: Record<string, BookingGroup>, booking: any, idx: number) => {
+                        const key = booking.order_id
+                          ? `order:${booking.order_id}`
+                          : `booking:${booking.id || idx}`
+
+                        if (!acc[key]) {
+                          acc[key] = {
+                            orderId: booking.order_id || null,
+                            items: [],
+                          }
+                        }
+
+                        acc[key].items.push(booking)
+
+                        return acc
+                      }, {} as Record<string, BookingGroup>)
+                    )
+
+                    const getTabValue = (
+                      group: { orderId: string | null; items: any[] },
+                      idx: number
+                    ) => group.orderId || group.items[0]?.id || `group-${idx}`
+
+                    const defaultTabValue = getTabValue(groupedBookings[0], 0)
 
                     return (
                       <Tabs key={dateKey} defaultValue={defaultTabValue} className="flex flex-col h-full overflow-hidden">
                         <div className="overflow-x-auto pb-2 shrink-0">
                           <Tabs.List>
-                            {bookings.map((booking: any, idx: number) => {
-                              const value = getTabValue(booking, idx)
-                              const orderLabel = booking.order_id 
-                                ? `Pedido ${booking.order_id.slice(-6).toUpperCase()}` 
-                                : 'Sin Pedido'
-                              // Add index to ensure distinct visual labels if multiple bookings exist
-                              const label = bookings.length > 1 ? `${orderLabel} (${idx + 1})` : orderLabel
+                            {groupedBookings.map((group, idx) => {
+                              const value = getTabValue(group, idx)
+                              const orderLabel = group.orderId
+                                ? `Pedido ${group.orderId.slice(-6).toUpperCase()}`
+                                : "Sin Pedido"
+                              const label = `${orderLabel} (${group.items.length})`
 
                               return (
                                 <Tabs.Trigger key={value} value={value} className="whitespace-nowrap">
@@ -287,47 +434,102 @@ const BookingListPage = () => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto mt-4 pr-1">
-                          {bookings.map((booking: any, idx: number) => {
-                            const value = getTabValue(booking, idx)
-                            const data = booking.tour || booking.package
-                            const typeLabel = booking.bookingType === 'tour' ? 'Tour' : 'Paquete'
-                            
-                            return (
-                              <Tabs.Content key={value} value={value} className="flex flex-col gap-4 h-full">
-                                <div className="space-y-3 flex-1">
-                                  <div className="p-3 bg-ui-bg-subtle rounded border border-ui-border-base flex justify-between items-start">
-                                    <div className="flex flex-col gap-1">
-                                      <Text size="small" weight="plus" className="text-ui-fg-base">
-                                        {data?.destination || 'Sin destino'}
-                                      </Text>
-                                      <Text size="xsmall" className="text-ui-fg-subtle">
-                                        {data?.duration_days ? `${data.duration_days} días` : 'Duración N/A'}
-                                      </Text>
-                                    </div>
-                                    <div className="px-2 py-0.5 bg-ui-bg-base rounded border border-ui-border-base">
-                                      <Text size="xsmall" weight="plus" className="text-ui-fg-subtle">
-                                        {typeLabel}
-                                      </Text>
-                                    </div>
-                                  </div>
-                                </div>
+                          {groupedBookings.map((group, idx) => {
+                            const value = getTabValue(group, idx)
 
-                                <div className="pt-2 mt-auto">
-                                  <Button 
-                                    variant="secondary" 
-                                    className="w-full"
-                                    onClick={() => {
-                                      setSelectedBooking({
-                                        type: booking.order_id || 'Sin Pedido',
-                                        bookingType: booking.bookingType, 
-                                        fecha: dateKey,
-                                        items: [booking]
-                                      })
-                                      setIsModalOpen(true)
-                                    }}
-                                  >
-                                    Ver Detalles Completos
-                                  </Button>
+                            type VariantGroup = {
+                              groupId: string
+                              items: any[]
+                              totalQuantity: number
+                            }
+
+                            const variantsByGroup: VariantGroup[] = Object.values(
+                              (group.items as any[]).reduce(
+                                (acc: Record<string, VariantGroup>, booking: any, itemIdx: number) => {
+                                  const groupId = getVariantGroupId(
+                                    booking,
+                                    `${value}-group-${itemIdx}`
+                                  )
+
+                                  if (!acc[groupId]) {
+                                    acc[groupId] = {
+                                      groupId,
+                                      items: [],
+                                      totalQuantity: 0,
+                                    }
+                                  }
+
+                                  acc[groupId].items.push(booking)
+                                  acc[groupId].totalQuantity += getBookingQuantity(booking)
+
+                                  return acc
+                                },
+                                {} as Record<string, VariantGroup>
+                              )
+                            )
+
+                            return (
+                              <Tabs.Content key={value} value={value} className="flex flex-col gap-4 h-36 data-[state=inactive]:hidden">
+                                <div className="space-y-3 flex-1">
+                                  {variantsByGroup.map((variantGroup, groupIdx) => (
+                                    <div
+                                      key={`${value}-variant-group-${groupIdx}`}
+                                      className="p-3 bg-ui-bg-subtle rounded border border-ui-border-base"
+                                    >
+                                      <div className="flex items-center justify-between mb-2">
+                                        <Text size="xsmall" weight="plus" className="text-ui-fg-subtle">
+                                          Grupo {shortGroupLabel(variantGroup.groupId)}
+                                        </Text>
+                                        <Text size="xsmall" className="text-ui-fg-subtle">
+                                          Cantidad total: {variantGroup.totalQuantity}
+                                        </Text>
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        {variantGroup.items.map((booking: any, itemIdx: number) => {
+                                          const data = booking.tour || booking.package
+                                          const typeLabel =
+                                            booking.bookingType === "tour" ? "Tour" : "Paquete"
+                                          const quantity = getBookingQuantity(booking)
+
+                                          return (
+                                            <div
+                                              key={`${value}-group-${groupIdx}-item-${itemIdx}`}
+                                              className="flex justify-between items-start cursor-pointer rounded-md px-2 py-1 -mx-2 hover:bg-ui-bg-base"
+                                              onClick={() => {
+                                                setSelectedBooking({
+                                                  type: booking.order_id || "Sin Pedido",
+                                                  bookingType: booking.bookingType,
+                                                  fecha: dateKey,
+                                                  items: [booking],
+                                                })
+                                                setIsModalOpen(true)
+                                              }}
+                                            >
+                                              <div className="flex flex-col gap-1">
+                                                <Text size="small" weight="plus" className="text-ui-fg-base">
+                                                  {data?.destination || "Sin destino"}
+                                                </Text>
+                                                <Text size="xsmall" className="text-ui-fg-subtle">
+                                                  {data?.duration_days
+                                                    ? `${data.duration_days} días`
+                                                    : "Duración N/A"}
+                                                </Text>
+                                              </div>
+                                              <div className="text-right">
+                                                <Text size="xsmall" weight="plus" className="text-ui-fg-subtle">
+                                                  {typeLabel}
+                                                </Text>
+                                                <Text size="xsmall" className="text-ui-fg-subtle">
+                                                  Cant: {quantity}
+                                                </Text>
+                                              </div>
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </Tabs.Content>
                             )
@@ -353,14 +555,12 @@ const BookingListPage = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
-              <h2 className="text-xl font-semibold">
-                {selectedBooking.bookingType === "tour" ? "Tour" : "Package"} - Reserva
-              </h2>
+              <h2 className="text-xl font-semibold">{modalTitle}</h2>
               <button onClick={handleCloseModal} className="text-ui-fg-muted hover:text-ui-fg-base">
                 ✕
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <Text className="text-ui-fg-subtle text-small font-medium">Pedido</Text>
@@ -377,18 +577,63 @@ const BookingListPage = () => {
               {selectedBooking.items && selectedBooking.items.length > 0 && (
                 <div>
                   <Text className="text-ui-fg-subtle text-small font-medium mb-2 block">Detalles</Text>
+                  {ordersLoading && (
+                    <Text size="small" className="text-ui-fg-subtle mb-2 block">
+                      Cargando información del cliente...
+                    </Text>
+                  )}
                   <div className="space-y-2">
-                    {selectedBooking.items.map((item: any, index: number) => {
-                      const data = item.tour || item.package
-                      return (
-                        <div key={index} className="p-3 bg-ui-bg-subtle rounded">
-                          <div className="font-medium">{data?.destination}</div>
-                          <div className="text-small text-ui-fg-subtle">
-                            Duración: {data?.duration_days} días
-                          </div>
+                    {selectedVariantGroups.map((variantGroup, groupIdx) => (
+                      <div key={`modal-group-${groupIdx}`} className="p-3 bg-ui-bg-subtle rounded">
+                        <div className="flex items-center justify-between mb-2">
+                          <Text size="xsmall" weight="plus" className="text-ui-fg-subtle">
+                            Grupo {shortGroupLabel(variantGroup.groupId)}
+                          </Text>
+                          <Text size="xsmall" className="text-ui-fg-subtle">
+                            Cantidad total: {variantGroup.totalQuantity}
+                          </Text>
                         </div>
-                      )
-                    })}
+
+                        <div className="space-y-2">
+                          {variantGroup.items.map((item: any, index: number) => {
+                            const data = item.tour || item.package
+                            const order = ordersById?.[item.order_id]
+                            const customer = order?.customer
+                            const customerName = [customer?.first_name, customer?.last_name]
+                              .filter(Boolean)
+                              .join(" ")
+                            const customerEmail = customer?.email || order?.email
+                            const customerPhone =
+                              customer?.phone ||
+                              order?.shipping_address?.phone ||
+                              order?.billing_address?.phone
+                            const quantity = getBookingQuantity(item)
+
+                            return (
+                              <div key={`modal-group-item-${groupIdx}-${index}`} className="border-t border-ui-border-base pt-2 first:border-t-0 first:pt-0">
+                                <div className="flex items-center justify-between">
+                                  <Text size="small" weight="plus">{data?.destination || "Sin destino"}</Text>
+                                  <Text size="xsmall" className="text-ui-fg-subtle">Cant: {quantity}</Text>
+                                </div>
+                                <Text size="xsmall" className="text-ui-fg-subtle">
+                                  {data?.duration_days ? `Duración: ${data.duration_days} días` : "Duración: N/A"}
+                                </Text>
+                                <div className="mt-2 border-t border-ui-border-base pt-2">
+                                  <Text size="xsmall" className="text-ui-fg-subtle">Cliente</Text>
+                                  <Text size="small">{customerName || customerEmail || "No disponible"}</Text>
+                                  {customerEmail && (
+                                    <Text size="xsmall" className="text-ui-fg-subtle">{customerEmail}</Text>
+                                  )}
+                                  {customerPhone && (
+                                    <Text size="xsmall" className="text-ui-fg-subtle">Tel: {customerPhone}</Text>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

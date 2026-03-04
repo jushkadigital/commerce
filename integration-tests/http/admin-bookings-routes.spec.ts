@@ -55,7 +55,7 @@ medusaIntegrationTestRunner({
       let tour: any
       let pkg: any
       let order: any
-      let tourBookingId: string | null = null
+      let tourBookingIds: string[] = []
       let packageBookingId: string | null = null
 
       beforeAll(async () => {
@@ -144,8 +144,31 @@ medusaIntegrationTestRunner({
           order_id: order.id,
           tour_id: tour.id,
           tour_date: new Date("2026-04-01T10:00:00.000Z"),
+          metadata: {
+            group_id: "tour_group_test",
+          },
           line_items: {
             passengers: [{ name: "Alice", type: "adult" }],
+          },
+          status: "pending",
+        })
+
+        const createdTourBookingChild = await tourModuleService.createTourBookings({
+          order_id: order.id,
+          tour_id: tour.id,
+          tour_date: new Date("2026-04-01T10:00:00.000Z"),
+          metadata: {
+            group_id: "tour_group_test",
+          },
+          line_items: {
+            quantity: 2,
+            passengers: {
+              adults: 0,
+              children: 2,
+              infants: 0,
+            },
+            variant_id: tourVariant.id,
+            title: "Tour Child",
           },
           status: "pending",
         })
@@ -154,15 +177,23 @@ medusaIntegrationTestRunner({
           order_id: order.id,
           package_id: pkg.id,
           package_date: new Date("2026-04-05T10:00:00.000Z"),
+          metadata: {
+            group_id: "package_group_test",
+          },
           line_items: {
             passengers: [{ name: "Bob", type: "adult" }],
           },
           status: "pending",
         })
 
-        tourBookingId = Array.isArray(createdTourBooking)
+        const firstTourBookingId = Array.isArray(createdTourBooking)
           ? createdTourBooking[0]?.id
           : (createdTourBooking as any)?.id
+        const secondTourBookingId = Array.isArray(createdTourBookingChild)
+          ? createdTourBookingChild[0]?.id
+          : (createdTourBookingChild as any)?.id
+
+        tourBookingIds = [firstTourBookingId, secondTourBookingId].filter(Boolean)
         packageBookingId = Array.isArray(createdPackageBooking)
           ? createdPackageBooking[0]?.id
           : (createdPackageBooking as any)?.id
@@ -170,8 +201,8 @@ medusaIntegrationTestRunner({
 
       afterEach(async () => {
         try {
-          if (tourBookingId) {
-            await tourModuleService.deleteTourBookings([tourBookingId])
+          if (tourBookingIds.length > 0) {
+            await tourModuleService.deleteTourBookings(tourBookingIds)
           }
           if (packageBookingId) {
             await packageModuleService.deletePackageBookings([packageBookingId])
@@ -207,7 +238,7 @@ medusaIntegrationTestRunner({
         } catch (error) {
         }
 
-        tourBookingId = null
+        tourBookingIds = []
         packageBookingId = null
       })
 
@@ -218,7 +249,7 @@ medusaIntegrationTestRunner({
             order_id: order.id,
           },
           queryConfig: {
-            fields: ["id", "order_id", "tour_id", "tour_date", "status"],
+            fields: ["id", "order_id", "tour_id", "tour_date", "status", "metadata", "line_items"],
           },
         } as any
 
@@ -231,6 +262,11 @@ medusaIntegrationTestRunner({
         expect(res.body?.type).toBe("tour")
         expect(res.body?.tours_booking?.length).toBeGreaterThan(0)
         expect(res.body?.tours_booking?.[0]?.order_id).toBe(order.id)
+        expect(res.body?.tours_booking?.[0]?.metadata?.group_id).toBe("tour_group_test")
+        expect(res.body?.tours_booking?.length).toBe(1)
+        expect(Array.isArray(res.body?.tours_booking?.[0]?.line_items?.items)).toBe(true)
+        expect(res.body?.tours_booking?.[0]?.line_items?.items?.length).toBe(2)
+        expect(res.body?.tours_booking?.[0]?.line_items?.quantity).toBe(3)
       })
 
       it("GET /admin/package-bookings should return package bookings filtered by order_id", async () => {
@@ -240,7 +276,7 @@ medusaIntegrationTestRunner({
             order_id: order.id,
           },
           queryConfig: {
-            fields: ["id", "order_id", "package_id", "package_date", "status"],
+            fields: ["id", "order_id", "package_id", "package_date", "status", "metadata", "line_items"],
           },
         } as any
 
@@ -252,6 +288,7 @@ medusaIntegrationTestRunner({
         expect(Array.isArray(res.body?.packages_booking)).toBe(true)
         expect(res.body?.packages_booking?.length).toBeGreaterThan(0)
         expect(res.body?.packages_booking?.[0]?.order_id).toBe(order.id)
+        expect(res.body?.packages_booking?.[0]?.metadata?.group_id).toBe("package_group_test")
       })
     })
   },

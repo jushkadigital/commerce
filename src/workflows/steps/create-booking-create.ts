@@ -28,6 +28,7 @@ export const createTourBookingsStep = createStep(
       order_id: string
       tour_id: string
       line_items: Record<string, unknown>
+      metadata?: Record<string, unknown>
       tour_date: Date
     }[] = []
 
@@ -42,6 +43,10 @@ export const createTourBookingsStep = createStep(
       const firstItem = item.items[0]
       const variantId = firstItem?.variant?.id
       const metadata = firstItem?.metadata as { tour_id?: string; tour_date?: string }
+      const groupId =
+        typeof firstItem?.metadata?.group_id === "string"
+          ? firstItem.metadata.group_id
+          : undefined
       
       // Try to get tour_id from metadata first, then from tour_variant link
       let tourId = metadata?.tour_id
@@ -69,6 +74,7 @@ export const createTourBookingsStep = createStep(
         order_id,
         tour_id: tourId,
         line_items: { items: item.items.map(ele => ({ variant_id: ele.variant_id, metadata: ele.metadata })) },
+        metadata: groupId ? { group_id: groupId } : undefined,
         tour_date: new Date(tourDate),
       })
     }

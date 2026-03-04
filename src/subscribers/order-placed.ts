@@ -53,6 +53,10 @@ export default async function handleOrderPlaced({
       tour_id: item.metadata.tour_id,
       tour_date: new Date(item.metadata.tour_date),
       status: "pending" as const,
+      metadata:
+        typeof item.metadata?.group_id === "string"
+          ? { group_id: item.metadata.group_id }
+          : undefined,
       line_items: {
         item_id: item.id,
         variant_id: item.variant_id,

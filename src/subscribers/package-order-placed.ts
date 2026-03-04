@@ -55,6 +55,10 @@ export default async function handlePackageOrderPlaced({
       package_id: item.metadata.package_id,
       package_date: new Date(item.metadata.package_date),
       status: "pending" as const,
+      metadata:
+        typeof item.metadata?.group_id === "string"
+          ? { group_id: item.metadata.group_id }
+          : undefined,
       line_items: {
         item_id: item.id,
         variant_id: item.variant_id,
