@@ -175,9 +175,9 @@ function getVariantComposition(booking: any): VariantComposition[] {
         return acc
       }, {})
 
-      ;(Object.entries(perType) as Array<[string, number]>).forEach(([type, quantity]) => {
-        addVariantCount(composition, type, quantity)
-      })
+        ; (Object.entries(perType) as Array<[string, number]>).forEach(([type, quantity]) => {
+          addVariantCount(composition, type, quantity)
+        })
 
       return
     }
@@ -255,6 +255,8 @@ const BookingListPage = () => {
     }),
   })
 
+  console.log(tourData)
+  console.log(packageData)
   const isLoading = tourLoading || packageLoading
 
   const bookingsByDate = useMemo(() => {

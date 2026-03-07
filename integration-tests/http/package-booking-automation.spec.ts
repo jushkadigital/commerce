@@ -98,7 +98,8 @@ medusaIntegrationTestRunner({
           packageId: string
           packageDate: string
           passengers: Array<{ name: string; type: string; passport?: string }>
-        }>
+        }>,
+        orderMetadata?: Record<string, unknown>
       ) {
         const adultVariant = await productModule.createProductVariants({
           product_id: product.id,
@@ -126,6 +127,7 @@ medusaIntegrationTestRunner({
           email,
           region_id: region.id,
           sales_channel_id: salesChannel.id,
+          metadata: orderMetadata,
           items: items.map((item) => ({
             title: item.title,
             variant_id: item.variant_id,
@@ -178,9 +180,17 @@ medusaIntegrationTestRunner({
             { name: "Maria Garcia", type: "adult", passport: "PE12345678" },
           ]
 
+          const preData = {
+            source: "checkout-web",
+            traveler: {
+              document: "DNI",
+              city: "Lima",
+            },
+          }
+
           const order = await createOrderWithPackageItems("booking@test.com", [
             { packageId: pkg.id, packageDate: testDate, passengers },
-          ])
+          ], { preData })
 
           await triggerOrderPlaced(order.id)
 
@@ -194,6 +204,7 @@ medusaIntegrationTestRunner({
           expect(new Date(bookings[0].package_date).toISOString().split("T")[0]).toBe(testDate)
           expect(bookings[0].status).toBe("pending")
           expect(bookings[0].line_items).toBeDefined()
+          expect((bookings[0].metadata as any)?.preData).toEqual(preData)
 
           const lineItems = bookings[0].line_items as any
           expect(lineItems.passengers).toEqual(passengers)

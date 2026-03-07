@@ -26,7 +26,7 @@ export default async function handlePackageOrderPlaced({
       data: [order],
     } = await query.graph({
       entity: "order",
-      fields: ["id", "items.*"],
+      fields: ["id", "metadata", "items.*"],
       filters: { id: orderId },
     })
 
@@ -50,23 +50,38 @@ export default async function handlePackageOrderPlaced({
       PACKAGE_MODULE
     ) as PackageModuleService
 
-    const bookingsToCreate = packageItems.map((item: any) => ({
-      order_id: orderId,
-      package_id: item.metadata.package_id,
-      package_date: new Date(item.metadata.package_date),
-      status: "pending" as const,
-      metadata:
-        typeof item.metadata?.group_id === "string"
-          ? { group_id: item.metadata.group_id }
-          : undefined,
-      line_items: {
-        item_id: item.id,
-        variant_id: item.variant_id,
-        title: item.title,
-        quantity: item.quantity,
-        passengers: item.metadata.passengers || [],
-      },
-    }))
+    const orderPreDataRaw =
+      order?.metadata && typeof order.metadata === "object"
+        ? (order.metadata as Record<string, any>).preData
+        : undefined
+    const orderPreData = orderPreDataRaw == null ? undefined : orderPreDataRaw
+
+    const bookingsToCreate = packageItems.map((item: any) => {
+      const bookingMetadata: Record<string, any> = {}
+
+      if (typeof item.metadata?.group_id === "string") {
+        bookingMetadata.group_id = item.metadata.group_id
+      }
+
+      if (orderPreData !== undefined) {
+        bookingMetadata.preData = structuredClone(orderPreData)
+      }
+
+      return {
+        order_id: orderId,
+        package_id: item.metadata.package_id,
+        package_date: new Date(item.metadata.package_date),
+        status: "pending" as const,
+        metadata: Object.keys(bookingMetadata).length > 0 ? bookingMetadata : undefined,
+        line_items: {
+          item_id: item.id,
+          variant_id: item.variant_id,
+          title: item.title,
+          quantity: item.quantity,
+          passengers: item.metadata.passengers || [],
+        },
+      }
+    })
 
     const createdBookingsRaw =
       await packageModuleService.createPackageBookings(bookingsToCreate)

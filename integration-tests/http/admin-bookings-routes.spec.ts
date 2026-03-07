@@ -57,6 +57,12 @@ medusaIntegrationTestRunner({
       let order: any
       let tourBookingIds: string[] = []
       let packageBookingIds: string[] = []
+      const orderPreData = {
+        source: "admin-tests",
+        leadPassenger: {
+          name: "Test User",
+        },
+      }
 
       beforeAll(async () => {
         container = getContainer()
@@ -130,6 +136,9 @@ medusaIntegrationTestRunner({
           email: "admin-bookings@test.com",
           region_id: region.id,
           sales_channel_id: salesChannel.id,
+          metadata: {
+            preData: orderPreData,
+          },
           items: [
             {
               title: "Order item",
@@ -146,6 +155,7 @@ medusaIntegrationTestRunner({
           tour_date: new Date("2026-04-01T10:00:00.000Z"),
           metadata: {
             group_id: "tour_group_test",
+            preData: orderPreData,
           },
           line_items: {
             passengers: [{ name: "Alice", type: "adult" }],
@@ -159,6 +169,7 @@ medusaIntegrationTestRunner({
           tour_date: new Date("2026-04-01T10:00:00.000Z"),
           metadata: {
             group_id: "tour_group_test",
+            preData: orderPreData,
           },
           line_items: {
             quantity: 2,
@@ -179,6 +190,7 @@ medusaIntegrationTestRunner({
           package_date: new Date("2026-04-05T10:00:00.000Z"),
           metadata: {
             group_id: "package_group_test",
+            preData: orderPreData,
           },
           line_items: {
             quantity: 1,
@@ -199,6 +211,7 @@ medusaIntegrationTestRunner({
           package_date: new Date("2026-04-05T10:00:00.000Z"),
           metadata: {
             group_id: "package_group_test",
+            preData: orderPreData,
           },
           line_items: {
             quantity: 2,
@@ -295,6 +308,7 @@ medusaIntegrationTestRunner({
         expect(res.body?.tours_booking?.length).toBeGreaterThan(0)
         expect(res.body?.tours_booking?.[0]?.order_id).toBe(order.id)
         expect(res.body?.tours_booking?.[0]?.metadata?.group_id).toBe("tour_group_test")
+        expect(res.body?.tours_booking?.[0]?.metadata?.preData).toEqual(orderPreData)
         expect(res.body?.tours_booking?.length).toBe(1)
         expect(Array.isArray(res.body?.tours_booking?.[0]?.line_items?.items)).toBe(true)
         expect(res.body?.tours_booking?.[0]?.line_items?.items?.length).toBe(2)
@@ -323,6 +337,7 @@ medusaIntegrationTestRunner({
         expect(res.body?.packages_booking?.length).toBeGreaterThan(0)
         expect(res.body?.packages_booking?.[0]?.order_id).toBe(order.id)
         expect(res.body?.packages_booking?.[0]?.metadata?.group_id).toBe("package_group_test")
+        expect(res.body?.packages_booking?.[0]?.metadata?.preData).toEqual(orderPreData)
         expect(res.body?.type).toBe("package")
         expect(res.body?.packages_booking?.length).toBe(1)
         expect(Array.isArray(res.body?.packages_booking?.[0]?.line_items?.items)).toBe(true)
