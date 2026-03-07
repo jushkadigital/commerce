@@ -77,6 +77,130 @@ type VariantGroupSummary = {
   totalQuantity: number
 }
 
+type VariantComposition = {
+  label: string
+  quantity: number
+}
+
+function getPassengerLabel(rawType: string): string {
+  const normalized = rawType.trim().toLowerCase()
+
+  if (normalized === "adult" || normalized === "adults") {
+    return "Adult"
+  }
+
+  if (normalized === "child" || normalized === "children") {
+    return "Child"
+  }
+
+  if (normalized === "infant" || normalized === "infants") {
+    return "Infant"
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+}
+
+function addVariantCount(
+  map: Map<string, number>,
+  label: string | undefined,
+  quantity: number
+) {
+  if (!label || quantity <= 0) {
+    return
+  }
+
+  const normalizedLabel = label.trim()
+  if (!normalizedLabel) {
+    return
+  }
+
+  map.set(normalizedLabel, (map.get(normalizedLabel) || 0) + quantity)
+}
+
+function getLineItemQuantity(item: any): number {
+  const directQuantity = Number(item?.quantity)
+  if (Number.isFinite(directQuantity) && directQuantity > 0) {
+    return directQuantity
+  }
+
+  const passengers = item?.passengers
+  if (Array.isArray(passengers) && passengers.length > 0) {
+    return passengers.length
+  }
+
+  if (passengers && typeof passengers === "object") {
+    const passengersCount =
+      (Number(passengers.adults) || 0) +
+      (Number(passengers.children) || 0) +
+      (Number(passengers.infants) || 0)
+
+    if (passengersCount > 0) {
+      return passengersCount
+    }
+  }
+
+  return 0
+}
+
+function getVariantComposition(booking: any): VariantComposition[] {
+  const lineItemsSource = booking?.line_items
+  const lineItems = Array.isArray(lineItemsSource?.items)
+    ? lineItemsSource.items
+    : lineItemsSource && typeof lineItemsSource === "object"
+      ? [lineItemsSource]
+      : []
+
+  const composition = new Map<string, number>()
+
+  lineItems.forEach((lineItem: any) => {
+    const lineItemTitle =
+      typeof lineItem?.title === "string" && lineItem.title.trim().length > 0
+        ? lineItem.title.trim()
+        : undefined
+    const lineItemQuantity = getLineItemQuantity(lineItem)
+
+    if (lineItemTitle) {
+      addVariantCount(composition, lineItemTitle, lineItemQuantity)
+      return
+    }
+
+    const passengers = lineItem?.passengers
+    if (Array.isArray(passengers) && passengers.length > 0) {
+      const perType = passengers.reduce((acc: Record<string, number>, passenger: any) => {
+        const type =
+          typeof passenger?.type === "string" && passenger.type.trim().length > 0
+            ? getPassengerLabel(passenger.type)
+            : "Passenger"
+        acc[type] = (acc[type] || 0) + 1
+        return acc
+      }, {})
+
+      ;(Object.entries(perType) as Array<[string, number]>).forEach(([type, quantity]) => {
+        addVariantCount(composition, type, quantity)
+      })
+
+      return
+    }
+
+    if (passengers && typeof passengers === "object") {
+      addVariantCount(composition, "Adult", Number(passengers.adults) || 0)
+      addVariantCount(composition, "Child", Number(passengers.children) || 0)
+      addVariantCount(composition, "Infant", Number(passengers.infants) || 0)
+    }
+  })
+
+  if (composition.size === 0) {
+    const groupedPassengers = booking?.line_items?.passengers
+    if (groupedPassengers && typeof groupedPassengers === "object") {
+      addVariantCount(composition, "Adult", Number(groupedPassengers.adults) || 0)
+      addVariantCount(composition, "Child", Number(groupedPassengers.children) || 0)
+      addVariantCount(composition, "Infant", Number(groupedPassengers.infants) || 0)
+    }
+  }
+
+  return Array.from(composition.entries()).map(([label, quantity]) => ({ label, quantity }))
+}
+
 const BookingListPage = () => {
   // Removed unused pagination state for now, as we fetch for the whole month
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -167,37 +291,6 @@ const BookingListPage = () => {
 
   const bookingsCount = Object.values(currentMonthBookings).flat().length
 
-  const selectedOrderIds = useMemo(() => {
-    if (!selectedBooking?.items?.length) {
-      return [] as string[]
-    }
-
-    const ids = selectedBooking.items
-      .map((item: any) => item?.order_id)
-      .filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
-
-    return Array.from(new Set(ids)).sort()
-  }, [selectedBooking])
-
-  const { data: ordersById, isLoading: ordersLoading } = useQuery({
-    queryKey: ["booking-order-details", selectedOrderIds],
-    enabled: isModalOpen && selectedOrderIds.length > 0,
-    queryFn: async () => {
-      const entries = await Promise.all(
-        selectedOrderIds.map(async (orderId) => {
-          try {
-            const response = await sdk.client.fetch(`/admin/orders/${orderId}`)
-            return [orderId, (response as any)?.order || null] as const
-          } catch (error) {
-            return [orderId, null] as const
-          }
-        })
-      )
-
-      return Object.fromEntries(entries) as Record<string, any>
-    },
-  })
-
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedBooking(null)
@@ -256,6 +349,36 @@ const BookingListPage = () => {
         {}
       )
     ) as VariantGroupSummary[]
+  }, [selectedBooking])
+
+  const selectedCustomer = useMemo(() => {
+    if (!selectedBooking?.items?.length) {
+      return {
+        name: null,
+        email: null,
+        phone: null,
+      }
+    }
+
+    const firstBookingWithCustomer = (selectedBooking.items as any[]).find(
+      (item) => item?.customer || item?.order?.customer
+    )
+
+    const customer = firstBookingWithCustomer?.customer || firstBookingWithCustomer?.order?.customer
+    const order = firstBookingWithCustomer?.order || null
+    const name = [customer?.first_name, customer?.last_name].filter(Boolean).join(" ")
+    const email = customer?.email || order?.email || null
+    const phone =
+      customer?.phone ||
+      order?.shipping_address?.phone ||
+      order?.billing_address?.phone ||
+      null
+
+    return {
+      name: name || null,
+      email,
+      phone,
+    }
   }, [selectedBooking])
 
   return (
@@ -562,26 +685,34 @@ const BookingListPage = () => {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <Text className="text-ui-fg-subtle text-small font-medium">Pedido</Text>
-                <Text className="text-ui-fg-base">{selectedBooking.type}</Text>
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3 bg-ui-bg-subtle rounded border border-ui-border-base">
+                  <Text className="text-ui-fg-subtle text-small font-medium">Pedido</Text>
+                  <Text className="text-ui-fg-base">{selectedBooking.type}</Text>
 
-              <div>
-                <Text className="text-ui-fg-subtle text-small font-medium">Fecha</Text>
-                <Text className="text-ui-fg-base">
-                  {dayjs(selectedBooking.fecha as string).format("DD/MM/YYYY")}
-                </Text>
+                  <Text className="text-ui-fg-subtle text-small font-medium mt-3">Fecha</Text>
+                  <Text className="text-ui-fg-base">
+                    {dayjs(selectedBooking.fecha as string).format("DD/MM/YYYY")}
+                  </Text>
+                </div>
+
+                <div className="p-3 bg-ui-bg-subtle rounded border border-ui-border-base">
+                  <Text className="text-ui-fg-subtle text-small font-medium">Cliente</Text>
+                  <>
+                    <Text className="text-ui-fg-base">{selectedCustomer.name || selectedCustomer.email || "No disponible"}</Text>
+                    {selectedCustomer.email && (
+                      <Text size="xsmall" className="text-ui-fg-subtle">{selectedCustomer.email}</Text>
+                    )}
+                    {selectedCustomer.phone && (
+                      <Text size="xsmall" className="text-ui-fg-subtle">Tel: {selectedCustomer.phone}</Text>
+                    )}
+                  </>
+                </div>
               </div>
 
               {selectedBooking.items && selectedBooking.items.length > 0 && (
                 <div>
                   <Text className="text-ui-fg-subtle text-small font-medium mb-2 block">Detalles</Text>
-                  {ordersLoading && (
-                    <Text size="small" className="text-ui-fg-subtle mb-2 block">
-                      Cargando información del cliente...
-                    </Text>
-                  )}
                   <div className="space-y-2">
                     {selectedVariantGroups.map((variantGroup, groupIdx) => (
                       <div key={`modal-group-${groupIdx}`} className="p-3 bg-ui-bg-subtle rounded">
@@ -597,17 +728,8 @@ const BookingListPage = () => {
                         <div className="space-y-2">
                           {variantGroup.items.map((item: any, index: number) => {
                             const data = item.tour || item.package
-                            const order = ordersById?.[item.order_id]
-                            const customer = order?.customer
-                            const customerName = [customer?.first_name, customer?.last_name]
-                              .filter(Boolean)
-                              .join(" ")
-                            const customerEmail = customer?.email || order?.email
-                            const customerPhone =
-                              customer?.phone ||
-                              order?.shipping_address?.phone ||
-                              order?.billing_address?.phone
                             const quantity = getBookingQuantity(item)
+                            const variantComposition = getVariantComposition(item)
 
                             return (
                               <div key={`modal-group-item-${groupIdx}-${index}`} className="border-t border-ui-border-base pt-2 first:border-t-0 first:pt-0">
@@ -615,19 +737,14 @@ const BookingListPage = () => {
                                   <Text size="small" weight="plus">{data?.destination || "Sin destino"}</Text>
                                   <Text size="xsmall" className="text-ui-fg-subtle">Cant: {quantity}</Text>
                                 </div>
+                                {variantComposition.length > 0 && (
+                                  <Text size="xsmall" className="text-ui-fg-subtle">
+                                    Variantes: {variantComposition.map((v) => `${v.label} ${v.quantity}`).join(", ")}
+                                  </Text>
+                                )}
                                 <Text size="xsmall" className="text-ui-fg-subtle">
                                   {data?.duration_days ? `Duración: ${data.duration_days} días` : "Duración: N/A"}
                                 </Text>
-                                <div className="mt-2 border-t border-ui-border-base pt-2">
-                                  <Text size="xsmall" className="text-ui-fg-subtle">Cliente</Text>
-                                  <Text size="small">{customerName || customerEmail || "No disponible"}</Text>
-                                  {customerEmail && (
-                                    <Text size="xsmall" className="text-ui-fg-subtle">{customerEmail}</Text>
-                                  )}
-                                  {customerPhone && (
-                                    <Text size="xsmall" className="text-ui-fg-subtle">Tel: {customerPhone}</Text>
-                                  )}
-                                </div>
                               </div>
                             )
                           })}

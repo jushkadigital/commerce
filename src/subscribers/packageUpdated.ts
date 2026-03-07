@@ -34,7 +34,7 @@ const gaga = await createTourWorkflow(container).run({
   const packageModule = container.resolve(PACKAGE_MODULE)
 
   logger.info(`${JSON.stringify(event.data)} `)
-  const [gege] = await packageModule.getPackageByMetadata(event.data.id)
+  const [gege] = await packageModule.getPackageByMetadata(event.data.id + "package")
 
   const newTour = await packageModule.updatePackages([{
     id: gege.id,

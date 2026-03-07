@@ -107,6 +107,45 @@ export async function GET(
     filters,
   })
 
+  const orderIds = Array.from(
+    new Set(
+      ((toursBooking || []) as Record<string, any>[])
+        .map((booking) => booking?.order_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
+    )
+  )
+
+  let ordersById = new Map<string, Record<string, any>>()
+
+  if (orderIds.length > 0) {
+    const { data: orders } = await query.graph({
+      entity: "order",
+      fields: [
+        "id",
+        "display_id",
+        "status",
+        "payment_status",
+        "fulfillment_status",
+        "total",
+        "currency_code",
+        "created_at",
+        "email",
+        "customer.id",
+        "customer.first_name",
+        "customer.last_name",
+        "customer.email",
+        "customer.phone",
+      ],
+      filters: {
+        id: orderIds,
+      },
+    })
+
+    ordersById = new Map(
+      ((orders || []) as Record<string, any>[]).map((order) => [order.id, order])
+    )
+  }
+
   const grouped = new Map<string, Record<string, any>>()
 
   for (const booking of (toursBooking || []) as Record<string, any>[]) {
@@ -116,6 +155,10 @@ export async function GET(
         : booking.id
 
     const lineItems = normalizeLineItems(booking.line_items)
+    const order = typeof booking?.order_id === "string"
+      ? ordersById.get(booking.order_id) || null
+      : null
+    const customer = order?.customer || null
 
     if (!grouped.has(groupId)) {
       const totalQuantity = lineItems.reduce((sum, item) => sum + getItemQuantity(item), 0)
@@ -129,6 +172,8 @@ export async function GET(
 
       grouped.set(groupId, {
         ...booking,
+        order,
+        customer,
         line_items: {
           items: lineItems,
           quantity: totalQuantity,
@@ -154,6 +199,8 @@ export async function GET(
 
     grouped.set(groupId, {
       ...current,
+      order: current.order || order,
+      customer: current.customer || customer,
       line_items: {
         items: mergedItems,
         quantity: mergedQuantity,

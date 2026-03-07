@@ -435,7 +435,7 @@ medusaIntegrationTestRunner({
 
           const { data: bookings } = await query.graph({
             entity: "package_booking",
-            fields: ["id", "order_id", "package_date", "status", "line_items"],
+            fields: ["id", "order_id", "package_date", "status", "line_items", "metadata"],
             filters: {
               order_id: orderId,
             },
@@ -443,9 +443,12 @@ medusaIntegrationTestRunner({
 
           expect(bookings).toHaveLength(1)
           const booking = bookings[0]
+          const orderGroupId = (result as any).order.items?.[0]?.metadata?.group_id
           expect(booking.order_id).toBe(orderId)
           expect(booking.status).toBe("pending")
           expect(new Date(booking.package_date).toISOString().split("T")[0]).toBe(testDate)
+          expect(typeof booking.metadata?.group_id).toBe("string")
+          expect(booking.metadata?.group_id).toBe(orderGroupId)
         })
 
         it("should handle multiple packages in same cart", async () => {

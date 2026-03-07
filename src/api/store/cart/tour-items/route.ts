@@ -25,6 +25,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         name: string
         email?: string
         phone?: string
+        formId?: any
       }
       items?: Array<{
         variant_id: string
@@ -196,7 +197,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           .find((meta) =>
             typeof meta.customer_name === "string" ||
             typeof meta.customer_email === "string" ||
-            typeof meta.customer_phone === "string"
+            typeof meta.customer_phone === "string" ||
+            typeof meta.formId === "number"
           )
 
         if (customerMetadata) {
@@ -210,6 +212,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
               typeof customerMetadata.customer_phone === "string"
                 ? (customerMetadata.customer_phone as string)
                 : undefined,
+            formId: customerMetadata.formId
           }
         }
       }
@@ -517,7 +520,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         requires_shipping: false,
         unit_price: entry.unit_price,
         thumbnail: inputOverridesByVariant.get(entry.variant_id)?.thumbnail || tour.thumbnail,
-        title: `${tour.destination} - ${tour_date!} (${entry.type})`,
+        title: `${tour.destination} (${entry.type})`,
         metadata: {
           is_tour: true,
           tour_id: tour.id,
@@ -534,6 +537,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           customer_name: customer?.name,
           customer_email: customer?.email,
           customer_phone: customer?.phone,
+          formId: customer?.formId
         },
       }
     })

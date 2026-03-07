@@ -74,7 +74,7 @@ class PackageModuleService extends MedusaService({
       // Handle potential missing line_items defensively
       const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
       const items = lineItemsData?.items || []
-      
+
       const bookingPassengers = items.reduce((bookingTotal, item) => {
         // The items array contains the metadata objects directly (not nested under .metadata)
         const itemData = item as any
@@ -84,18 +84,18 @@ class PackageModuleService extends MedusaService({
         // Infants are EXCLUDED from capacity
         return bookingTotal + adults + children
       }, 0)
-      
+
       return total + bookingPassengers
     }, 0)
 
     const availableCapacity = pkg.max_capacity - reservedPassengers
-    
+
     return availableCapacity
   }
   async getPackageByMetadata(value: string) {
     const packageMod = await this.listPackages({
       metadata: {
-        payloadId: value
+        payloadId: String(value)
       }
     }, { take: 1 })
     return packageMod

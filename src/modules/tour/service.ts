@@ -63,7 +63,7 @@ class TourModuleService extends MedusaService({
       // Handle potential missing line_items defensively
       const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
       const items = lineItemsData?.items || []
-      
+
       const bookingPassengers = items.reduce((bookingTotal, item) => {
         const passengers = item.metadata?.passengers || {}
         const adults = Number(passengers.adults) || 0
@@ -71,7 +71,7 @@ class TourModuleService extends MedusaService({
         // Infants are EXCLUDED from capacity
         return bookingTotal + adults + children
       }, 0)
-      
+
       return total + bookingPassengers
     }, 0)
 
@@ -272,7 +272,7 @@ class TourModuleService extends MedusaService({
   async getTourByMetadata(value: string) {
     const tour = await this.listTours({
       metadata: {
-        payloadId: value
+        payloadId: String(value)
       }
     }, { take: 1 })
     return tour

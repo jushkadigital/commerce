@@ -56,7 +56,7 @@ medusaIntegrationTestRunner({
       let pkg: any
       let order: any
       let tourBookingIds: string[] = []
-      let packageBookingId: string | null = null
+      let packageBookingIds: string[] = []
 
       beforeAll(async () => {
         container = getContainer()
@@ -181,7 +181,34 @@ medusaIntegrationTestRunner({
             group_id: "package_group_test",
           },
           line_items: {
-            passengers: [{ name: "Bob", type: "adult" }],
+            quantity: 1,
+            passengers: {
+              adults: 1,
+              children: 0,
+              infants: 0,
+            },
+            variant_id: packageVariant.id,
+            title: "Package Adult",
+          },
+          status: "pending",
+        })
+
+        const createdPackageBookingChild = await packageModuleService.createPackageBookings({
+          order_id: order.id,
+          package_id: pkg.id,
+          package_date: new Date("2026-04-05T10:00:00.000Z"),
+          metadata: {
+            group_id: "package_group_test",
+          },
+          line_items: {
+            quantity: 2,
+            passengers: {
+              adults: 0,
+              children: 2,
+              infants: 0,
+            },
+            variant_id: packageVariant.id,
+            title: "Package Child",
           },
           status: "pending",
         })
@@ -194,9 +221,14 @@ medusaIntegrationTestRunner({
           : (createdTourBookingChild as any)?.id
 
         tourBookingIds = [firstTourBookingId, secondTourBookingId].filter(Boolean)
-        packageBookingId = Array.isArray(createdPackageBooking)
+        const firstPackageBookingId = Array.isArray(createdPackageBooking)
           ? createdPackageBooking[0]?.id
           : (createdPackageBooking as any)?.id
+        const secondPackageBookingId = Array.isArray(createdPackageBookingChild)
+          ? createdPackageBookingChild[0]?.id
+          : (createdPackageBookingChild as any)?.id
+
+        packageBookingIds = [firstPackageBookingId, secondPackageBookingId].filter(Boolean)
       })
 
       afterEach(async () => {
@@ -204,8 +236,8 @@ medusaIntegrationTestRunner({
           if (tourBookingIds.length > 0) {
             await tourModuleService.deleteTourBookings(tourBookingIds)
           }
-          if (packageBookingId) {
-            await packageModuleService.deletePackageBookings([packageBookingId])
+          if (packageBookingIds.length > 0) {
+            await packageModuleService.deletePackageBookings(packageBookingIds)
           }
 
           if (tour?.id) {
@@ -239,7 +271,7 @@ medusaIntegrationTestRunner({
         }
 
         tourBookingIds = []
-        packageBookingId = null
+        packageBookingIds = []
       })
 
       it("GET /admin/bookings should return tour bookings filtered by order_id", async () => {
@@ -267,6 +299,8 @@ medusaIntegrationTestRunner({
         expect(Array.isArray(res.body?.tours_booking?.[0]?.line_items?.items)).toBe(true)
         expect(res.body?.tours_booking?.[0]?.line_items?.items?.length).toBe(2)
         expect(res.body?.tours_booking?.[0]?.line_items?.quantity).toBe(3)
+        expect(res.body?.tours_booking?.[0]?.order?.id).toBe(order.id)
+        expect(res.body?.tours_booking?.[0]).toHaveProperty("customer")
       })
 
       it("GET /admin/package-bookings should return package bookings filtered by order_id", async () => {
@@ -289,6 +323,13 @@ medusaIntegrationTestRunner({
         expect(res.body?.packages_booking?.length).toBeGreaterThan(0)
         expect(res.body?.packages_booking?.[0]?.order_id).toBe(order.id)
         expect(res.body?.packages_booking?.[0]?.metadata?.group_id).toBe("package_group_test")
+        expect(res.body?.type).toBe("package")
+        expect(res.body?.packages_booking?.length).toBe(1)
+        expect(Array.isArray(res.body?.packages_booking?.[0]?.line_items?.items)).toBe(true)
+        expect(res.body?.packages_booking?.[0]?.line_items?.items?.length).toBe(2)
+        expect(res.body?.packages_booking?.[0]?.line_items?.quantity).toBe(3)
+        expect(res.body?.packages_booking?.[0]?.order?.id).toBe(order.id)
+        expect(res.body?.packages_booking?.[0]).toHaveProperty("customer")
       })
     })
   },

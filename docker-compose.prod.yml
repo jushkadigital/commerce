@@ -30,19 +30,6 @@ services:
       - medusa-network
 
 
-  meilisearch:
-    image: getmeili/meilisearch:latest
-    volumes:
-      - meilisearch-data:/data.ms
-    environment:
-      - MEILI_MASTER_KEY=ms
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7700"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - medusa-network
 
   backend-server:
     container_name: medusa-app
