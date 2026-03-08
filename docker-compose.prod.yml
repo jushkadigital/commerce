@@ -45,20 +45,6 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    environment:
-      NODE_ENV: production
-      REDIS_URL: redis://redis:6379
-      CACHE_REDIS_URL: redis://redis:6379
-      EVENTS_REDIS_URL: redis://redis:6379
-      WE_REDIS_URL: redis://redis:6379
-      LOCKING_REDIS_URL: redis://redis:6379
-      DATABASE_URL: postgres://medusa-starter:medusa-password@postgres-medusa:5432/medusa-starter
-      POSTGRES_URL: postgres://medusa-starter:medusa-password@postgres-medusa:5432/medusa-starter
-      MEDUSA_CREATE_ADMIN_USER: true
-      MEDUSA_ADMIN_EMAIL: admin@medusa-test.com
-      MEDUSA_ADMIN_PASSWORD: supersecret
-      MEILISEARCH_HOST: http://meilisearch:7700
-      MEILISEARCH_API_KEY: ms
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 10s
@@ -76,7 +62,6 @@ volumes:
   postgres-data:
   backend-server-data:
   cache-backend-data:
-  meilisearch-data:
 
 networks:
   proxiable:
