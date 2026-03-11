@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:18
     container_name: postgres-medusa
+    restart: unless-stopped
     environment:
       POSTGRES_USER: medusa-starter
       POSTGRES_PASSWORD: medusa-password
@@ -9,16 +10,22 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "medusa-starter"]
+      test: ["CMD-SHELL", "pg_isready -U medusa-starter -d medusa-starter"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     networks:
       - medusa-network
-
+    cpus: 1.5
+    mem_limit: 2g
+    mem_reservation: 1g
+    pids_limit: 300
 
   redis:
     image: redis:8
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - cache-backend-data:/data
     healthcheck:
@@ -26,14 +33,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     networks:
       - medusa-network
-
-
+    cpus: 0.75
+    mem_limit: 768m
+    mem_reservation: 256m
+    pids_limit: 200
 
   backend-server:
-    container_name: medusa-app
+    container_name: medusa-app-server
     image: urgosxd7/medusa-app:latest
+    restart: unless-stopped
     volumes:
       - backend-server-data:/data
     expose:
@@ -45,16 +56,47 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      MEDUSA_WORKER_MODE: server
+      DISABLE_MEDUSA_ADMIN: "false"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 10s
       timeout: 5s
-      start_period: 10s
+      start_period: 20s
       retries: 5
     networks:
       - medusa-network
       - red-compartida
       - proxiable
+    cpus: 2.0
+    mem_limit: 2g
+    mem_reservation: 1g
+    pids_limit: 400
+  backend-worker:
+    container_name: medusa-app-worker
+    image: urgosxd7/medusa-app:latest
+    restart: unless-stopped
+    volumes:
+      - backend-server-data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      MEDUSA_WORKER_MODE: worker
+      DISABLE_MEDUSA_ADMIN: "true"
+    networks:
+      - medusa-network
+    cpus: 1.5
+    mem_limit: 1536m
+    mem_reservation: 768m
+    pids_limit: 400
+
+
 
 
 

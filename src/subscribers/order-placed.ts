@@ -4,6 +4,8 @@ import { TOUR_MODULE } from "../modules/tour"
 import type TourModuleService from "../modules/tour/service"
 import { findExistingBooking } from "../utils/booking-idempotency"
 import { resend } from "../utils/email"
+import { getOrderNotificationEmails } from "../utils/order-notification-emails"
+import { TravelBookingNotificationEmail } from "../emails/travel-booking-notification"
 
 export default async function handleOrderPlaced({
   event,
@@ -24,7 +26,18 @@ export default async function handleOrderPlaced({
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
     const { data: [order] } = await query.graph({
       entity: "order",
-      fields: ["id", "metadata", "items.*"],
+      fields: [
+        "id",
+        "display_id",
+        "email",
+        "metadata",
+        "currency_code",
+        "total",
+        "items.*",
+        "customer.first_name",
+        "customer.last_name",
+        "customer.email",
+      ],
       filters: { id: orderId },
     })
 
@@ -92,47 +105,171 @@ export default async function handleOrderPlaced({
       `[order.placed] Created ${createdBookings.length} tour booking(s) for order ${orderId}: ${createdBookings.map((b: any) => b.id).join(", ")}`
     )
 
+    const notificationRecipients = await getOrderNotificationEmails(container)
+
+    if (notificationRecipients.length === 0) {
+      logger.warn(
+        "No order notification recipients configured. Will send only customer email for order.placed."
+      )
+    }
+
+    const customerEmailRaw =
+      (typeof order.email === "string" && order.email) ||
+      (typeof order.customer?.email === "string" && order.customer.email) ||
+      null
+    const customerEmail =
+      typeof customerEmailRaw === "string" && customerEmailRaw.trim().length > 0
+        ? customerEmailRaw.trim()
+        : null
+
+    const customerFirstName =
+      typeof order.customer?.first_name === "string"
+        ? order.customer.first_name.trim()
+        : ""
+    const customerLastName =
+      typeof order.customer?.last_name === "string"
+        ? order.customer.last_name.trim()
+        : ""
+    const customerName =
+      [customerFirstName, customerLastName].filter(Boolean).join(" ") || "Viajero"
+
+    if (!customerEmail) {
+      logger.warn(
+        `Customer email not found for order ${orderId}. Skipping customer notification email.`
+      )
+    }
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "bookings@yourdomain.com"
+
     // Send notification emails for each created booking. Failures are logged
     // and do not interrupt the subscriber flow.
     for (const booking of createdBookings) {
       try {
-        // Ensure TypeScript understands this is an array; bookings may come as loose objects
-        const passengersArr = (booking.line_items?.passengers as any[]) || []
-        const passengersHtml = Array.isArray(passengersArr) ? passengersArr
-          .map((p: any) => {
-            const passport = p.passport ? ` - Passport: ${p.passport}` : ""
-            return `${p.name} (${p.type})${passport}`
-          })
-          .join("</li><li>") : ""
+        const lineItemsSource = booking.line_items
+        const lineItems = Array.isArray(lineItemsSource)
+          ? lineItemsSource
+          : Array.isArray(lineItemsSource?.items)
+            ? lineItemsSource.items
+            : lineItemsSource
+              ? [lineItemsSource]
+              : []
+        const lineItem = lineItems[0]
 
-        const formattedDate = booking.tour_date
-          ? new Date(booking.tour_date).toISOString()
-          : ""
+        const passengers = Array.isArray(lineItem?.passengers)
+          ? lineItem.passengers
+          : []
+        const linkedOrderItem = (order.items || []).find(
+          (item: any) => item.id === lineItem?.item_id
+        )
 
-        const subject = `New Tour Booking - Order #${orderId}`
+        const normalizedPrice = (
+          [
+            lineItem?.total,
+            linkedOrderItem?.total,
+            linkedOrderItem?.subtotal,
+            linkedOrderItem?.unit_price,
+          ]
+            .map((value) => Number(value))
+            .find((value) => Number.isFinite(value)) ?? null
+        )
+        const preData =
+          (order.metadata as Record<string, unknown> | undefined)?.preData ??
+          (booking.metadata as Record<string, unknown> | undefined)?.preData
+        const destinationRaw = lineItem?.title ?? linkedOrderItem?.title
+        const destination = typeof destinationRaw === "string" ? destinationRaw : null
+        const imageUrlRaw = lineItem?.thumbnail ?? linkedOrderItem?.thumbnail
+        const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw : null
+        const currencyCode =
+          typeof order.currency_code === "string" ? order.currency_code : null
 
-        const html = `<h2>New Tour Booking</h2>
-<p><strong>Order ID:</strong> ${orderId}</p>
-<p><strong>Tour ID:</strong> ${booking.tour_id}</p>
-<p><strong>Tour Date:</strong> ${formattedDate}</p>
-<h3>Passengers:</h3>
-<ul><li>${passengersHtml}</li></ul>`
+        const subject = `Nueva reserva de tour - Pedido #${order.display_id || orderId}`
 
-        // Placeholder addresses per plan. Do not throw on failure.
-        // Resend SDK returns an object with { data, error }.
-        // Await the send call and log result.
         if (resend) {
-          const res = await resend.emails.send({
-            from: "bookings@yourdomain.com",
-            to: ["operator@example.com"],
-            subject,
-            html,
-          })
+          if (customerEmail) {
+            try {
+              const customerRes = await resend.emails.send({
+                from: fromEmail,
+                to: [customerEmail],
+                subject,
+                react: TravelBookingNotificationEmail({
+                  reservationType: "Tour",
+                  orderId: String(order.display_id || orderId),
+                  bookingId: String(booking.id || "N/A"),
+                  recipientName: customerName,
+                  destination,
+                  imageUrl,
+                  travelDate: booking.tour_date,
+                  price: normalizedPrice,
+                  currencyCode,
+                  preData,
+                  passengers,
+                }),
+                tags: [
+                  { name: "category", value: "tour_booking" },
+                  { name: "audience", value: "customer" },
+                  { name: "order_id", value: String(orderId) },
+                ],
+                headers: {
+                  "Idempotency-Key": `tour-booking-customer-${booking.id || orderId}`,
+                },
+              })
 
-          if (res?.error) {
-            logger.error(`Failed to send email for booking ${booking.id}:`, res.error)
-          } else {
-            logger.info(`Email sent for booking ${booking.id}`)
+              if (customerRes?.error) {
+                logger.error(
+                  `Failed to send customer email for booking ${booking.id}:`,
+                  customerRes.error
+                )
+              } else {
+                logger.info(`Customer email sent for booking ${booking.id}`)
+              }
+            } catch (customerSendError) {
+              logger.error(
+                `Unexpected error sending customer email for booking ${booking.id}:`,
+                customerSendError
+              )
+            }
+          }
+
+          if (notificationRecipients.length > 0) {
+            try {
+              const opsRes = await resend.emails.send({
+                from: fromEmail,
+                to: notificationRecipients,
+                subject,
+                react: TravelBookingNotificationEmail({
+                  reservationType: "Tour",
+                  orderId: String(order.display_id || orderId),
+                  bookingId: String(booking.id || "N/A"),
+                  recipientName: "Equipo de Operaciones",
+                  destination,
+                  imageUrl,
+                  travelDate: booking.tour_date,
+                  price: normalizedPrice,
+                  currencyCode,
+                  preData,
+                  passengers,
+                }),
+                tags: [
+                  { name: "category", value: "tour_booking" },
+                  { name: "audience", value: "ops" },
+                  { name: "order_id", value: String(orderId) },
+                ],
+                headers: {
+                  "Idempotency-Key": `tour-booking-ops-${booking.id || orderId}`,
+                },
+              })
+
+              if (opsRes?.error) {
+                logger.error(`Failed to send ops email for booking ${booking.id}:`, opsRes.error)
+              } else {
+                logger.info(`Ops email sent for booking ${booking.id}`)
+              }
+            } catch (opsSendError) {
+              logger.error(
+                `Unexpected error sending ops email for booking ${booking.id}:`,
+                opsSendError
+              )
+            }
           }
         } else {
           logger.warn(`Resend client not initialized, skipping email for booking ${booking.id}`)

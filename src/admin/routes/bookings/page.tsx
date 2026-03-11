@@ -5,6 +5,7 @@ import {
   Heading,
   Text,
   Button,
+  Popover,
   clx,
   Tabs,
 } from "@medusajs/ui"
@@ -201,6 +202,27 @@ function getVariantComposition(booking: any): VariantComposition[] {
   return Array.from(composition.entries()).map(([label, quantity]) => ({ label, quantity }))
 }
 
+function stringifyPreData(preData: unknown): string | null {
+  if (preData === null || preData === undefined) {
+    return null
+  }
+
+  if (typeof preData === "string") {
+    try {
+      const parsed = JSON.parse(preData)
+      return JSON.stringify(parsed, null, 2)
+    } catch {
+      return JSON.stringify(preData)
+    }
+  }
+
+  try {
+    return JSON.stringify(preData, null, 2)
+  } catch {
+    return JSON.stringify(String(preData))
+  }
+}
+
 const BookingListPage = () => {
   // Removed unused pagination state for now, as we fetch for the whole month
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -381,6 +403,22 @@ const BookingListPage = () => {
       email,
       phone,
     }
+  }, [selectedBooking])
+
+  const selectedPreDataString = useMemo(() => {
+    if (!selectedBooking?.items?.length) {
+      return null
+    }
+
+    const firstBookingWithPreData = (selectedBooking.items as any[]).find(
+      (item) => item?.metadata?.preData !== null && item?.metadata?.preData !== undefined
+    )
+
+    if (!firstBookingWithPreData) {
+      return null
+    }
+
+    return stringifyPreData(firstBookingWithPreData.metadata.preData)
   }, [selectedBooking])
 
   return (
@@ -707,6 +745,29 @@ const BookingListPage = () => {
                     )}
                     {selectedCustomer.phone && (
                       <Text size="xsmall" className="text-ui-fg-subtle">Tel: {selectedCustomer.phone}</Text>
+                    )}
+                    {selectedPreDataString && (
+                      <div className="mt-2">
+                        <Popover>
+                          <Popover.Trigger asChild>
+                            <Button size="small" variant="secondary">
+                              Ver preData
+                            </Button>
+                          </Popover.Trigger>
+                          <Popover.Content
+                            sideOffset={8}
+                            align="start"
+                            className="w-[min(92vw,560px)] max-h-[360px] overflow-auto"
+                          >
+                            <Text size="xsmall" className="text-ui-fg-subtle">
+                              metadata.preData
+                            </Text>
+                            <pre className="mt-2 rounded bg-ui-bg-subtle p-2 text-xs text-ui-fg-subtle whitespace-pre-wrap break-words">
+                              {selectedPreDataString}
+                            </pre>
+                          </Popover.Content>
+                        </Popover>
+                      </div>
                     )}
                   </>
                 </div>

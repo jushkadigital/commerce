@@ -37,6 +37,11 @@ ENV NODE_ENV=$NODE_ENV
 COPY --from=deps /opt/medusa/deps .
 COPY . .
 
+# 1. Le decimos a Docker que espere este argumento durante el build
+ARG VITE_MEDUSA_BACKEND_URL
+
+# 2. Lo exponemos como variable de entorno para que Vite lo inyecte
+ENV VITE_MEDUSA_BACKEND_URL=$VITE_MEDUSA_BACKEND_URL
 # FIX 2: EL ENGAÑO (MOCKING)
 # Definimos las variables para que medusa-config.ts use "in-memory"
 # y no intente conectarse a Redis/DB reales durante el build.
@@ -50,6 +55,7 @@ ENV LOCKING_REDIS_URL=redis://localhost:6379
 ENV JWT_SECRET=dummy
 ENV COOKIE_SECRET=dummy
 ENV SESSION_SECRET=dummy
+ENV MEDUSA_BACKEND_URL=https://commerce.patarutera.pe
 
 # Ahora el build correrá sin errores de conexión
 RUN \

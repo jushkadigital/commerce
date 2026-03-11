@@ -67,7 +67,7 @@ export default async function handleProductSync({
 
     logger.info(`Loaded full product: ${JSON.stringify(fullProductWithPrices)}`)
 
-    const rabbitMQEventBus = container.resolve(RABBITMQ_EVENT_BUS_MODULE)
+    const rabbitMQEventBus = container.resolve(RABBITMQ_EVENT_BUS_MODULE) as any
 
     await rabbitMQEventBus.emit({
       name: "product.created",

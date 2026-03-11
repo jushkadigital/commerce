@@ -15,12 +15,14 @@ import { createSelectParams } from "./validators"
 import { GetTourAvailabilityParamsSchema } from "./admin/tours/[id]/availability/validators"
 import { z } from "zod"
 import { CreatePackageSchema } from "./admin/packages/route"
+import { CreateOrderNotificationEmailSchema } from "./admin/order-notification-emails/route"
+import { customMiddlewares } from "./custom/izipay/callback/middlewares"
 
 export const StoreGetCartsCart = createSelectParams()
 
-
 export default defineMiddlewares({
   routes: [
+    ...customMiddlewares,
     // Admin routes
     {
       matcher: "/admin/tours*",
@@ -32,6 +34,10 @@ export default defineMiddlewares({
     },
     {
       matcher: "/admin/package-bookings*",
+      middlewares: [authenticate("user", ["session", "bearer"])],
+    },
+    {
+      matcher: "/admin/order-notification-emails*",
       middlewares: [authenticate("user", ["session", "bearer"])],
     },
     {
@@ -128,6 +134,13 @@ export default defineMiddlewares({
           defaults: ["start_date", "end_date"],
         }),
       ],
-    }
+    },
+    {
+      matcher: "/admin/order-notification-emails",
+      methods: ["POST"],
+      middlewares: [
+        validateAndTransformBody(CreateOrderNotificationEmailSchema),
+      ],
+    },
   ]
 })

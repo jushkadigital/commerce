@@ -13,6 +13,15 @@ type RecieveData = {
   ocurredOn: string
 }
 
+function isAlreadyExistsError(error: unknown): boolean {
+  if (!error || typeof error !== "object" || !("message" in error)) {
+    return false
+  }
+
+  const message = String(error.message)
+  return message.toLowerCase().includes("already exists")
+}
+
 export default async function handleCustomerSync({
   event,
   container
@@ -31,9 +40,83 @@ export default async function handleCustomerSync({
   })
 
   if (existingCustomers.length > 0) {
-    // Aquí podrías decidir si actualizas en lugar de lanzar error, 
-    // pero mantenemos tu lógica de error.
-    throw new MedusaError(MedusaError.Types.DUPLICATE_ERROR, "El cliente ya existe")
+    const existingCustomer = existingCustomers[0]
+
+    const [providerIdentity] = await authModule.listProviderIdentities({
+      provider: "keycloak-store",
+      entity_id: event.data.externalId,
+    })
+
+    let existingAuthIdentityId = providerIdentity?.auth_identity_id
+
+    if (!existingAuthIdentityId) {
+      try {
+        const createdIdentity = await authModule.createAuthIdentities({
+          provider_identities: [
+            {
+              provider: "keycloak-store",
+              entity_id: event.data.externalId,
+              user_metadata: {
+                email: event.data.email,
+                given_name: event.data.firstName,
+                family_name: event.data.lastName,
+                keycloak_sub: event.data.externalId,
+              },
+            },
+          ],
+        })
+
+        existingAuthIdentityId = createdIdentity.id
+        logger.info(
+          `[passenger.registered] Se creó auth identity para customer existente ${existingCustomer.id}: ${createdIdentity.id}`
+        )
+      } catch (authError: unknown) {
+        if (isAlreadyExistsError(authError)) {
+          const [alreadyExistingProviderIdentity] = await authModule.listProviderIdentities({
+            provider: "keycloak-store",
+            entity_id: event.data.externalId,
+          })
+
+          existingAuthIdentityId = alreadyExistingProviderIdentity?.auth_identity_id
+        } else {
+          const message =
+            authError && typeof authError === "object" && "message" in authError
+              ? String(authError.message)
+              : "Unknown auth error"
+
+          logger.warn(`Could not pre-create auth identity: ${message}`)
+          throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "Error auth step")
+        }
+      }
+    }
+
+    if (!existingAuthIdentityId) {
+      throw new MedusaError(
+        MedusaError.Types.UNEXPECTED_STATE,
+        "No se pudo recuperar ni crear auth identity para customer existente"
+      )
+    }
+
+    await authModule.updateAuthIdentities([
+      {
+        id: existingAuthIdentityId,
+        app_metadata: {
+          customer_id: existingCustomer.id,
+        },
+      },
+    ])
+
+    if (providerIdentity?.auth_identity_id) {
+      logger.info(
+        `[passenger.registered] Customer ya existía y fue re-vinculado: ${existingCustomer.id} <-> ${providerIdentity.auth_identity_id}`
+      )
+    } else {
+      logger.warn(
+        `[passenger.registered] Customer ya existía y fue vinculado con identity recuperada/creada: ${existingCustomer.id} <-> ${existingAuthIdentityId}`
+      )
+    }
+
+    return
   }
 
   let authIdentity
@@ -54,9 +137,34 @@ export default async function handleCustomerSync({
         },
       ],
     })
-  } catch (authError: any) {
-    console.warn("Could not pre-create auth identity:", authError.message)
-    throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "Error auth step")
+  } catch (authError: unknown) {
+    if (isAlreadyExistsError(authError)) {
+      logger.warn(
+        `[passenger.registered] Auth identity ya existe para sub ${event.data.externalId}, reutilizando.`
+      )
+
+      const [providerIdentity] = await authModule.listProviderIdentities({
+        provider: "keycloak-store",
+        entity_id: event.data.externalId,
+      })
+
+      if (!providerIdentity?.auth_identity_id) {
+        throw new MedusaError(
+          MedusaError.Types.UNEXPECTED_STATE,
+          "Auth identity duplicada detectada pero no recuperable"
+        )
+      }
+
+      authIdentity = await authModule.retrieveAuthIdentity(providerIdentity.auth_identity_id)
+    } else {
+      const message =
+        authError && typeof authError === "object" && "message" in authError
+          ? String(authError.message)
+          : "Unknown auth error"
+
+      logger.warn(`Could not pre-create auth identity: ${message}`)
+      throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "Error auth step")
+    }
   }
 
   // CAMBIO 3: Ejecutamos el Workflow de Cuenta de Cliente

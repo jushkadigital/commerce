@@ -12,7 +12,7 @@ import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 import dotenv from 'dotenv'
 // Don't let .env.development overwrite NODE_ENV when running tests.
 // Setting override: false ensures TEST_TYPE -> NODE_ENV='test' set above is preserved.
-dotenv.config({ path: process.cwd() + '/.env.development', override: false })
+dotenv.config({ path: process.cwd() + process.env.NODE_ENV === 'development' ? '/.env.development' : '/.env', override: true })
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 // ========================================================================
 // 1. DETECCIÓN DE MODO BUILD (CRÍTICO PARA DOCKER)
@@ -27,6 +27,7 @@ console.log("NODE_ENV =", process.env.NODE_ENV)
 console.log("RABBITMQ", process.env.RABBITMQ_URL)
 console.log("CWD =", process.cwd())
 console.log("IS_BUILD MODE =", IS_BUILD) // Log para confirmar en consola
+console.log("MEDUSA_BACKEND_URL", process.env.MEDUSA_BACKEND_URL)
 
 
 // ========================================================================
@@ -76,8 +77,6 @@ const S3_FILE_URL = process.env.S3_FILE_URL
 // Email providers
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL
-const RESEND_API_KEY = process.env.RESEND_API_KEY
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL
 
 // Payment Providers
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY
@@ -119,7 +118,7 @@ module.exports = defineConfig({
     } : {}),
     // FIX: Si es build, anulamos Redis global para evitar conexiones del core
     redisUrl: DISABLE_REDIS ? undefined : REDIS_URL,
-
+    workerMode: process.env.MEDUSA_WORKER_MODE as undefined || "shared",
     http: {
       storeCors: STORE_CORS,
       adminCors: ADMIN_CORS,
@@ -137,7 +136,7 @@ module.exports = defineConfig({
   },
   admin: {
     backendUrl: BACKEND_URL,
-    disable: IS_ADMIN_DISABLED,
+    disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
   },
   modules: [
     // --------------------------------------------------------------------
@@ -267,7 +266,7 @@ module.exports = defineConfig({
     // --------------------------------------------------------------------
     // NOTIFICATIONS
     // --------------------------------------------------------------------
-    ...((SENDGRID_API_KEY && SENDGRID_FROM_EMAIL) || (RESEND_API_KEY && RESEND_FROM_EMAIL) ? [{
+    ...(SENDGRID_API_KEY && SENDGRID_FROM_EMAIL ? [{
       key: Modules.NOTIFICATION,
       resolve: '@medusajs/notification',
       options: {
@@ -280,15 +279,6 @@ module.exports = defineConfig({
               api_key: SENDGRID_API_KEY,
               from: SENDGRID_FROM_EMAIL,
             }
-          }] : []),
-          ...(RESEND_API_KEY && RESEND_FROM_EMAIL ? [{
-            resolve: './src/modules/email-notifications',
-            id: 'resend',
-            options: {
-              channels: ['email'],
-              api_key: RESEND_API_KEY,
-              from: RESEND_FROM_EMAIL,
-            },
           }] : []),
         ]
       }
@@ -335,6 +325,12 @@ module.exports = defineConfig({
     },
     {
       resolve: './src/modules/package',
+    },
+    {
+      resolve: './src/modules/order-notification',
+    },
+    {
+      resolve: './src/modules/izipay',
     },
 
     // --------------------------------------------------------------------
