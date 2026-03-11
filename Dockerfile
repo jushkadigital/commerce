@@ -39,8 +39,6 @@ COPY . .
 
 # 1. Le decimos a Docker que espere este argumento durante el build
 ARG VITE_MEDUSA_BACKEND_URL
-
-# 2. Lo exponemos como variable de entorno para que Vite lo inyecte
 ENV VITE_MEDUSA_BACKEND_URL=$VITE_MEDUSA_BACKEND_URL
 # FIX 2: EL ENGAÑO (MOCKING)
 # Definimos las variables para que medusa-config.ts use "in-memory"
@@ -67,7 +65,8 @@ RUN \
 # ==============================================================================
 # ETAPA RUNNER: Imagen final limpia
 # ==============================================================================
-FROM base AS runner
+FROM node:${NODE_VERSION}-bookworm-slim AS runner
+
 RUN apt-get update \
   && apt-get install --no-install-recommends -y tini=0.19.0-1+b3 \
   && apt-get clean \
