@@ -91,6 +91,7 @@ services:
       DISABLE_MEDUSA_ADMIN: "true"
     networks:
       - medusa-network
+      - red-compartida
     cpus: 1.5
     mem_limit: 1536m
     mem_reservation: 768m
