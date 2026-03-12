@@ -13,6 +13,7 @@ const WHITELISTED_EVENTS = ["product.created", "product.updated"]
 type RabbitMQOptions = {
   url: string
   exchange?: string
+  workerMode?: string
 }
 
 type InjectedDependencies = {
@@ -82,16 +83,19 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
       // Usamos 'topic' para permitir routing keys flexibles
       await this.channel_.assertExchange(exchange, "topic", { durable: true })
 
-      // Crear cola exclusiva para esta instancia de Medusa
-      const q = await this.channel_.assertQueue("commerce_sync_queue", { durable: true })
-      this.queueName_ = q.queue
+      const isWorker = this.options_.workerMode === "shared" || this.options_.workerMode === "worker"
 
-      // Binding wildcard para recibir TODOS los eventos del exchange
-      await this.channel_.bindQueue(this.queueName_, exchange, "#")
-      this.logger_.info(`Queue bound to exchange "${exchange}" with routing key "#"`)
+      if (isWorker) {
+        // Crear cola exclusiva para esta instancia de Medusa
+        const q = await this.channel_.assertQueue("commerce_sync_queue", { durable: true })
+        this.queueName_ = q.queue
 
-      // Consumidor: Escucha mensajes de RabbitMQ e invoca suscriptores locales
-      this.channel_.consume(q.queue, async (msg) => {
+        // Binding wildcard para recibir TODOS los eventos del exchange
+        await this.channel_.bindQueue(this.queueName_, exchange, "#")
+        this.logger_.info(`Queue bound to exchange "${exchange}" with routing key "#"`)
+
+        // Consumidor: Escucha mensajes de RabbitMQ e invoca suscriptores locales
+        this.channel_.consume(q.queue, async (msg) => {
         if (!msg) return
 
         const routingKey = msg.fields.routingKey
@@ -172,17 +176,22 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
         }
       }, { noAck: true })
 
-      this.isReady_ = true
-
       // Process pending bindings
       for (const [eventName, routingKey] of this.pendingBindings_.entries()) {
         await this.channel_.bindQueue(this.queueName_, exchange, routingKey)
       }
       this.pendingBindings_.clear()
-
-      this.logger_.info("RabbitMQ Event Bus is ready.")
+      
       this.logger_.info(`Conectado a RabbitMQ. Cola: ${this.queueName_}`)
-    } catch (err) {
+    } else {
+      this.logger_.info("RabbitMQ in server mode - skipping consumer initialization")
+      this.pendingBindings_.clear()
+    }
+
+    this.isReady_ = true
+
+    this.logger_.info("RabbitMQ Event Bus is ready.")
+  } catch (err) {
       this.logger_.error(`Failed to connect to RabbitMQ: ${err}`)
     }
   }
@@ -244,13 +253,17 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
     this.logger_.info(`${this.isReady_}`)
 
     // B. Si RabbitMQ ya está listo, creamos el binding inmediatamente
-    if (this.isReady_ && this.queueName_ && typeof eventName === 'string') {
-      const exchange = this.options_.exchange || "tourism-exchange"
-      this.channel_.bindQueue(this.queueName_, exchange, eventName)
-        .catch(err => this.logger_.error(`Error binding queue for ${eventName}: ${err}`))
-    } else if (!this.isReady_ && typeof eventName === 'string') {
-      // Store for later binding when connection is ready
-      this.pendingBindings_.set(eventName, eventName)
+    const isWorker = this.options_.workerMode === "shared" || this.options_.workerMode === "worker"
+    
+    if (isWorker) {
+      if (this.isReady_ && this.queueName_ && typeof eventName === 'string') {
+        const exchange = this.options_.exchange || "tourism-exchange"
+        this.channel_.bindQueue(this.queueName_, exchange, eventName)
+          .catch(err => this.logger_.error(`Error binding queue for ${eventName}: ${err}`))
+      } else if (!this.isReady_ && typeof eventName === 'string') {
+        // Store for later binding when connection is ready
+        this.pendingBindings_.set(eventName, eventName)
+      }
     }
 
     return this
