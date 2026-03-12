@@ -21,12 +21,15 @@ loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 // Esto nos permitirá apagar conexiones a DB/Redis/RabbitMQ durante el build.
 const IS_BUILD = process.env.IS_BUILD === 'true' || process.env.npm_lifecycle_event === 'build';
 const IS_TEST = process.env.NODE_ENV === 'test';
-const DISABLE_REDIS = IS_BUILD || IS_TEST;
+// Detect migration/maintenance mode to avoid unnecessary connections
+const IS_MIGRATION = process.env.IS_MIGRATION === 'true';
+const DISABLE_REDIS = IS_BUILD || IS_TEST || IS_MIGRATION;
 
 console.log("NODE_ENV =", process.env.NODE_ENV)
 console.log("RABBITMQ", process.env.RABBITMQ_URL)
 console.log("CWD =", process.cwd())
 console.log("IS_BUILD MODE =", IS_BUILD) // Log para confirmar en consola
+console.log("IS_MIGRATION MODE =", IS_MIGRATION)
 console.log("MEDUSA_BACKEND_URL", process.env.MEDUSA_BACKEND_URL)
 
 
@@ -175,6 +178,7 @@ module.exports = defineConfig({
       options: {
         url: process.env.RABBITMQ_URL || 'amqp://admin:admin123@172.17.0.1:5672',
         exchange: "tourism-exchange",
+        workerMode: process.env.MEDUSA_WORKER_MODE || "shared",
       },
     }]),
 
