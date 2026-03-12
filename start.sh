@@ -15,12 +15,6 @@ if [ "$WORKER_MODE" = "server" ]; then
     echo "Migrations completed."
   fi
 
-  if [ "$RUN_SETUP_STORE" = "true" ]; then
-    echo "Running setup-store script..."
-    npx medusa exec src/scripts/setup-store.ts
-    echo "setup-store completed."
-  fi
-
   if [[ "${MEDUSA_CREATE_ADMIN_USER:-false}" == "true" ]]; then
     if [[ -z "${MEDUSA_ADMIN_EMAIL:-}" ]] || [[ -z "${MEDUSA_ADMIN_PASSWORD:-}" ]]; then
       echo "Error: MEDUSA_ADMIN_EMAIL and MEDUSA_ADMIN_PASSWORD are required when MEDUSA_CREATE_ADMIN_USER is true" >&2
