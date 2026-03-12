@@ -10,9 +10,10 @@ function validateSignature(payload: string, signature: string, hashKey: string):
     const hmac = crypto.createHmac("sha256", Buffer.from(hashKey, "utf-8"))
     const messageBytes = Buffer.from(payload, "utf-8")
     const hash = hmac.update(messageBytes).digest("base64")
+    const normalizedSignature = signature.trim()
     
-    const sigBuffer = Buffer.from(signature)
-    const hashBuffer = Buffer.from(hash)
+    const sigBuffer = Buffer.from(normalizedSignature, "base64")
+    const hashBuffer = Buffer.from(hash, "base64")
     
     if (sigBuffer.length !== hashBuffer.length) {
       return false
@@ -37,9 +38,14 @@ export const validateIzipaySignatureStep = createStep(
   async (input: IzipayWebhookInput, { container }) => {
     const { rawPayload, signature } = input
     const hashKey = process.env.IZIPAY_HASH_KEY || ""
+    const code = input.payload?.code
     
     if (!hashKey) {
         throw new Error("IZIPAY_HASH_KEY not configured")
+    }
+
+    if (code === "021" || code === "COMMUNICATION_ERROR") {
+      return new StepResponse({ isValid: true, skipped: true })
     }
     
     const isValid = validateSignature(rawPayload, signature, hashKey)

@@ -2,27 +2,42 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { handleIzipayWebhookWorkflow } from "../../../../workflows/handle-izipay-ipn"
 
 export async function POST(req: MedusaRequest & { rawBody?: string }, res: MedusaResponse) {
+  const body = (req.body ?? {}) as Record<string, unknown>
+  const code = body.code as string | undefined
+  const shouldValidateSignature = code !== "021" && code !== "COMMUNICATION_ERROR"
+  const response =
+    typeof body.response === "object" && body.response !== null
+      ? (body.response as Record<string, unknown>)
+      : undefined
+
   const signature = 
+    (typeof body["signature"] === "string" ? body["signature"] : undefined) ||
+    (typeof body["kr-hash"] === "string" ? body["kr-hash"] : undefined) ||
     (req.headers['kr-hash'] as string) || 
     (req.headers['x-signature'] as string) ||
-    (req.headers['signature'] as string) || 
-    (req.body?.['kr-hash'] as string) ||
-    (req.body?.['signature'] as string)
+    (req.headers['signature'] as string)
 
-  if (!signature) {
+  if (shouldValidateSignature && !signature) {
     return res.status(400).json({ message: "Missing signature" })
   }
 
-  // Use the raw body if captured by middleware, otherwise fallback to stringified parsed body
-  // The raw body is critical for HMAC validation so spacing/newlines match exactly
-  const payloadToHash = req.rawBody || JSON.stringify(req.body)
+  const payloadHttp =
+    (typeof body["payloadHttp"] === "string" ? body["payloadHttp"] : undefined) ||
+    (typeof response?.["payloadHttp"] === "string" ? response["payloadHttp"] : undefined) ||
+    (typeof body["kr-answer"] === "string" ? body["kr-answer"] : undefined)
+
+  if (shouldValidateSignature && !payloadHttp) {
+    return res.status(400).json({ message: "Missing payloadHttp" })
+  }
+
+  const payloadToHash = payloadHttp || req.rawBody || JSON.stringify(body)
 
   const { errors } = await handleIzipayWebhookWorkflow(req.scope)
     .run({
       input: {
-        payload: req.body,          // Parsed object for business logic
-        rawPayload: payloadToHash,  // Raw string for signature validation
-        signature,
+        payload: body,
+        rawPayload: payloadToHash,
+        signature: signature || "",
         headers: req.headers as Record<string, any>
       },
       throwOnError: false
