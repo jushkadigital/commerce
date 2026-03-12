@@ -70,129 +70,141 @@ export default class RabbitMQEventBusService extends AbstractEventBusModuleServi
     return this.medusaEventBus_
   }
 
-  async connect() {
+  async connect(retries = 5, delay = 5000) {
     if (this.isReady_) return
 
-    try {
-      this.logger_.info("Connecting to RabbitMQ...")
-      this.connection_ = await amqp.connect(this.options_.url)
-      this.channel_ = await this.connection_.createChannel()
+    for (let i = 0; i < retries; i++) {
+      try {
+        this.logger_.info(`Connecting to RabbitMQ... (Attempt ${i + 1}/${retries})`)
+        this.connection_ = await amqp.connect(this.options_.url)
+        this.channel_ = await this.connection_.createChannel()
 
-      this.logger_.info("🟢 [DEBUG] ONE")
-      const exchange = this.options_.exchange || "tourism-exchange"
-      // Usamos 'topic' para permitir routing keys flexibles
-      await this.channel_.assertExchange(exchange, "topic", { durable: true })
+        this.logger_.info("🟢 [DEBUG] ONE")
+        const exchange = this.options_.exchange || "tourism-exchange"
+        // Usamos 'topic' para permitir routing keys flexibles
+        await this.channel_.assertExchange(exchange, "topic", { durable: true })
 
-      const isWorker = this.options_.workerMode === "shared" || this.options_.workerMode === "worker"
+        const isWorker = this.options_.workerMode === "shared" || this.options_.workerMode === "worker"
 
-      if (isWorker) {
-        // Crear cola exclusiva para esta instancia de Medusa
-        const q = await this.channel_.assertQueue("commerce_sync_queue", { durable: true })
-        this.queueName_ = q.queue
+        if (isWorker) {
+          // Crear cola exclusiva para esta instancia de Medusa
+          const q = await this.channel_.assertQueue("commerce_sync_queue", { durable: true })
+          this.queueName_ = q.queue
 
-        // Binding wildcard para recibir TODOS los eventos del exchange
-        await this.channel_.bindQueue(this.queueName_, exchange, "#")
-        this.logger_.info(`Queue bound to exchange "${exchange}" with routing key "#"`)
+          // Binding wildcard para recibir TODOS los eventos del exchange
+          await this.channel_.bindQueue(this.queueName_, exchange, "#")
+          this.logger_.info(`Queue bound to exchange "${exchange}" with routing key "#"`)
 
-        // Consumidor: Escucha mensajes de RabbitMQ e invoca suscriptores locales
-        this.channel_.consume(q.queue, async (msg) => {
-        if (!msg) return
+          // Consumidor: Escucha mensajes de RabbitMQ e invoca suscriptores locales
+          this.channel_.consume(q.queue, async (msg) => {
+            if (!msg) return
 
-        const routingKey = msg.fields.routingKey
-        let rawContent: any
+            const routingKey = msg.fields.routingKey
+            let rawContent: any
 
-        try {
-          rawContent = JSON.parse(msg.content.toString())
-        } catch (err) {
-          this.logger_.error(`Failed to parse message content: ${err}`)
-          return
-        }
-
-        // 1. CONSTRUCCIÓN ESTRICTA DEL MENSAJE TIPO MEDUSA
-        // Convertimos lo que llega de RabbitMQ en la estructura Message<T>
-        // Asumimos que rawContent es el PAYLOAD (la data útil)
-
-        const message: EventBusTypes.Message<unknown> = {
-          // 'name' es obligatorio según tu tipo
-          name: routingKey,
-
-          // 'data' es el payload.
-          // NOTA: Si tu sistema externo envía ya el wrapper {data: ...},
-          // deberías hacer: rawContent.data || rawContent
-          data: rawContent,
-
-          // 'metadata' es opcional, pero útil llenarlo con info de Rabbit
-          metadata: {
-            event_id: msg.properties.messageId,
-            correlation_id: msg.properties.correlationId,
-            source: "rabbitmq",
-            timestamp: new Date().toISOString()
-          },
-
-          // 'options' viene de la extensión de Message
-          options: msg.properties.headers
-        }
-
-        this.logger_.info("🟢 [DEBUG] Mensaje crudo recibido en RabbitMQ Service")
-
-        // A. Call interceptors (if available)
-        if (typeof this.callInterceptors === 'function') {
-          try {
-            await this.callInterceptors(message, { isGrouped: false })
-          } catch (err) {
-            this.logger_.warn(`Interceptor failed for ${routingKey}: ${err}`)
-          }
-        }
-
-        // B. Lookup subscribers (specific + wildcard)
-        const specificSubs = this.eventToSubscribersMap_.get(routingKey) || []
-        const wildcardSubs = this.eventToSubscribersMap_.get("*") || []
-        const allSubscribers = [...specificSubs, ...wildcardSubs]
-
-        // C. Execute all subscribers
-        await Promise.all(
-          allSubscribers.map(async (subDescriptor) => {
             try {
-              await subDescriptor.subscriber(message)
+              rawContent = JSON.parse(msg.content.toString())
             } catch (err) {
-              this.logger_.error(
-                `Error processing ${routingKey} in RabbitMQ subscriber: ${err}`
-              )
+              this.logger_.error(`Failed to parse message content: ${err}`)
+              return
             }
-          })
-        )
 
-        // D. Re-emit to Medusa's official Event Bus (triggers src/subscribers/*)
-        const eventBus = this.getMedusaEventBus()
-        if (eventBus) {
-          try {
-            await eventBus.emit(message)
-            this.logger_.info(`Re-emitted ${routingKey} to Medusa Event Bus`)
-          } catch (err) {
-            this.logger_.error(`Failed to re-emit ${routingKey} to Medusa Event Bus: ${err}`)
+            // 1. CONSTRUCCIÓN ESTRICTA DEL MENSAJE TIPO MEDUSA
+            const message: EventBusTypes.Message<unknown> = {
+              name: routingKey,
+              data: rawContent,
+              metadata: {
+                event_id: msg.properties.messageId,
+                correlation_id: msg.properties.correlationId,
+                source: "rabbitmq",
+                timestamp: new Date().toISOString()
+              },
+              options: msg.properties.headers
+            }
+
+            this.logger_.info("🟢 [DEBUG] Mensaje crudo recibido en RabbitMQ Service")
+
+            // A. Call interceptors (if available)
+            if (typeof this.callInterceptors === 'function') {
+              try {
+                await this.callInterceptors(message, { isGrouped: false })
+              } catch (err) {
+                this.logger_.warn(`Interceptor failed for ${routingKey}: ${err}`)
+              }
+            }
+
+            // B. Lookup subscribers (specific + wildcard)
+            const specificSubs = this.eventToSubscribersMap_.get(routingKey) || []
+            const wildcardSubs = this.eventToSubscribersMap_.get("*") || []
+            const allSubscribers = [...specificSubs, ...wildcardSubs]
+
+            // C. Execute all subscribers
+            await Promise.all(
+              allSubscribers.map(async (subDescriptor) => {
+                try {
+                  await subDescriptor.subscriber(message)
+                } catch (err) {
+                  this.logger_.error(
+                    `Error processing ${routingKey} in RabbitMQ subscriber: ${err}`
+                  )
+                }
+              })
+            )
+
+            // D. Re-emit to Medusa's official Event Bus
+            const eventBus = this.getMedusaEventBus()
+            if (eventBus) {
+              try {
+                await eventBus.emit(message)
+                this.logger_.info(`Re-emitted ${routingKey} to Medusa Event Bus`)
+              } catch (err) {
+                this.logger_.error(`Failed to re-emit ${routingKey} to Medusa Event Bus: ${err}`)
+              }
+            } else {
+              this.logger_.warn(`Medusa Event Bus not available, cannot re-emit ${routingKey}`)
+            }
+          }, { noAck: true })
+
+          // Process pending bindings
+          for (const [eventName, routingKey] of this.pendingBindings_.entries()) {
+            await this.channel_.bindQueue(this.queueName_, exchange, routingKey)
           }
+          this.pendingBindings_.clear()
+          
+          this.logger_.info(`Conectado a RabbitMQ. Cola: ${this.queueName_}`)
         } else {
-          this.logger_.warn(`Medusa Event Bus not available, cannot re-emit ${routingKey}`)
+          this.logger_.info("RabbitMQ in server mode - skipping consumer initialization")
+          this.pendingBindings_.clear()
         }
-      }, { noAck: true })
 
-      // Process pending bindings
-      for (const [eventName, routingKey] of this.pendingBindings_.entries()) {
-        await this.channel_.bindQueue(this.queueName_, exchange, routingKey)
+        this.isReady_ = true
+
+        this.logger_.info("RabbitMQ Event Bus is ready.")
+        
+        // Manejo de desconexiones inesperadas (reconexión automática)
+        this.connection_.on("error", (err) => {
+          this.logger_.error(`RabbitMQ connection error: ${err.message}`)
+          this.isReady_ = false
+          setTimeout(() => this.connect(), delay)
+        })
+
+        this.connection_.on("close", () => {
+          this.logger_.warn(`RabbitMQ connection closed. Attempting to reconnect...`)
+          this.isReady_ = false
+          setTimeout(() => this.connect(), delay)
+        })
+
+        return // Conexión exitosa, salimos del loop de reintentos
+
+      } catch (err: any) {
+        this.logger_.error(`Failed to connect to RabbitMQ: ${err.message}`)
+        if (i < retries - 1) {
+          this.logger_.info(`Retrying in ${delay / 1000} seconds...`)
+          await new Promise(res => setTimeout(res, delay))
+        } else {
+          this.logger_.error(`All RabbitMQ connection retries failed. System will run without external event publishing.`)
+        }
       }
-      this.pendingBindings_.clear()
-      
-      this.logger_.info(`Conectado a RabbitMQ. Cola: ${this.queueName_}`)
-    } else {
-      this.logger_.info("RabbitMQ in server mode - skipping consumer initialization")
-      this.pendingBindings_.clear()
-    }
-
-    this.isReady_ = true
-
-    this.logger_.info("RabbitMQ Event Bus is ready.")
-  } catch (err) {
-      this.logger_.error(`Failed to connect to RabbitMQ: ${err}`)
     }
   }
 
