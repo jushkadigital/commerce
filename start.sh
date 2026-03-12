@@ -17,9 +17,8 @@ if [ "$WORKER_MODE" = "server" ]; then
 
   if [ "$RUN_SETUP_STORE" = "true" ]; then
     echo "Running setup-store script..."
-    # setup-store might need Redis/RabbitMQ, so we don't set IS_MIGRATION=true here blindly
-    # unless we are sure. Leaving it as is to be safe.
-    npx medusa exec src/scripts/setup-store.ts
+    # setup-store solo usa la DB y el container, no necesita Redis ni RabbitMQ
+    IS_MIGRATION=true npx medusa exec src/scripts/setup-store.ts
     echo "setup-store completed."
   fi
 
