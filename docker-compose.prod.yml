@@ -17,15 +17,14 @@ services:
       start_period: 20s
     networks:
       - medusa-network
-    cpus: 1.5
-    mem_limit: 2g
+    shm_size: "1g"
     mem_reservation: 1g
-    pids_limit: 300
+    pids_limit: 500
 
   redis:
     image: redis:8
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes","--appendfsync", "everysec"]
     volumes:
       - cache-backend-data:/data
     healthcheck:
@@ -36,8 +35,6 @@ services:
       start_period: 10s
     networks:
       - medusa-network
-    cpus: 0.75
-    mem_limit: 768m
     mem_reservation: 256m
     pids_limit: 200
 
@@ -69,10 +66,9 @@ services:
       - medusa-network
       - red-compartida
       - proxiable
-    cpus: 2.0
-    mem_limit: 2g
     mem_reservation: 1g
-    pids_limit: 400
+    pids_limit: 1000
+    stop_grace_period: 30s
   backend-worker:
     container_name: medusa-app-worker
     image: urgosxd7/medusa-app:latest
@@ -92,10 +88,9 @@ services:
     networks:
       - medusa-network
       - red-compartida
-    cpus: 1.5
-    mem_limit: 1536m
     mem_reservation: 768m
-    pids_limit: 400
+    pids_limit: 1000
+    stop_grace_period: 30s
 
 
 

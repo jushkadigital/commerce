@@ -122,7 +122,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       httpOnly: true,
       secure: isProduction,
       sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 5, // 7 days
       path: "/"
     })
 
