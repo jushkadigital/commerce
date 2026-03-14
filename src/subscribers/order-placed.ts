@@ -141,8 +141,96 @@ export default async function handleOrderPlaced({
 
     const fromEmail = process.env.RESEND_FROM_EMAIL || "bookings@yourdomain.com"
 
-    // Send notification emails for each created booking. Failures are logged
-    // and do not interrupt the subscriber flow.
+    const customerBookableItems = (order.items || []).filter(
+      (item: any) => item.metadata?.is_tour === true || item.metadata?.is_package === true
+    )
+    const hasPackageItemsForCustomer = customerBookableItems.some(
+      (item: any) => item.metadata?.is_package === true
+    )
+    const customerReservationType: "Tour" | "Package" | "Mixed" = hasPackageItemsForCustomer
+      ? "Mixed"
+      : "Tour"
+
+    const customerCartItems = customerBookableItems.map((item: any) => {
+      const rawQuantity = Number(item.quantity)
+      const quantity = Number.isFinite(rawQuantity) ? Math.max(0, rawQuantity) : 0
+
+      const rawTotal = [item.total, item.subtotal, item.unit_price]
+        .map((value) => Number(value))
+        .find((value) => Number.isFinite(value))
+
+      const destinationRaw =
+        item.metadata?.tour_destination ?? item.metadata?.package_destination ?? item.title
+      const destination = typeof destinationRaw === "string" ? destinationRaw : null
+
+      return {
+        groupId: typeof item.metadata?.group_id === "string" ? item.metadata.group_id : null,
+        name: destination,
+        date: item.metadata?.tour_date ?? item.metadata?.package_date ?? null,
+        quantity,
+        total: rawTotal ?? 0,
+        imageUrl: typeof item.thumbnail === "string" ? item.thumbnail : null,
+      }
+    })
+
+    const customerPassengers = customerBookableItems.flatMap((item: any) =>
+      Array.isArray(item.metadata?.passengers) ? item.metadata.passengers : []
+    )
+    const bookingReference =
+      createdBookings
+        .map((booking: any) => String(booking?.id || ""))
+        .filter((bookingId: string) => bookingId.length > 0)
+        .join(", ") || "N/A"
+
+    if (resend && customerEmail) {
+      try {
+        const customerSubject = hasPackageItemsForCustomer
+          ? `Nueva reserva de viaje - Pedido #${order.display_id || orderId}`
+          : `Nueva reserva de tour - Pedido #${order.display_id || orderId}`
+        const customerRes = await resend.emails.send({
+          from: fromEmail,
+          to: [customerEmail],
+          subject: customerSubject,
+          react: TravelBookingNotificationEmail({
+            reservationType: customerReservationType,
+            orderId: String(order.display_id || orderId),
+            bookingId: bookingReference,
+            recipientName: customerName,
+            destination:
+              typeof customerCartItems[0]?.name === "string" ? customerCartItems[0].name : null,
+            imageUrl:
+              typeof customerCartItems[0]?.imageUrl === "string"
+                ? customerCartItems[0].imageUrl
+                : null,
+            travelDate: customerCartItems[0]?.date,
+            price: typeof customerCartItems[0]?.total === "number" ? customerCartItems[0].total : null,
+            currencyCode: typeof order.currency_code === "string" ? order.currency_code : null,
+            cartItems: customerCartItems,
+            passengers: customerPassengers,
+          }),
+          tags: [
+            { name: "category", value: "tour_booking" },
+            { name: "audience", value: "customer" },
+            { name: "order_id", value: String(orderId) },
+          ],
+          headers: {
+            "Idempotency-Key": `tour-booking-customer-${orderId}`,
+          },
+        })
+
+        if (customerRes?.error) {
+          logger.error(`Failed to send customer order email for ${orderId}:`, customerRes.error)
+        } else {
+          logger.info(`Customer order email sent for order ${orderId}`)
+        }
+      } catch (customerSendError) {
+        logger.error(
+          `Unexpected error sending customer order email for order ${orderId}:`,
+          customerSendError
+        )
+      }
+    }
+
     for (const booking of createdBookings) {
       try {
         const lineItemsSource = booking.line_items
@@ -161,6 +249,10 @@ export default async function handleOrderPlaced({
         const linkedOrderItem = (order.items || []).find(
           (item: any) => item.id === lineItem?.item_id
         )
+        const quantityRaw = Number(lineItem?.quantity ?? linkedOrderItem?.quantity)
+        const quantity = Number.isFinite(quantityRaw)
+          ? Math.max(0, quantityRaw)
+          : 0
 
         const normalizedPrice = (
           [
@@ -172,64 +264,33 @@ export default async function handleOrderPlaced({
             .map((value) => Number(value))
             .find((value) => Number.isFinite(value)) ?? null
         )
-        const preData =
-          (order.metadata as Record<string, unknown> | undefined)?.preData ??
-          (booking.metadata as Record<string, unknown> | undefined)?.preData
-        const destinationRaw = lineItem?.title ?? linkedOrderItem?.title
+        const destinationRaw =
+          linkedOrderItem?.metadata?.tour_destination ??
+          linkedOrderItem?.metadata?.package_destination ??
+          lineItem?.title ??
+          linkedOrderItem?.title
         const destination = typeof destinationRaw === "string" ? destinationRaw : null
         const imageUrlRaw = lineItem?.thumbnail ?? linkedOrderItem?.thumbnail
         const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw : null
+        const groupIdRaw =
+          typeof booking?.metadata?.group_id === "string"
+            ? booking.metadata.group_id
+            : linkedOrderItem?.metadata?.group_id
+        const groupId = typeof groupIdRaw === "string" ? groupIdRaw : null
+        const cartDateRaw =
+          linkedOrderItem?.metadata?.tour_date ??
+          linkedOrderItem?.metadata?.package_date ??
+          booking.tour_date
+        const cartDate =
+          typeof cartDateRaw === "string" || cartDateRaw instanceof Date
+            ? cartDateRaw
+            : booking.tour_date
         const currencyCode =
           typeof order.currency_code === "string" ? order.currency_code : null
 
         const subject = `Nueva reserva de tour - Pedido #${order.display_id || orderId}`
 
         if (resend) {
-          if (customerEmail) {
-            try {
-              const customerRes = await resend.emails.send({
-                from: fromEmail,
-                to: [customerEmail],
-                subject,
-                react: TravelBookingNotificationEmail({
-                  reservationType: "Tour",
-                  orderId: String(order.display_id || orderId),
-                  bookingId: String(booking.id || "N/A"),
-                  recipientName: customerName,
-                  destination,
-                  imageUrl,
-                  travelDate: booking.tour_date,
-                  price: normalizedPrice,
-                  currencyCode,
-                  preData,
-                  passengers,
-                }),
-                tags: [
-                  { name: "category", value: "tour_booking" },
-                  { name: "audience", value: "customer" },
-                  { name: "order_id", value: String(orderId) },
-                ],
-                headers: {
-                  "Idempotency-Key": `tour-booking-customer-${booking.id || orderId}`,
-                },
-              })
-
-              if (customerRes?.error) {
-                logger.error(
-                  `Failed to send customer email for booking ${booking.id}:`,
-                  customerRes.error
-                )
-              } else {
-                logger.info(`Customer email sent for booking ${booking.id}`)
-              }
-            } catch (customerSendError) {
-              logger.error(
-                `Unexpected error sending customer email for booking ${booking.id}:`,
-                customerSendError
-              )
-            }
-          }
-
           if (notificationRecipients.length > 0) {
             try {
               const opsRes = await resend.emails.send({
@@ -246,7 +307,16 @@ export default async function handleOrderPlaced({
                   travelDate: booking.tour_date,
                   price: normalizedPrice,
                   currencyCode,
-                  preData,
+                  cartItems: [
+                    {
+                      groupId,
+                      name: destination,
+                      date: cartDate,
+                      quantity,
+                      total: normalizedPrice,
+                      imageUrl,
+                    },
+                  ],
                   passengers,
                 }),
                 tags: [

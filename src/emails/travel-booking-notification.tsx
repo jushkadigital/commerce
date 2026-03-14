@@ -9,6 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components"
+import { Fragment } from "react"
 
 type Passenger = {
   name?: string
@@ -16,8 +17,35 @@ type Passenger = {
   passport?: string
 }
 
+type CartItem = {
+  groupId?: string | null
+  name?: string | null
+  date?: string | Date | null
+  quantity?: number | null
+  total?: number | null
+  imageUrl?: string | null
+}
+
+type NormalizedCartItem = {
+  groupKey: string
+  groupLabel: string
+  name: string
+  date: string | Date | null
+  quantity: number
+  total: number
+  imageUrl?: string | null
+}
+
+type GroupedCartItems = {
+  groupKey: string
+  groupLabel: string
+  items: NormalizedCartItem[]
+  totalQuantity: number
+  totalAmount: number
+}
+
 export type TravelBookingNotificationEmailProps = {
-  reservationType: "Tour" | "Package"
+  reservationType: "Tour" | "Package" | "Mixed"
   orderId: string
   bookingId: string
   recipientName?: string | null
@@ -25,8 +53,8 @@ export type TravelBookingNotificationEmailProps = {
   travelDate?: string | Date | null
   price?: number | null
   currencyCode?: string | null
-  preData?: unknown
   passengers?: Passenger[]
+  cartItems?: CartItem[]
   imageUrl?: string | null
 }
 
@@ -69,34 +97,99 @@ function formatPrice(amount: number | null | undefined, currencyCode?: string | 
   }
 }
 
-function stringifyPreData(preData: unknown): string {
-  if (preData === null || preData === undefined) {
-    return "N/A"
+function normalizeQuantity(value: number | null | undefined): number {
+  if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
+    return 0
   }
 
-  if (typeof preData === "string") {
-    try {
-      return JSON.stringify(JSON.parse(preData), null, 2)
-    } catch {
-      return preData
+  return Math.floor(value)
+}
+
+function normalizeTotal(value: number | null | undefined): number {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return 0
+  }
+
+  return value
+}
+
+function normalizeGroup(
+  value: string | null | undefined,
+  index: number
+): { groupKey: string; groupLabel: string } {
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+    if (trimmed.length > 0) {
+      return {
+        groupKey: trimmed,
+        groupLabel: trimmed,
+      }
     }
   }
 
-  try {
-    return JSON.stringify(preData, null, 2)
-  } catch {
-    return String(preData)
+  return {
+    groupKey: `SIN-GRUPO-${index + 1}`,
+    groupLabel: "SIN-GRUPO",
   }
+}
+
+function normalizeCartItems(items: CartItem[] | undefined, fallback: CartItem): NormalizedCartItem[] {
+  const sourceItems = Array.isArray(items) && items.length > 0 ? items : [fallback]
+
+  return sourceItems.map((item, index) => {
+    const group = normalizeGroup(item.groupId, index)
+
+    return {
+      groupKey: group.groupKey,
+      groupLabel: group.groupLabel,
+      name: typeof item.name === "string" && item.name.trim().length > 0
+        ? item.name.trim()
+        : "Experiencia Pata Rutera",
+      date: item.date ?? null,
+      quantity: normalizeQuantity(item.quantity),
+      total: normalizeTotal(item.total),
+      imageUrl:
+        typeof item.imageUrl === "string" && item.imageUrl.trim().length > 0
+          ? item.imageUrl
+          : null,
+    }
+  })
+}
+
+function groupCartItemsById(items: NormalizedCartItem[]): GroupedCartItems[] {
+  const groupedMap = new Map<string, GroupedCartItems>()
+
+  for (const item of items) {
+    const existingGroup = groupedMap.get(item.groupKey)
+    if (existingGroup) {
+      existingGroup.items.push(item)
+      existingGroup.totalQuantity += item.quantity
+      existingGroup.totalAmount += item.total
+      continue
+    }
+
+    groupedMap.set(item.groupKey, {
+      groupKey: item.groupKey,
+      groupLabel: item.groupLabel,
+      items: [item],
+      totalQuantity: item.quantity,
+      totalAmount: item.total,
+    })
+  }
+
+  return Array.from(groupedMap.values())
 }
 
 export function TravelBookingNotificationEmail(
   props: TravelBookingNotificationEmailProps
 ) {
   const reservationType =
-    props.reservationType === "Package" || props.reservationType === "Tour"
+    props.reservationType === "Package" ||
+    props.reservationType === "Tour" ||
+    props.reservationType === "Mixed"
       ? props.reservationType
       : "Tour"
-  const reservationTypeLabel = reservationType
+  const reservationTypeLabel = reservationType === "Mixed" ? "Mixta" : reservationType
   const passengers = Array.isArray(props.passengers) ? props.passengers : []
   const derivedPassengerName =
     passengers.find((passenger) => typeof passenger?.name === "string" && passenger.name.trim())
@@ -110,6 +203,16 @@ export function TravelBookingNotificationEmail(
     typeof props.imageUrl === "string" && props.imageUrl.length > 0
       ? props.imageUrl
       : "https://www.patarutera.pe/pataLogo.png"
+  const fallbackCartItem: CartItem = {
+    groupId: "SIN-GRUPO",
+    name: props.destination || "Experiencia Pata Rutera",
+    date: props.travelDate,
+    quantity: travelers,
+    total: props.price,
+    imageUrl: imageSrc,
+  }
+  const normalizedCartItems = normalizeCartItems(props.cartItems, fallbackCartItem)
+  const groupedCartItems = groupCartItemsById(normalizedCartItems)
 
   return (
     <Html>
@@ -140,30 +243,57 @@ export function TravelBookingNotificationEmail(
                   <th style={tableHeader}>Imagen</th>
                   <th style={tableHeader}>Nombre</th>
                   <th style={tableHeader}>Fecha</th>
-                  <th style={tableHeader}>Viajeros</th>
-                  <th style={tableHeader}>Precio</th>
+                  <th style={tableHeader}>Cantidad</th>
+                  <th style={tableHeader}>Total</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style={tableRow}>
-                  <td style={tableCell}>
-                    <Img src={imageSrc} alt="reserva" style={itemImage} />
-                  </td>
-                  <td style={tableCell}>
-                    <Text style={itemName}>{props.destination || "Experiencia Pata Rutera"}</Text>
-                    <Text style={itemMeta}>Booking: {props.bookingId}</Text>
-                    <Text style={itemMeta}>Pedido: {props.orderId}</Text>
-                  </td>
-                  <td style={tableCell}>
-                    <Text style={itemDate}>{formatDate(props.travelDate)}</Text>
-                  </td>
-                  <td style={tableCellCenter}>
-                    <Text style={itemTravelers}>{travelers}</Text>
-                  </td>
-                  <td style={tableCellRight}>
-                    <Text style={itemPrice}>{formatPrice(props.price, props.currencyCode)}</Text>
-                  </td>
-                </tr>
+                {groupedCartItems.map((group) => (
+                  <Fragment key={group.groupKey}>
+                    <tr style={groupHeaderRow}>
+                      <td style={groupHeaderCell} colSpan={5}>
+                        <Text style={groupHeaderText}>Grupo: {group.groupLabel}</Text>
+                      </td>
+                    </tr>
+
+                    {group.items.map((item, index) => (
+                      <tr style={tableRow} key={`${group.groupKey}-${index}`}>
+                        <td style={tableCell}>
+                          <Img src={item.imageUrl || imageSrc} alt="reserva" style={itemImage} />
+                        </td>
+                        <td style={tableCell}>
+                          <Text style={itemName}>{item.name}</Text>
+                          <Text style={itemMeta}>Pedido: {props.orderId}</Text>
+                        </td>
+                        <td style={tableCell}>
+                          <Text style={itemDate}>{formatDate(item.date)}</Text>
+                        </td>
+                        <td style={tableCellCenter}>
+                          <Text style={itemTravelers}>{item.quantity}</Text>
+                        </td>
+                        <td style={tableCellRight}>
+                          <Text style={itemPrice}>
+                            {formatPrice(item.total, props.currencyCode)}
+                          </Text>
+                        </td>
+                      </tr>
+                    ))}
+
+                    <tr style={groupTotalsRow}>
+                      <td style={groupTotalsLabelCell} colSpan={3}>
+                        <Text style={groupTotalsLabel}>Totales del grupo</Text>
+                      </td>
+                      <td style={tableCellCenter}>
+                        <Text style={groupTotalsValue}>{group.totalQuantity}</Text>
+                      </td>
+                      <td style={tableCellRight}>
+                        <Text style={groupTotalsAmount}>
+                          {formatPrice(group.totalAmount, props.currencyCode)}
+                        </Text>
+                      </td>
+                    </tr>
+                  </Fragment>
+                ))}
               </tbody>
             </table>
           </Section>
@@ -178,11 +308,6 @@ export function TravelBookingNotificationEmail(
               ))}
             </Section>
           )}
-
-          <Section style={orderSection}>
-            <Text style={orderTitle}>preData (JSON)</Text>
-            <pre style={preDataBox}>{stringifyPreData(props.preData)}</pre>
-          </Section>
 
           <Text style={footer}>Agradecemos tu confianza</Text>
         </Container>
@@ -284,6 +409,22 @@ const tableRow = {
   borderBottom: "1px solid #e2e8f0",
 }
 
+const groupHeaderRow = {
+  backgroundColor: "#edf2f7",
+}
+
+const groupHeaderCell = {
+  borderBottom: "1px solid #cbd5e0",
+  padding: "8px 10px",
+}
+
+const groupHeaderText = {
+  color: "#2d3748",
+  fontSize: "12px",
+  fontWeight: "700",
+  margin: "0",
+}
+
 const tableCell = {
   padding: "12px 10px",
   verticalAlign: "middle" as const,
@@ -339,23 +480,40 @@ const itemPrice = {
   margin: "0",
 }
 
+const groupTotalsRow = {
+  backgroundColor: "#f8fafc",
+  borderBottom: "2px solid #cbd5e0",
+}
+
+const groupTotalsLabelCell = {
+  padding: "10px",
+}
+
+const groupTotalsLabel = {
+  color: "#4a5568",
+  fontSize: "12px",
+  fontWeight: "700",
+  margin: "0",
+}
+
+const groupTotalsValue = {
+  color: "#2d3748",
+  fontSize: "13px",
+  fontWeight: "700",
+  margin: "0",
+}
+
+const groupTotalsAmount = {
+  color: "#2b6cb0",
+  fontSize: "14px",
+  fontWeight: "700",
+  margin: "0",
+}
+
 const passengerLine = {
   color: "#4a5568",
   fontSize: "13px",
   margin: "0 0 6px",
-}
-
-const preDataBox = {
-  backgroundColor: "#0f172a",
-  borderRadius: "8px",
-  color: "#e2e8f0",
-  fontSize: "12px",
-  margin: "0",
-  maxHeight: "300px",
-  overflow: "auto",
-  padding: "10px",
-  whiteSpace: "pre-wrap" as const,
-  wordBreak: "break-word" as const,
 }
 
 const footer = {
