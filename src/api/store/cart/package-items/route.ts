@@ -5,6 +5,7 @@ import { generateEntityId } from "@medusajs/utils"
 import { PACKAGE_MODULE } from "../../../../modules/package"
 import PackageModuleService from "../../../../modules/package/service"
 import { PassengerType } from "../../../../modules/package/models/package-variant"
+import { refetchPromotionAwareCart } from "../refetch-cart"
 
 /**
  * Add package items to cart
@@ -552,7 +553,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     await cartModule.addLineItems(cart_id, itemsToAdd)
 
     // 6. Retrieve updated cart
-    const updatedCart = await cartModule.retrieveCart(cart_id)
+    const updatedCart = await refetchPromotionAwareCart(cart_id, req.scope)
 
     res.json({
       cart: updatedCart,
