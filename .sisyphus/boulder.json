@@ -1,6 +1,11 @@
 {
-  "active_plan": "/home/node/app/.sisyphus/plans/complex-reservations-ui.md",
-  "started_at": "2026-03-03T15:49:09.779Z",
-  "session_ids": ["ses_34ba86be8ffe7Oj7Hz47pP77JH"],
-  "plan_name": "complex-reservations-ui"
+  "active_plan": "/home/node/order-level-discounts-cart/.sisyphus/plans/order-level-discounts-cart.md",
+  "started_at": "2026-03-15T22:13:54.689Z",
+  "session_ids": [
+    "ses_30ce402ccffe65SpZxxRw4wXM3",
+    "ses_307a9e7a8ffeLCPnSqzpcigw9U"
+  ],
+  "plan_name": "order-level-discounts-cart",
+  "agent": "atlas",
+  "worktree_path": "/home/node/order-level-discounts-cart"
 }

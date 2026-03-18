@@ -5,12 +5,11 @@ import {
   transform
 } from "@medusajs/framework/workflows-sdk"
 import { TOUR_MODULE } from ".."
-import { acquireLockStep, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
+import { acquireLockStep, releaseLockStep, useQueryGraphStep, createRemoteLinkStep, completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import tourBookingOrderLink from "../../../links/tour-booking-order"
 import { CreateBookingsStepInput, createTourBookingsStep } from "../../../workflows/steps/create-booking-create"
 import { Modules } from "@medusajs/framework/utils"
 import { generateTourLockKey } from "../../../utils/locking"
-import createOrderFromCartStep from "../../../workflows/steps/create-order-from-cart"
 import { validateTourBookingStep } from "../../../workflows/steps/validate-tour-booking"
 
 export type CompleteCartWithToursWorkflowInput = {
@@ -68,9 +67,11 @@ export const completeCartWithToursWorkflow = createWorkflow(
       cart_id: input.cart_id
     }).config({ name: "validate-tour-bookings" })
 
-    const order = createOrderFromCartStep({
-      cart_id: input.cart_id,
-    }).config({ name: "create-order-from-cart" })
+    const { id: orderId } = completeCartWorkflow.runAsStep({
+      input: {
+        id: input.cart_id,
+      },
+    })
 
     const { data: cartsWithTours } = useQueryGraphStep({
       entity: "cart",
@@ -95,19 +96,19 @@ export const completeCartWithToursWorkflow = createWorkflow(
     const { data: existingLinks } = useQueryGraphStep({
       entity: "tour_booking_order",
       fields: ["tour_booking.id"],
-      filters: { order_id: order.id },
+      filters: { order_id: orderId },
     }).config({ name: "retrieve-existing-links" })
 
     when({ existingLinks }, (data) => data.existingLinks.length === 0)
       .then(() => {
         const tourBookings = createTourBookingsStep({
-          order_id: order.id,
+          order_id: orderId,
           cart: cartsWithTours[0],
         } as unknown as CreateBookingsStepInput)
           .config({ name: "create-tour-bookings" })
 
         const linkData = transform({
-          order,
+          orderId,
           tourBookings,
         }, (data) => {
           return data.tourBookings.map((purchase) => ({
@@ -115,7 +116,7 @@ export const completeCartWithToursWorkflow = createWorkflow(
               tour_booking_id: purchase.id,
             },
             [Modules.ORDER]: {
-              order_id: data.order.id,
+              order_id: data.orderId,
             },
           }))
         })
@@ -143,7 +144,7 @@ export const completeCartWithToursWorkflow = createWorkflow(
         "updated_at",
       ],
       filters: {
-        id: order.id,
+        id: orderId,
       },
     }).config({ name: "refetch-order" })
 

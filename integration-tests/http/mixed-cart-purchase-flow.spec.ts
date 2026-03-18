@@ -99,6 +99,9 @@ medusaIntegrationTestRunner({
 
         const tour1 = await tourModuleService.createTours({
           product_id: tourProduct1.id,
+          slug: `tour-mixed-cusco-${Date.now()}-${Math.round(
+            Math.random() * 1e6
+          )}`,
           destination: "Cusco",
           description: "Full day city tour of Cusco",
           duration_days: 1,
@@ -122,6 +125,7 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": type.charAt(0).toUpperCase() + type.slice(1),
             },
+            requires_shipping: false,
             manage_inventory: false,
             allow_backorder: true,
           })
@@ -152,6 +156,9 @@ medusaIntegrationTestRunner({
 
         const tour2 = await tourModuleService.createTours({
           product_id: tourProduct2.id,
+          slug: `tour-mixed-lima-${Date.now()}-${Math.round(
+            Math.random() * 1e6
+          )}`,
           destination: "Lima",
           description: "Full day historical tour of Lima",
           duration_days: 1,
@@ -174,6 +181,7 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": type.charAt(0).toUpperCase() + type.slice(1),
             },
+            requires_shipping: false,
             manage_inventory: false,
             allow_backorder: true,
           })
@@ -204,6 +212,9 @@ medusaIntegrationTestRunner({
 
         const package1 = await packageModuleService.createPackages({
           product_id: packageProduct1.id,
+          slug: `package-mixed-cusco-${Date.now()}-${Math.round(
+            Math.random() * 1e6
+          )}`,
           destination: "Cusco",
           description: "3-day adventure package in Cusco",
           duration_days: 3,
@@ -226,6 +237,7 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": type.charAt(0).toUpperCase() + type.slice(1),
             },
+            requires_shipping: false,
             manage_inventory: false,
             allow_backorder: true,
           })
@@ -261,6 +273,9 @@ medusaIntegrationTestRunner({
 
         const package2 = await packageModuleService.createPackages({
           product_id: packageProduct2.id,
+          slug: `package-mixed-machu-picchu-${Date.now()}-${Math.round(
+            Math.random() * 1e6
+          )}`,
           destination: "Machu Picchu",
           description: "4-day Machu Picchu expedition package",
           duration_days: 4,
@@ -283,6 +298,7 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": type.charAt(0).toUpperCase() + type.slice(1),
             },
+            requires_shipping: false,
             manage_inventory: false,
             allow_backorder: true,
           })
@@ -421,6 +437,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: tour1AdultVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 150 * tourPassengers.adults,
             title: `${tours[0].destination} - ${testDate} (Adults)`,
             metadata: {
@@ -456,6 +473,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: tour2AdultVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 120 * tourPassengers.adults,
             title: `${tours[1].destination} - ${testDate} (Adults)`,
             metadata: {
@@ -491,6 +509,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: package1AdultVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 500 * packagePassengers.adults,
             title: `${packages[0].destination} - ${testDate} (Adults)`,
             metadata: {
@@ -526,6 +545,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: package2AdultVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 800 * packagePassengers.adults,
             title: `${packages[1].destination} - ${testDate} (Adults)`,
             metadata: {
@@ -799,45 +819,31 @@ medusaIntegrationTestRunner({
           expect(tourBookings.length).toBeLessThanOrEqual(2)
   
           // Step 2: Run Package Workflow
-          // Since order is already created, this workflow might fail on "createOrderFromCartStep"
-          // unless the workflow is idempotent or checks for existing orders.
-          // IF it fails, we catch it and mark it as a "known limitation" for now,
-          // or ideally, we'd fix the workflow to support mixed carts.
           console.log("[TEST] Running Package Workflow...")
-          try {
-            await completeCartWithPackagesWorkflow(container).run({
-              input: {
-                cart_id: cart.id,
-              },
-            })
-  
-            // If we reach here, it means the workflow succeeded (idempotency works!)
-            console.log("[TEST] Package Workflow succeeded!")
-  
-            // Verify package bookings
-            const allPackageBookings = await packageModuleService.listPackageBookings({
-              order_id: orderId,
-            })
-            console.log(
-              `[TEST] Package bookings found: ${allPackageBookings.length}`
-            )
-            expect(allPackageBookings.length).toBeGreaterThan(0)
-            expect(allPackageBookings.length).toBeLessThanOrEqual(2)
-          } catch (packageError: any) {
-            // If package workflow fails, log it - this is a known limitation
-            console.log(
-              `[TEST] Package workflow failed as expected (system limitation): ${packageError.message}`
-            )
-  
-            // This is a valid test result showing current system limitation:
-            // The system cannot process both tour and package bookings in the same order
-            // through sequential workflow calls because createOrderFromCartStep
-            // does not support idempotency or duplicate order creation.
-            expect(packageError).toBeDefined()
-            expect(packageError.message).toContain(
-              "order" // Generic check that error relates to order creation
-            )
-          }
+          const { result: packageResult } = await completeCartWithPackagesWorkflow(
+            container
+          ).run({
+            input: {
+              cart_id: cart.id,
+            },
+          })
+
+          console.log("[TEST] Package Workflow succeeded!")
+          expect((packageResult as any).order).toBeDefined()
+          expect((packageResult as any).order.id).toBe(orderId)
+
+          const allPackageBookings = await packageModuleService.listPackageBookings({
+            order_id: orderId,
+          })
+          console.log(
+            `[TEST] Package bookings found: ${allPackageBookings.length}`
+          )
+          expect(allPackageBookings.length).toBe(2)
+
+          const finalTourBookings = await tourModuleService.listTourBookings({
+            order_id: orderId,
+          })
+          expect(finalTourBookings.length).toBe(2)
         })
       })
     })

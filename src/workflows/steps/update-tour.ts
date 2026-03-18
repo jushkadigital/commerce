@@ -5,6 +5,7 @@ import TourModuleService from "../../modules/tour/service"
 export type UpdateTourStepInput = {
   id: string
   data: {
+    slug?: string
     destination?: string
     description?: string
     duration_days?: number

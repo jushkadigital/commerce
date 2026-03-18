@@ -8,7 +8,8 @@ import {
 import {
   useQueryGraphStep,
   createProductsWorkflow,
-  createRemoteLinkStep
+  createRemoteLinkStep,
+  emitEventStep
 } from "@medusajs/medusa/core-flows"
 import { Modules, ProductStatus } from "@medusajs/framework/utils"
 import { CreateProductWorkflowInputDTO } from "@medusajs/framework/types"
@@ -18,6 +19,7 @@ import { PassengerType } from "../modules/package/models/package-variant"
 import { validatePackageStep } from "./steps/create-package-validate"
 import { createPackageVariantsStep } from "./steps/create-package-variant"
 import { createPackagesStep } from "./steps/create-package-create"
+import { generateSlugStep } from "./steps/generate-slug"
 import { validateBookingWindowStep } from "./steps/validate-booking-window"
 import { validateCapacityStep } from "./steps/validate-capacity"
 import { validateBlockedDatesStep } from "./steps/validate-blocked-dates"
@@ -120,10 +122,17 @@ export const createPackageWorkflow = createWorkflow(
       input: { products: productData }
     })
 
-    const packageData = transform({ medusaProduct, input }, (data) => {
+    const { slug } = generateSlugStep({
+      entity: "package",
+      destination: input.destination,
+      duration_days: input.duration_days,
+    })
+
+    const packageData = transform({ medusaProduct, input, slug }, (data) => {
       return {
         packages: [{
           product_id: data.medusaProduct[0].id,
+          slug: data.slug,
           destination: data.input.destination,
           description: data.input.description,
           duration_days: data.input.duration_days,
@@ -199,6 +208,11 @@ export const createPackageWorkflow = createWorkflow(
         id: packages[0].id
       }
     }).config({ name: "retrieve-package-result" })
+
+    emitEventStep({
+      eventName: "entityPackage.created",
+      data: { id: packages[0].id }
+    })
 
     return new WorkflowResponse({
       package: finalPackage[0],

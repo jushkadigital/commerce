@@ -6,6 +6,7 @@ import { PackageServiceVariant } from "./package-service-variant"
 export const Package = model.define("package", {
   id: model.id().primaryKey(),
   product_id: model.text().unique(),
+  slug: model.text().unique(),
   destination: model.text(),
   description: model.text().nullable(),
   duration_days: model.number(),
@@ -29,6 +30,9 @@ export const Package = model.define("package", {
 }).indexes([
   {
     on: ["destination"],
+  },
+  {
+    on: ["slug"],
   },
 ])
 

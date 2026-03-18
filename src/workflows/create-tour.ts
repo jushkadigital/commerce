@@ -8,7 +8,8 @@ import {
 import {
   useQueryGraphStep,
   createProductsWorkflow,
-  createRemoteLinkStep
+  createRemoteLinkStep,
+  emitEventStep
 } from "@medusajs/medusa/core-flows"
 import { Modules, ProductStatus } from "@medusajs/framework/utils"
 import { CreateProductWorkflowInputDTO } from "@medusajs/framework/types"
@@ -18,6 +19,7 @@ import { PassengerType } from "../modules/tour/models/tour-variant"
 import { validateTourStep } from "./steps/create-tour-validate"
 import { createTourVariantsStep } from "./steps/create-tour-variant"
 import { createToursStep } from "./steps/create-tour-create"
+import { generateSlugStep } from "./steps/generate-slug"
 import { validateBookingWindowStep } from "./steps/validate-booking-window"
 import { validateCapacityStep } from "./steps/validate-capacity"
 import { validateBlockedDatesStep } from "./steps/validate-blocked-dates"
@@ -130,11 +132,18 @@ export const createTourWorkflow = createWorkflow(
       input: { products: productData }
     })
 
+    const { slug } = generateSlugStep({
+      entity: "tour",
+      destination: input.destination,
+      duration_days: input.duration_days,
+    })
+
     // --- Step 5: Prepare Tour Module Data ---
-    const tourData = transform({ medusaProduct, input }, (data) => {
+    const tourData = transform({ medusaProduct, input, slug }, (data) => {
       return {
         tours: [{
           product_id: data.medusaProduct[0].id, // Enlace simple por ID
+          slug: data.slug,
           destination: data.input.destination,
           description: data.input.description,
           duration_days: data.input.duration_days,
@@ -219,6 +228,11 @@ export const createTourWorkflow = createWorkflow(
         id: tours[0].id
       }
     }).config({ name: "retrieve-tour-result" })
+
+    emitEventStep({
+      eventName: "entityTour.created",
+      data: { id: tours[0].id }
+    })
 
     return new WorkflowResponse({
       tour: finalTour[0],

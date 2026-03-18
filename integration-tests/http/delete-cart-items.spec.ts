@@ -67,6 +67,7 @@ medusaIntegrationTestRunner({
 
         tour = await tourModuleService.createTours({
           product_id: product.id,
+          slug: `tour-delete-test-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Delete Test Destination",
           description: "Full day tour",
           duration_days: 1,

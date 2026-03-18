@@ -5,6 +5,7 @@ import PackageModuleService from "../../modules/package/service"
 export type UpdatePackageStepInput = {
   id: string
   data: {
+    slug?: string
     destination?: string
     description?: string
     duration_days?: number

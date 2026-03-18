@@ -5,13 +5,15 @@ import {
 } from "@medusajs/framework/workflows-sdk"
 import {
   updateProductsWorkflow,
-  useQueryGraphStep
+  useQueryGraphStep,
+  emitEventStep
 } from "@medusajs/medusa/core-flows"
 import { updatePackageStep } from "./steps/update-package"
 import { updatePackagePricesStep } from "./steps/update-package-prices"
 
 export type UpdatePackageWorkflowInput = {
   id: string
+  slug?: string
   destination?: string
   description?: string
   duration_days?: number
@@ -42,9 +44,18 @@ export const updatePackageWorkflow = createWorkflow(
 
     const pkg = transform({ packages }, function (data: any) { return data.packages[0] })
 
+    const packageSlugUpdate = transform({ input }, (data) => {
+      if (!data.input.slug) {
+        return {}
+      }
+
+      return { slug: data.input.slug }
+    })
+
     updatePackageStep({
       id: input.id,
       data: {
+        ...packageSlugUpdate,
         destination: input.destination,
         description: input.description,
         duration_days: input.duration_days,
@@ -115,6 +126,11 @@ export const updatePackageWorkflow = createWorkflow(
       ],
       filters: { id: input.id }
     }).config({ name: "retrieve-updated-package" })
+
+    emitEventStep({
+      eventName: "entityPackage.updated",
+      data: { id: input.id }
+    })
 
     return new WorkflowResponse({
       package: finalPackage[0]

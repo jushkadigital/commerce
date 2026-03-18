@@ -5,12 +5,11 @@ import {
   transform
 } from "@medusajs/framework/workflows-sdk"
 import { PACKAGE_MODULE } from ".."
-import { acquireLockStep, releaseLockStep, useQueryGraphStep, createRemoteLinkStep } from "@medusajs/medusa/core-flows"
+import { acquireLockStep, releaseLockStep, useQueryGraphStep, createRemoteLinkStep, completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import packageBookingOrderLink from "../../../links/package-booking-order"
 import { CreatePackageBookingsStepInput, createPackageBookingsStep } from "../../../workflows/steps/create-package-booking-create"
 import { Modules } from "@medusajs/framework/utils"
 import { generatePackageLockKey } from "../../../utils/locking"
-import createOrderFromCartStep from "../../../workflows/steps/create-order-from-cart"
 import { validatePackageBookingStep } from "../../../workflows/steps/validate-package-booking"
 
 export type CompleteCartWithPackagesWorkflowInput = {
@@ -68,9 +67,11 @@ export const completeCartWithPackagesWorkflow = createWorkflow(
       cart_id: input.cart_id
     }).config({ name: "validate-package-bookings" })
 
-    const order = createOrderFromCartStep({
-      cart_id: input.cart_id,
-    }).config({ name: "create-order-from-cart" })
+    const { id: orderId } = completeCartWorkflow.runAsStep({
+      input: {
+        id: input.cart_id,
+      },
+    })
 
     const { data: cartsWithPackages } = useQueryGraphStep({
       entity: "cart",
@@ -95,19 +96,40 @@ export const completeCartWithPackagesWorkflow = createWorkflow(
     const { data: existingLinks } = useQueryGraphStep({
       entity: "package_booking_order",
       fields: ["package_booking.id"],
-      filters: { order_id: order.id },
+      filters: { order_id: orderId },
     }).config({ name: "retrieve-existing-links" })
 
-    when({ existingLinks }, (data) => data.existingLinks.length === 0)
+    const { data: existingBookings } = useQueryGraphStep({
+      entity: "package_booking",
+      fields: ["id"],
+      filters: { order_id: orderId },
+    }).config({ name: "retrieve-existing-bookings" })
+
+    const unlinkedExistingBookingIds = transform(
+      { existingBookings, existingLinks },
+      (data) => {
+        const linkedBookingIds = new Set(
+          data.existingLinks
+            .map((link) => link.package_booking?.id)
+            .filter((id): id is string => Boolean(id))
+        )
+
+        return data.existingBookings
+          .map((booking) => booking.id)
+          .filter((id): id is string => Boolean(id) && !linkedBookingIds.has(id))
+      }
+    )
+
+    when({ existingBookings }, (data) => data.existingBookings.length === 0)
       .then(() => {
         const packageBookings = createPackageBookingsStep({
-          order_id: order.id,
+          order_id: orderId,
           cart: cartsWithPackages[0],
         } as unknown as CreatePackageBookingsStepInput)
           .config({ name: "create-package-bookings" })
 
         const linkData = transform({
-          order,
+          orderId,
           packageBookings,
         }, (data) => {
           return data.packageBookings.map((purchase) => ({
@@ -115,7 +137,7 @@ export const completeCartWithPackagesWorkflow = createWorkflow(
               package_booking_id: purchase.id,
             },
             [Modules.ORDER]: {
-              order_id: data.order.id,
+              order_id: data.orderId,
             },
           }))
         })
@@ -123,6 +145,30 @@ export const completeCartWithPackagesWorkflow = createWorkflow(
         createRemoteLinkStep(linkData)
           .config({ name: "create-order-links" })
       })
+
+    when(
+      { existingBookings, unlinkedExistingBookingIds },
+      (data) =>
+        data.existingBookings.length > 0 &&
+        data.unlinkedExistingBookingIds.length > 0
+    ).then(() => {
+      const existingLinkData = transform(
+        { orderId, unlinkedExistingBookingIds },
+        (data) => {
+          return data.unlinkedExistingBookingIds.map((bookingId) => ({
+            [PACKAGE_MODULE]: {
+              package_booking_id: bookingId,
+            },
+            [Modules.ORDER]: {
+              order_id: data.orderId,
+            },
+          }))
+        }
+      )
+
+      createRemoteLinkStep(existingLinkData)
+        .config({ name: "create-existing-order-links" })
+    })
 
     const { data: refetchedOrder } = useQueryGraphStep({
       entity: "order",
@@ -143,7 +189,7 @@ export const completeCartWithPackagesWorkflow = createWorkflow(
         "updated_at",
       ],
       filters: {
-        id: order.id,
+        id: orderId,
       },
     }).config({ name: "refetch-order" })
 

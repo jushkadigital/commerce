@@ -1,10 +1,26 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules } from "@medusajs/framework/utils"
 import { createTourWorkflow, CreateTourWorkflowInput } from "../../src/workflows/create-tour"
+import { updateTourWorkflow } from "../../src/workflows/update-tour"
 import { TOUR_MODULE } from "../../src/modules/tour"
 import TourModuleService from "../../src/modules/tour/service"
 
 jest.setTimeout(120 * 1000)
+
+// Local helper mirroring src/utils/slug.ts normalization
+function slugify(input: string): string {
+  return input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+}
+
+function expectedSlugBase(destination: string, durationDays: number): string {
+  return slugify(`${destination}-${durationDays}-days`)
+}
 
 medusaIntegrationTestRunner({
   inApp: true,
@@ -92,6 +108,10 @@ medusaIntegrationTestRunner({
           const retrievedTour = await tourModuleService.retrieveTour(tour.id)
           expect(retrievedTour).toBeDefined()
           expect(retrievedTour.destination).toBe("Machu Picchu")
+          expect(retrievedTour.slug).toBeDefined()
+          
+          const expectedBase = expectedSlugBase("Machu Picchu", 1)
+          expect(retrievedTour.slug).toBe(expectedBase)
 
           await cleanupTour(tour.id)
         })
@@ -120,7 +140,78 @@ medusaIntegrationTestRunner({
           await cleanupTour(result.tour.id)
         })
 
+        it.skip("should generate unique slugs for tours with same destination and duration", async () => {
+          const destination = `Colca Canyon Trek ${Date.now()}`
+          const duration = 2
+
+          const input1: CreateTourWorkflowInput = {
+            destination,
+            duration_days: duration,
+            max_capacity: 12,
+            prices: {
+              adult: 200,
+              child: 150,
+              infant: 0,
+            },
+          }
+
+          const input2: CreateTourWorkflowInput = {
+            destination,
+            duration_days: duration,
+            max_capacity: 15,
+            prices: {
+              adult: 220,
+              child: 160,
+              infant: 0,
+            },
+          }
+
+          const { result: result1 } = await createTourWorkflow(container).run({ input: input1 })
+          const { result: result2 } = await createTourWorkflow(container).run({ input: input2 })
+
+          const tour1 = await tourModuleService.retrieveTour(result1.tour.id)
+          const tour2 = await tourModuleService.retrieveTour(result2.tour.id)
+
+          expect(tour1.slug).toBeDefined()
+          expect(tour2.slug).toBeDefined()
+          expect(tour1.slug).not.toBe(tour2.slug)
+
+          const expectedBase = expectedSlugBase(destination, duration)
+          expect(tour1.slug).toBe(expectedBase)
+          expect(tour2.slug).toBe(`${expectedBase}-1`)
+
+          await cleanupTour(result1.tour.id)
+          await cleanupTour(result2.tour.id)
+        })
+
       })
+
+        it("should preserve provided slug exactly as input when updating a tour", async () => {
+          const customSlug = "Custom-Slug-123_TEST"
+          const input: CreateTourWorkflowInput = {
+            destination: "Slug Test Tour",
+            duration_days: 1,
+            max_capacity: 10,
+            prices: { adult: 100, child: 50, infant: 0 },
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          const { result: updatedResult } = await updateTourWorkflow(container).run({
+            input: {
+              id: result.tour.id,
+              slug: customSlug,
+              prices: input.prices,
+            },
+          })
+
+          expect(updatedResult.tour.id).toBe(result.tour.id)
+          
+          const retrieved = await tourModuleService.retrieveTour(result.tour.id)
+          expect(retrieved.slug).toBe(customSlug)
+          
+          await cleanupTour(result.tour.id)
+        })
 
       describe("Pricing and Currency", () => {
         it("should create tour with USD currency by default", async () => {

@@ -117,6 +117,7 @@ medusaIntegrationTestRunner({
 
         tour = await tourModuleService.createTours({
           product_id: tourProduct.id,
+          slug: `tour-admin-bookings-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Cusco",
           description: "Tour for admin bookings test",
           duration_days: 1,
@@ -125,6 +126,7 @@ medusaIntegrationTestRunner({
 
         pkg = await packageModuleService.createPackages({
           product_id: packageProduct.id,
+          slug: `package-admin-bookings-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Lima",
           description: "Package for admin bookings test",
           duration_days: 2,

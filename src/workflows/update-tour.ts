@@ -5,13 +5,15 @@ import {
 } from "@medusajs/framework/workflows-sdk"
 import {
   updateProductsWorkflow,
-  useQueryGraphStep
+  useQueryGraphStep,
+  emitEventStep
 } from "@medusajs/medusa/core-flows"
 import { updateTourStep } from "./steps/update-tour"
 import { updateTourPricesStep } from "./steps/update-tour-prices"
 
 export type UpdateTourWorkflowInput = {
   id: string
+  slug?: string
   destination?: string
   description?: string
   duration_days?: number
@@ -50,10 +52,19 @@ export const updateTourWorkflow = createWorkflow(
     // Transformamos el array a objeto simple
     const tour = transform({ tours }, (data) => data.tours[0])
 
+    const tourSlugUpdate = transform({ input }, (data) => {
+      if (!data.input.slug) {
+        return {}
+      }
+
+      return { slug: data.input.slug }
+    })
+
     // --- Step 2: Actualizar la entidad Tour (Custom Module) ---
     const updatedTour = updateTourStep({
       id: input.id,
       data: {
+        ...tourSlugUpdate,
         destination: input.destination,
         description: input.description,
         duration_days: input.duration_days,
@@ -135,6 +146,11 @@ export const updateTourWorkflow = createWorkflow(
       ],
       filters: { id: input.id }
     }).config({ name: "retrieve-updated-tour" })
+
+    emitEventStep({
+      eventName: "entityTour.updated",
+      data: { id: input.id }
+    })
 
     return new WorkflowResponse({
       tour: finalTour[0]

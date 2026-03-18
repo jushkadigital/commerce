@@ -1,8 +1,6 @@
 import {
-  createStep,
   createWorkflow,
   WorkflowResponse,
-  StepResponse,
   transform,
 } from "@medusajs/framework/workflows-sdk"
 import {
@@ -13,11 +11,11 @@ import {
 import { Modules, ProductStatus } from "@medusajs/framework/utils"
 import { CreateProductWorkflowInputDTO } from "@medusajs/framework/types"
 import { TOUR_MODULE } from ".."
-import TourModuleService from "../service"
 import { PassengerType } from "../models/tour-variant"
 import { validateTourStep } from "../../../workflows/steps/create-tour-validate"
 import { createTourVariantsStep } from "../../../workflows/steps/create-tour-variant"
 import { createToursStep } from "../../../workflows/steps/create-tour-create"
+import { generateSlugStep } from "../../../workflows/steps/generate-slug"
 
 
 
@@ -121,11 +119,18 @@ export const createTourWorkflow = createWorkflow(
       input: { products: productData }
     })
 
+    const { slug } = generateSlugStep({
+      entity: "tour",
+      destination: input.destination,
+      duration_days: input.duration_days,
+    })
+
     // --- Step 5: Prepare Tour Module Data ---
-    const tourData = transform({ medusaProduct, input }, (data) => {
+    const tourData = transform({ medusaProduct, input, slug }, (data) => {
       return {
         tours: [{
           product_id: data.medusaProduct[0].id, // Enlace simple por ID
+          slug: data.slug,
           destination: data.input.destination,
           description: data.input.description,
           duration_days: data.input.duration_days,

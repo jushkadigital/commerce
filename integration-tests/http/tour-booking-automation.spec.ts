@@ -61,6 +61,7 @@ medusaIntegrationTestRunner({
 
         tour = await tourModuleService.createTours({
           product_id: product.id,
+          slug: `tour-machu-picchu-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Machu Picchu",
           description: "Full day tour to Machu Picchu",
           duration_days: 1,
@@ -255,6 +256,7 @@ medusaIntegrationTestRunner({
 
           secondTour = await tourModuleService.createTours({
             product_id: secondProduct.id,
+            slug: `tour-sacred-valley-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
             destination: "Sacred Valley",
             description: "Full day Sacred Valley tour",
             duration_days: 1,

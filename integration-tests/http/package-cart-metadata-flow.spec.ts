@@ -82,6 +82,7 @@ medusaIntegrationTestRunner({
 
         pkg = await packageModuleService.createPackages({
           product_id: product.id,
+          slug: `package-cart-flow-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Cusco Historic Center",
           description: "Adventure package through Cusco's historic center",
           duration_days: 1,
@@ -332,6 +333,9 @@ medusaIntegrationTestRunner({
           })
           const secondPackage = await packageModuleService.createPackages({
             product_id: secondProduct.id,
+            slug: `package-cart-flow-second-${Date.now()}-${Math.round(
+              Math.random() * 1e6
+            )}`,
             destination: "Sacred Valley",
             description: "Full day Sacred Valley package",
             duration_days: 1,
@@ -449,12 +453,17 @@ medusaIntegrationTestRunner({
               (call[0].includes("Email sent for booking") ||
                 call[0].includes("Failed to send email for booking") ||
                 call[0].includes("Email sent for package booking") ||
-                call[0].includes("Failed to send email for package booking"))
+                call[0].includes("Failed to send email for package booking") ||
+                call[0].includes("Customer order email sent for package order") ||
+                call[0].includes("Failed to send customer order email for") ||
+                call[0].includes("Unexpected error sending customer order email for package order"))
           ) || errorSpy.mock.calls.find(
             (call) =>
               typeof call[0] === "string" &&
               (call[0].includes("Failed to send email for booking") ||
-                call[0].includes("Failed to send email for package booking"))
+                call[0].includes("Failed to send email for package booking") ||
+                call[0].includes("Failed to send customer order email for") ||
+                call[0].includes("Unexpected error sending customer order email for package order"))
           )
           expect(emailLogCall).toBeDefined()
 

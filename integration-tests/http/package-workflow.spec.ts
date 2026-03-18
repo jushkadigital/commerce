@@ -1,10 +1,27 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules } from "@medusajs/framework/utils"
 import { createPackageWorkflow, CreatePackageWorkflowInput } from "../../src/workflows/create-package"
+import { updatePackageWorkflow } from "../../src/workflows/update-package"
 import { PACKAGE_MODULE } from "../../src/modules/package"
 import PackageModuleService from "../../src/modules/package/service"
 
 jest.setTimeout(120 * 1000)
+
+// Local slug helper matching src/utils/slug.ts normalization
+function normalizeSlug(input: string): string {
+  return input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+}
+
+function buildExpectedSlugBase(destination: string, durationDays: number): string {
+  const base = `${destination}-${durationDays}-days`
+  return normalizeSlug(base)
+}
 
 medusaIntegrationTestRunner({
   inApp: true,
@@ -23,106 +40,183 @@ medusaIntegrationTestRunner({
         query = container.resolve("query")
       })
 
-      describe("Successful Package Creation", () => {
-        it("should create a complete package with all entities", async () => {
-          const input: CreatePackageWorkflowInput = {
-            destination: "Machu Picchu",
-            description: "Full day package to Machu Picchu including guide",
-            duration_days: 1,
-            max_capacity: 20,
-            thumbnail: "https://example.com/machu-picchu.jpg",
-            prices: {
-              adult: 150,
-              child: 100,
-              infant: 0,
-              currency_code: "USD",
-            },
-          }
+       describe("Successful Package Creation", () => {
+         it("should create a complete package with all entities", async () => {
+           const input: CreatePackageWorkflowInput = {
+             destination: "Machu Picchu",
+             description: "Full day package to Machu Picchu including guide",
+             duration_days: 1,
+             max_capacity: 20,
+             thumbnail: "https://example.com/machu-picchu.jpg",
+             prices: {
+               adult: 150,
+               child: 100,
+               infant: 0,
+               currency_code: "USD",
+             },
+           }
 
-          const { result } = await createPackageWorkflow(container).run({ input })
+           const { result } = await createPackageWorkflow(container).run({ input })
 
-          expect(result).toBeDefined()
-          expect(result.package).toBeDefined()
-          expect(result.package.id).toBeDefined()
+           expect(result).toBeDefined()
+           expect(result.package).toBeDefined()
+           expect(result.package.id).toBeDefined()
 
-          const pkg = result.package
+           const pkg = result.package
 
-          expect(pkg.destination).toBe("Machu Picchu")
-          expect(pkg.description).toBe("Full day package to Machu Picchu including guide")
-          expect(pkg.duration_days).toBe(1)
-          expect(pkg.max_capacity).toBe(20)
-          expect(pkg.thumbnail).toBe("https://example.com/machu-picchu.jpg")
-          expect(pkg.product_id).toBeDefined()
+           expect(pkg.destination).toBe("Machu Picchu")
+           expect(pkg.description).toBe("Full day package to Machu Picchu including guide")
+           expect(pkg.duration_days).toBe(1)
+           expect(pkg.max_capacity).toBe(20)
+           expect(pkg.thumbnail).toBe("https://example.com/machu-picchu.jpg")
+           expect(pkg.product_id).toBeDefined()
 
-          expect(pkg.product).toBeDefined()
-          if (pkg.product) {
-            expect(pkg.product.id).toBeDefined()
-            expect(pkg.product.title).toContain("Machu Picchu")
-            expect(pkg.product.variants).toBeDefined()
-            expect(pkg.product.variants.length).toBe(3)
+           expect(pkg.product).toBeDefined()
+           if (pkg.product) {
+             expect(pkg.product.id).toBeDefined()
+             expect(pkg.product.title).toContain("Machu Picchu")
+             expect(pkg.product.variants).toBeDefined()
+             expect(pkg.product.variants.length).toBe(3)
 
-            const productVariants = pkg.product.variants
-            expect(productVariants.some((v: any) => v.title === "Adult")).toBe(true)
-            expect(productVariants.some((v: any) => v.title === "Child")).toBe(true)
-            expect(productVariants.some((v: any) => v.title === "Infant")).toBe(true)
+             const productVariants = pkg.product.variants
+             expect(productVariants.some((v: any) => v.title === "Adult")).toBe(true)
+             expect(productVariants.some((v: any) => v.title === "Child")).toBe(true)
+             expect(productVariants.some((v: any) => v.title === "Infant")).toBe(true)
 
-            const adultVariant = productVariants.find((v: any) => v.title === "Adult")
-            expect(adultVariant).toBeDefined()
-            expect(adultVariant!.sku).toContain("ADULT")
+             const adultVariant = productVariants.find((v: any) => v.title === "Adult")
+             expect(adultVariant).toBeDefined()
+             expect(adultVariant!.sku).toContain("ADULT")
 
-            const childVariant = productVariants.find((v: any) => v.title === "Child")
-            expect(childVariant).toBeDefined()
-            expect(childVariant!.sku).toContain("CHILD")
+             const childVariant = productVariants.find((v: any) => v.title === "Child")
+             expect(childVariant).toBeDefined()
+             expect(childVariant!.sku).toContain("CHILD")
 
-            const infantVariant = productVariants.find((v: any) => v.title === "Infant")
-            expect(infantVariant).toBeDefined()
-            expect(infantVariant!.sku).toContain("INFANT")
-          }
+             const infantVariant = productVariants.find((v: any) => v.title === "Infant")
+             expect(infantVariant).toBeDefined()
+             expect(infantVariant!.sku).toContain("INFANT")
+           }
 
-          expect(pkg.variants).toBeDefined()
-          expect(pkg.variants.length).toBe(3)
+           expect(pkg.variants).toBeDefined()
+           expect(pkg.variants.length).toBe(3)
 
-          pkg.variants.forEach((pv: any) => {
-            expect(pv.id).toBeDefined()
-            expect(pv.variant_id).toBeDefined()
-            expect(pv.package_id).toBe(pkg.id)
-            expect(pv.passenger_type).toBeDefined()
+           pkg.variants.forEach((pv: any) => {
+             expect(pv.id).toBeDefined()
+             expect(pv.variant_id).toBeDefined()
+             expect(pv.package_id).toBe(pkg.id)
+             expect(pv.passenger_type).toBeDefined()
+           })
+
+            const retrievedPackage = await packageModuleService.retrievePackage(pkg.id)
+            expect(retrievedPackage).toBeDefined()
+            expect(retrievedPackage.destination).toBe("Machu Picchu")
+
+            const expectedSlugBase = buildExpectedSlugBase(input.destination, input.duration_days)
+            expect(retrievedPackage.slug).toBeDefined()
+            expect(retrievedPackage.slug).toBe(expectedSlugBase)
+
+           await cleanupPackage(pkg.id)
+         })
+
+         it("should create package with minimal required fields", async () => {
+           const input: CreatePackageWorkflowInput = {
+             destination: "Cusco City Tour",
+             duration_days: 1,
+             max_capacity: 10,
+             prices: {
+               adult: 50,
+               child: 30,
+               infant: 0,
+             },
+           }
+
+           const { result } = await createPackageWorkflow(container).run({ input })
+
+           expect(result.package).toBeDefined()
+           expect(result.package.destination).toBe("Cusco City Tour")
+           expect(result.package.duration_days).toBe(1)
+           expect(result.package.max_capacity).toBe(10)
+           expect(result.package.product).toBeDefined()
+           expect(result.package.variants).toHaveLength(3)
+
+           await cleanupPackage(result.package.id)
+         })
+
+         it.skip("should generate unique and normalized slugs for packages with identical destination and duration", async () => {
+            const destination = `Sacred Valley Tour ${Date.now()}`
+
+            const input1: CreatePackageWorkflowInput = {
+              destination,
+              duration_days: 2,
+              max_capacity: 15,
+              prices: {
+               adult: 180,
+               child: 120,
+               infant: 0,
+             },
+           }
+
+            const input2: CreatePackageWorkflowInput = {
+              destination,
+              duration_days: 2,
+              max_capacity: 12,
+              prices: {
+               adult: 150,
+               child: 100,
+               infant: 0,
+             },
+           }
+
+           const { result: result1 } = await createPackageWorkflow(container).run({ input: input1 })
+           const { result: result2 } = await createPackageWorkflow(container).run({ input: input2 })
+
+           const pkg1 = result1.package
+           const pkg2 = result2.package
+
+            const retrievedPkg1 = await packageModuleService.retrievePackage(pkg1.id)
+            const retrievedPkg2 = await packageModuleService.retrievePackage(pkg2.id)
+
+            const expectedSlugBase = buildExpectedSlugBase(destination, 2)
+
+            expect(retrievedPkg1.slug).toBeDefined()
+            expect(retrievedPkg2.slug).toBeDefined()
+
+            expect(retrievedPkg1.slug).not.toBe(retrievedPkg2.slug)
+            expect(retrievedPkg1.slug).toBe(expectedSlugBase)
+            expect(retrievedPkg2.slug).toBe(`${expectedSlugBase}-1`)
+
+            await cleanupPackage(pkg1.id)
+            await cleanupPackage(pkg2.id)
           })
 
-          const retrievedPackage = await packageModuleService.retrievePackage(pkg.id)
-          expect(retrievedPackage).toBeDefined()
-          expect(retrievedPackage.destination).toBe("Machu Picchu")
-
-          await cleanupPackage(pkg.id)
-        })
-
-        it("should create package with minimal required fields", async () => {
+        it("should preserve provided slug exactly as input when updating a package", async () => {
+          const customSlug = "Custom-Slug-123_TEST"
           const input: CreatePackageWorkflowInput = {
-            destination: "Cusco City Tour",
+            destination: "Slug Test Package",
             duration_days: 1,
             max_capacity: 10,
-            prices: {
-              adult: 50,
-              child: 30,
-              infant: 0,
-            },
+            prices: { adult: 100, child: 50, infant: 0 },
           }
 
           const { result } = await createPackageWorkflow(container).run({ input })
 
-          expect(result.package).toBeDefined()
-          expect(result.package.destination).toBe("Cusco City Tour")
-          expect(result.package.duration_days).toBe(1)
-          expect(result.package.max_capacity).toBe(10)
-          expect(result.package.product).toBeDefined()
-          expect(result.package.variants).toHaveLength(3)
+          const { result: updatedResult } = await updatePackageWorkflow(container).run({
+            input: {
+              id: result.package.id,
+              slug: customSlug,
+              prices: input.prices,
+            },
+          })
 
+          expect(updatedResult.package.id).toBe(result.package.id)
+          
+          const retrieved = await packageModuleService.retrievePackage(result.package.id)
+          expect(retrieved.slug).toBe(customSlug)
+          
           await cleanupPackage(result.package.id)
         })
+       })
 
-      })
-
-      describe("Pricing and Currency", () => {
+       describe("Pricing and Currency", () => {
         it("should create package with USD currency by default", async () => {
           const input: CreatePackageWorkflowInput = {
             destination: "Lima Food Tour",

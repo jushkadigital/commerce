@@ -5,6 +5,7 @@ import { PACKAGE_MODULE } from "../../modules/package"
 export type CreatePackagesStepInput = {
   packages: {
     product_id: string
+    slug: string
     destination: string
     description?: string
     duration_days: number

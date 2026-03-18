@@ -2,6 +2,7 @@ import { sign } from "jsonwebtoken"
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import {
+  createPaymentCollectionForCartWorkflow,
   createApiKeysWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
 } from "@medusajs/medusa/core-flows"
@@ -16,6 +17,7 @@ medusaIntegrationTestRunner({
       let container: any
       let productModule: any
       let cartModule: any
+      let paymentModule: any
       let salesChannelModule: any
       let regionModule: any
       let query: any
@@ -35,6 +37,7 @@ medusaIntegrationTestRunner({
         container = getContainer()
         productModule = container.resolve(Modules.PRODUCT)
         cartModule = container.resolve(Modules.CART)
+        paymentModule = container.resolve(Modules.PAYMENT)
         salesChannelModule = container.resolve(Modules.SALES_CHANNEL)
         regionModule = container.resolve(Modules.REGION)
         query = container.resolve(ContainerRegistrationKeys.QUERY)
@@ -214,11 +217,47 @@ medusaIntegrationTestRunner({
       async function retrieveCart(cartId: string): Promise<any> {
         const { data } = await query.graph({
           entity: "cart",
-          fields: ["id", "promotions.id", "promotions.code", "discount_total", "total"],
+          fields: [
+            "id",
+            "promotions.id",
+            "promotions.code",
+            "promotions.is_automatic",
+            "discount_total",
+            "total",
+            "payment_collection.id",
+            "payment_collection.payment_sessions.id",
+          ],
           filters: { id: cartId },
         })
 
         return data[0]
+      }
+
+      async function createPaymentSessionForCart(cartId: string) {
+        await createPaymentCollectionForCartWorkflow(container).run({
+          input: { cart_id: cartId },
+        })
+
+        const cart = await retrieveCart(cartId)
+
+        await paymentModule.createPaymentSession(cart.payment_collection.id, {
+          provider_id: "pp_system_default",
+          currency_code: "usd",
+          amount: cart.total,
+          data: {},
+        })
+
+        return retrieveCart(cartId)
+      }
+
+      async function captureErrorResponse(request: Promise<unknown>) {
+        try {
+          await request
+        } catch (error: any) {
+          return error.response
+        }
+
+        throw new Error("Expected request to fail")
       }
 
       it("creates standard order-level promotions via the admin API", async () => {
@@ -284,17 +323,13 @@ medusaIntegrationTestRunner({
       it("rejects invalid promotion codes without mutating the cart", async () => {
         const cart = await createCart()
 
-        let response: any
-
-        try {
-          await api.post(
+        const response = await captureErrorResponse(
+          api.post(
             `/store/carts/${cart.id}/promotions`,
             { promo_codes: ["NOTREAL"] },
             { headers: storeHeaders }
           )
-        } catch (error: any) {
-          response = error.response
-        }
+        )
 
         expect([400, 404, 422]).toContain(response.status)
         expect(String(response.data.message).toLowerCase()).toContain("promotion")
@@ -334,6 +369,94 @@ medusaIntegrationTestRunner({
         const persistedCart = await retrieveCart(cart.id)
         expect(persistedCart.promotions ?? []).toHaveLength(1)
         expect(persistedCart.promotions?.[0].code).toBe("WELCOME10")
+      })
+
+      it("rejects applying a different second manual coupon", async () => {
+        await createPromotion("WELCOME10", "percentage")
+        await createPromotion("SAVE15", "fixed")
+        const cart = await createCart()
+
+        const firstResponse = await api.post(
+          `/store/carts/${cart.id}/promotions`,
+          { promo_codes: ["WELCOME10"] },
+          { headers: storeHeaders }
+        )
+
+        expect(firstResponse.status).toBe(200)
+
+        const response = await captureErrorResponse(
+          api.post(
+            `/store/carts/${cart.id}/promotions`,
+            { promo_codes: ["SAVE15"] },
+            { headers: storeHeaders }
+          )
+        )
+
+        expect(response.status).toBe(400)
+        expect(response.data.message).toBe(
+          "Only one manual coupon can be applied per cart."
+        )
+
+        const persistedCart = await retrieveCart(cart.id)
+        expect(persistedCart.promotions ?? []).toHaveLength(1)
+        expect(persistedCart.promotions?.[0].code).toBe("WELCOME10")
+      })
+
+      it("rejects applying a coupon after payment session creation", async () => {
+        await createPromotion("WELCOME10", "percentage")
+        const cart = await createCart()
+
+        const cartWithPaymentSession = await createPaymentSessionForCart(cart.id)
+        expect(
+          cartWithPaymentSession.payment_collection?.payment_sessions ?? []
+        ).toHaveLength(1)
+
+        const applyResponse = await captureErrorResponse(
+          api.post(
+            `/store/carts/${cart.id}/promotions`,
+            { promo_codes: ["WELCOME10"] },
+            { headers: storeHeaders }
+          )
+        )
+
+        expect(applyResponse.status).toBe(409)
+        expect(applyResponse.data.message).toBe(
+          "Coupon changes are not allowed after payment session creation. Reset payment session and retry."
+        )
+
+        const applyPersistedCart = await retrieveCart(cart.id)
+        expect(applyPersistedCart.promotions ?? []).toHaveLength(0)
+
+      })
+
+      it("rejects removing a coupon after payment session creation", async () => {
+        await createPromotion("WELCOME10", "percentage")
+        const cartWithCoupon = await createCart()
+
+        await api.post(
+          `/store/carts/${cartWithCoupon.id}/promotions`,
+          { promo_codes: ["WELCOME10"] },
+          { headers: storeHeaders }
+        )
+
+        const lockedCart = await createPaymentSessionForCart(cartWithCoupon.id)
+        expect(lockedCart.promotions ?? []).toHaveLength(1)
+
+        const removeResponse = await captureErrorResponse(
+          api.delete(`/store/carts/${cartWithCoupon.id}/promotions`, {
+            data: { promo_codes: ["WELCOME10"] },
+            headers: storeHeaders,
+          })
+        )
+
+        expect(removeResponse.status).toBe(409)
+        expect(removeResponse.data.message).toBe(
+          "Coupon changes are not allowed after payment session creation. Reset payment session and retry."
+        )
+
+        const removePersistedCart = await retrieveCart(cartWithCoupon.id)
+        expect(removePersistedCart.promotions ?? []).toHaveLength(1)
+        expect(removePersistedCart.promotions?.[0].code).toBe("WELCOME10")
       })
     })
   },

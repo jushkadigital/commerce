@@ -5,7 +5,40 @@ import type PackageModuleService from "../modules/package/service"
 import { findExistingPackageBooking } from "../utils/package-booking-idempotency"
 import { resend } from "../utils/email"
 import { getOrderNotificationEmails } from "../utils/order-notification-emails"
-import { TravelBookingNotificationEmail } from "../emails/travel-booking-notification"
+
+type TravelBookingNotificationEmailFn =
+  typeof import("../emails/travel-booking-notification.js").TravelBookingNotificationEmail
+
+type AdminBookingNotificationEmailFn =
+  typeof import("../emails/admin-booking-notification.js").AdminBookingNotificationEmail
+
+let travelBookingNotificationEmail:
+  | TravelBookingNotificationEmailFn
+  | null = null
+
+let adminBookingNotificationEmail:
+  | AdminBookingNotificationEmailFn
+  | null = null
+
+async function getTravelBookingNotificationEmail(): Promise<TravelBookingNotificationEmailFn> {
+  if (travelBookingNotificationEmail) {
+    return travelBookingNotificationEmail
+  }
+
+  const module = await import("../emails/travel-booking-notification.js")
+  travelBookingNotificationEmail = module.TravelBookingNotificationEmail
+  return module.TravelBookingNotificationEmail
+}
+
+async function getAdminBookingNotificationEmail(): Promise<AdminBookingNotificationEmailFn> {
+  if (adminBookingNotificationEmail) {
+    return adminBookingNotificationEmail
+  }
+
+  const module = await import("../emails/admin-booking-notification.js")
+  adminBookingNotificationEmail = module.AdminBookingNotificationEmail
+  return module.AdminBookingNotificationEmail
+}
 
 export default async function handlePackageOrderPlaced({
   event,
@@ -161,11 +194,16 @@ export default async function handlePackageOrderPlaced({
 
       return {
         groupId: typeof item.metadata?.group_id === "string" ? item.metadata.group_id : null,
+        metadata: {
+          group_id: typeof item.metadata?.group_id === "string" ? item.metadata.group_id : null,
+          passengers: item.metadata?.passengers ?? null,
+        },
         name: destination,
         date: item.metadata?.package_date ?? null,
         quantity,
         total: rawTotal ?? 0,
         imageUrl: typeof item.thumbnail === "string" ? item.thumbnail : null,
+        passengers: item.metadata?.passengers ?? null,
       }
     })
 
@@ -181,6 +219,8 @@ export default async function handlePackageOrderPlaced({
     if (resend && customerEmail && !hasTourItemsInOrder) {
       try {
         const customerSubject = `Nueva reserva de paquete - Pedido #${order.display_id || orderId}`
+        const TravelBookingNotificationEmail =
+          await getTravelBookingNotificationEmail()
         const customerResult = await resend.emails.send({
           from: fromEmail,
           to: [customerEmail],
@@ -225,127 +265,49 @@ export default async function handlePackageOrderPlaced({
       }
     }
 
-    for (const booking of createdBookings) {
+    if (resend && !hasTourItemsInOrder && notificationRecipients.length > 0) {
       try {
-        const lineItemsSource = booking.line_items
-        const lineItems = Array.isArray(lineItemsSource)
-          ? lineItemsSource
-          : Array.isArray(lineItemsSource?.items)
-            ? lineItemsSource.items
-            : lineItemsSource
-              ? [lineItemsSource]
-              : []
-        const lineItem = lineItems[0]
+        const opsSubject = `Nueva reserva de paquete - Pedido #${order.display_id || orderId}`
+        
+        const AdminBookingNotificationEmail = await getAdminBookingNotificationEmail()
+        const opsRes = await resend.emails.send({
+          from: fromEmail,
+          to: notificationRecipients,
+          subject: opsSubject,
+          react: AdminBookingNotificationEmail({
+            reservationType: "Package",
+            orderId: String(order.display_id || orderId),
+            bookingId: bookingReference,
+            customerName: customerName,
+            customerEmail: customerEmail,
+            destination: typeof customerCartItems[0]?.name === "string" ? customerCartItems[0].name : null,
+            imageUrl: typeof customerCartItems[0]?.imageUrl === "string" ? customerCartItems[0].imageUrl : null,
+            travelDate: customerCartItems[0]?.date,
+            price: typeof customerCartItems[0]?.total === "number" ? customerCartItems[0].total : null,
+            currencyCode: typeof order.currency_code === "string" ? order.currency_code : null,
+            cartItems: customerCartItems,
+            passengers: customerPassengers,
+          }),
+          tags: [
+            { name: "category", value: "package_booking" },
+            { name: "audience", value: "ops" },
+            { name: "order_id", value: String(orderId) },
+          ],
+          headers: {
+            "Idempotency-Key": `package-booking-ops-${orderId}`,
+          },
+        })
 
-        const passengers = Array.isArray(lineItem?.passengers)
-          ? lineItem.passengers
-          : []
-        const linkedOrderItem = (order.items || []).find(
-          (item: any) => item.id === lineItem?.item_id
-        )
-        const quantityRaw = Number(lineItem?.quantity ?? linkedOrderItem?.quantity)
-        const quantity = Number.isFinite(quantityRaw)
-          ? Math.max(0, quantityRaw)
-          : 0
-
-        const normalizedPrice = (
-          [
-            lineItem?.total,
-            linkedOrderItem?.total,
-            linkedOrderItem?.subtotal,
-            linkedOrderItem?.unit_price,
-          ]
-            .map((value) => Number(value))
-            .find((value) => Number.isFinite(value)) ?? null
-        )
-        const destinationRaw =
-          linkedOrderItem?.metadata?.tour_destination ??
-          linkedOrderItem?.metadata?.package_destination ??
-          lineItem?.title ??
-          linkedOrderItem?.title
-        const destination = typeof destinationRaw === "string" ? destinationRaw : null
-        const imageUrlRaw = lineItem?.thumbnail ?? linkedOrderItem?.thumbnail
-        const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw : null
-        const groupIdRaw =
-          typeof booking?.metadata?.group_id === "string"
-            ? booking.metadata.group_id
-            : linkedOrderItem?.metadata?.group_id
-        const groupId = typeof groupIdRaw === "string" ? groupIdRaw : null
-        const cartDateRaw =
-          linkedOrderItem?.metadata?.tour_date ??
-          linkedOrderItem?.metadata?.package_date ??
-          booking.package_date
-        const cartDate =
-          typeof cartDateRaw === "string" || cartDateRaw instanceof Date
-            ? cartDateRaw
-            : booking.package_date
-        const currencyCode =
-          typeof order.currency_code === "string" ? order.currency_code : null
-
-        const subject = `Nueva reserva de paquete - Pedido #${order.display_id || orderId}`
-
-        if (resend) {
-          if (notificationRecipients.length > 0) {
-            try {
-              const opsResult = await resend.emails.send({
-                from: fromEmail,
-                to: notificationRecipients,
-                subject,
-                react: TravelBookingNotificationEmail({
-                  reservationType: "Package",
-                  orderId: String(order.display_id || orderId),
-                  bookingId: String(booking.id || "N/A"),
-                  recipientName: "Equipo de Operaciones",
-                  destination,
-                  imageUrl,
-                  travelDate: booking.package_date,
-                  price: normalizedPrice,
-                  currencyCode,
-                  cartItems: [
-                    {
-                      groupId,
-                      name: destination,
-                      date: cartDate,
-                      quantity,
-                      total: normalizedPrice,
-                      imageUrl,
-                    },
-                  ],
-                  passengers,
-                }),
-                tags: [
-                  { name: "category", value: "package_booking" },
-                  { name: "audience", value: "ops" },
-                  { name: "order_id", value: String(orderId) },
-                ],
-                headers: {
-                  "Idempotency-Key": `package-booking-ops-${booking.id || orderId}`,
-                },
-              })
-
-              if (opsResult?.error) {
-                logger.error(
-                  `Failed to send ops email for package booking ${booking.id}:`,
-                  opsResult.error
-                )
-              } else {
-                logger.info(`Ops email sent for package booking ${booking.id}`)
-              }
-            } catch (opsSendError) {
-              logger.error(
-                `Unexpected error sending ops email for package booking ${booking.id}:`,
-                opsSendError
-              )
-            }
-          }
+        if (opsRes?.error) {
+          logger.error(`Failed to send ops email for order ${orderId}:`, opsRes.error)
         } else {
-          logger.warn(
-            `Resend client not initialized, skipping email for package booking ${booking.id}`
-          )
+          logger.info(`Ops email sent for order ${orderId}`)
         }
-      } catch (error) {
-        logger.error(`Failed to send email for package booking ${booking.id}:`, error)
+      } catch (opsSendError) {
+        logger.error(`Unexpected error sending ops email for order ${orderId}:`, opsSendError)
       }
+    } else if (!resend) {
+      logger.warn(`Resend client not initialized, skipping ops email for order ${orderId}`)
     }
   } catch (error) {
     console.error(

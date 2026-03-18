@@ -65,11 +65,12 @@ type GroupedCartItems = {
   passengerCounts: PassengerCountTotals
 }
 
-export type TravelBookingNotificationEmailProps = {
+export type AdminBookingNotificationEmailProps = {
   reservationType: "Tour" | "Package" | "Mixed"
   orderId: string
   bookingId: string
-  recipientName?: string | null
+  customerEmail?: string | null
+  customerName?: string | null
   destination?: string | null
   travelDate?: string | Date | null
   price?: number | null
@@ -304,8 +305,8 @@ function groupCartItemsById(items: NormalizedCartItem[]): GroupedCartItems[] {
   return Array.from(groupedMap.values())
 }
 
-export function TravelBookingNotificationEmail(
-  props: TravelBookingNotificationEmailProps
+export function AdminBookingNotificationEmail(
+  props: AdminBookingNotificationEmailProps
 ) {
   const reservationType =
     props.reservationType === "Package" ||
@@ -319,9 +320,10 @@ export function TravelBookingNotificationEmail(
     passengers.find((passenger) => typeof passenger?.name === "string" && passenger.name.trim())
       ?.name || "viajero"
   const customerName =
-    typeof props.recipientName === "string" && props.recipientName.trim().length > 0
-      ? props.recipientName.trim()
+    typeof props.customerName === "string" && props.customerName.trim().length > 0
+      ? props.customerName.trim()
       : derivedPassengerName
+  const customerEmail = props.customerEmail || "No proporcionado"
   const travelers = passengers.length > 0 ? passengers.length : 1
   const imageSrc =
     typeof props.imageUrl === "string" && props.imageUrl.length > 0
@@ -350,27 +352,30 @@ export function TravelBookingNotificationEmail(
   return (
     <Html>
       <Head />
-      <Preview>{`Tu reserva de ${reservationTypeLabel} fue confirmada - PATA RUTERA`}</Preview>
+      <Preview>{`NUEVA RESERVA (${reservationTypeLabel}): ${customerName} - PATA RUTERA`}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={logoSection}>
             <Img src="https://www.patarutera.pe/pataLogo.png" alt="Pata Rutera" style={logo} />
           </Section>
 
-          <Heading style={heading}>{`TU RESERVA DE ${reservationTypeLabel.toUpperCase()} FUE CONFIRMADA`}</Heading>
+          <Heading style={heading}>{`NUEVA RESERVA DE ${reservationTypeLabel.toUpperCase()} RECIBIDA`}</Heading>
 
           <Text style={description}>
-            Hola {customerName}, gracias por realizar tu compra con nosotros. Estamos preparando todo
-            para que vivas una experiencia inolvidable.
+            Se ha registrado una nueva compra en el sistema.
+            <br />
+            <strong>Cliente:</strong> {customerName}
+            <br />
+            <strong>Email:</strong> {customerEmail}
+            <br />
+            <strong>Pedido:</strong> #{props.orderId}
           </Text>
-
-          <Heading style={subheading}>Nos vemos muy pronto, {customerName}</Heading>
 
           <Section style={orderSection}>
             <Text style={orderTitle}>Detalles de la Reserva</Text>
             <Text style={typeBadge}>{`Tipo de reserva: ${reservationTypeLabel}`}</Text>
             {passengerSummary && (
-              <Text style={groupSummaryText}>{`Pasajeros: ${passengerSummary}`}</Text>
+              <Text style={groupSummaryText}>{`Total de Pasajeros: ${passengerSummary}`}</Text>
             )}
 
             <table style={table}>
@@ -678,4 +683,4 @@ const footer = {
   textAlign: "center" as const,
 }
 
-export default TravelBookingNotificationEmail
+export default AdminBookingNotificationEmail

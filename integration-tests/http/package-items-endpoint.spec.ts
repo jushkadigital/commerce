@@ -65,6 +65,7 @@ medusaIntegrationTestRunner({
 
         pkg = await packageModuleService.createPackages({
           product_id: product.id,
+          slug: `package-endpoint-test-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Test Destination",
           duration_days: 5,
           thumbnail: "https://example.com/test.jpg",

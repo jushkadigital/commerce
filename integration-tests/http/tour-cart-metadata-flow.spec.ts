@@ -29,7 +29,7 @@ medusaIntegrationTestRunner({
       let salesChannel: any
       let region: any
 
-      const testDate = "2026-03-15"
+      const testDate = "2030-03-15"
 
       beforeAll(async () => {
         container = getContainer()
@@ -69,6 +69,7 @@ medusaIntegrationTestRunner({
           title: "Adult Ticket",
           sku: `CART-FLOW-ADULT-${Date.now()}`,
           manage_inventory: false,
+          requires_shipping: false,
           options: { "Passenger Type": "Adult" },
         })
 
@@ -77,11 +78,13 @@ medusaIntegrationTestRunner({
           title: "Child Ticket",
           sku: `CART-FLOW-CHILD-${Date.now()}`,
           manage_inventory: false,
+          requires_shipping: false,
           options: { "Passenger Type": "Child" },
         })
 
         tour = await tourModuleService.createTours({
           product_id: product.id,
+          slug: `tour-cart-flow-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Cusco Historic Center",
           description: "Walking tour through Cusco's historic center",
           duration_days: 1,
@@ -140,6 +143,7 @@ medusaIntegrationTestRunner({
           lineItemsWithMetadata.map((item) => ({
             variant_id: item.variant_id,
             quantity: item.quantity,
+            requires_shipping: false,
             unit_price: item.unit_price,
             title: item.title,
           }))
@@ -345,6 +349,7 @@ medusaIntegrationTestRunner({
           itemsToAdd.push({
             variant_id: adultVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 150 * 2,
             title: `Cusco Walking Tour - ${testDate} (Adults)`,
             metadata: {
@@ -362,6 +367,7 @@ medusaIntegrationTestRunner({
           itemsToAdd.push({
             variant_id: childVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 100 * 2,
             title: `Cusco Walking Tour - ${testDate} (Children)`,
             metadata: {
@@ -457,10 +463,15 @@ medusaIntegrationTestRunner({
             title: "Adult Ticket",
             sku: `CART-FLOW-SECOND-${Date.now()}`,
             manage_inventory: false,
+            requires_shipping: false,
+            allow_backorder: true,
             options: { "Passenger Type": "Adult" },
           })
           const secondTour = await tourModuleService.createTours({
             product_id: secondProduct.id,
+            slug: `tour-cart-flow-second-${Date.now()}-${Math.round(
+              Math.random() * 1e6
+            )}`,
             destination: "Sacred Valley",
             description: "Full day Sacred Valley tour",
             duration_days: 1,
@@ -575,12 +586,16 @@ medusaIntegrationTestRunner({
           const emailLogCall = logSpy.mock.calls.find(
             (call) =>
               typeof call[0] === "string" &&
-              (call[0].includes("Email sent for booking") ||
-                call[0].includes("Failed to send email for booking"))
+              (call[0].includes("Customer order email sent for order") ||
+                call[0].includes("Ops email sent for booking") ||
+                call[0].includes("Failed to send ops email for booking") ||
+                call[0].includes("Failed to send customer order email for"))
           ) || errorSpy.mock.calls.find(
             (call) =>
               typeof call[0] === "string" &&
-              call[0].includes("Failed to send email for booking")
+              (call[0].includes("Unexpected error sending customer order email for order") ||
+                call[0].includes("Failed to send email for booking") ||
+                call[0].includes("Failed to send ops email for booking"))
           )
           expect(emailLogCall).toBeDefined()
 

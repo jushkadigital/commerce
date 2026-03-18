@@ -1,0 +1,1186 @@
+jest-haste-map: Haste module naming collision: medusa-starter-default
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>/package.json
+    * <rootDir>/.medusa/server/package.json
+
+(node:8759) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.log
+    NODE_ENV = test
+
+      at Object.log (medusa-config.ts:28:9)
+
+  console.log
+    RABBITMQ amqp://admin:admin123@172.17.0.1:5672
+
+      at Object.log (medusa-config.ts:29:9)
+
+  console.log
+    CWD = /home/node/app
+
+      at Object.log (medusa-config.ts:30:9)
+
+  console.log
+    IS_BUILD MODE = false
+
+      at Object.log (medusa-config.ts:31:9)
+
+  console.log
+    IS_MIGRATION MODE = false
+
+      at Object.log (medusa-config.ts:32:9)
+
+  console.log
+    MEDUSA_BACKEND_URL https://commerce.patarutera.pe
+
+      at Object.log (medusa-config.ts:33:9)
+
+  console.log
+    KEYCLOAK_CLIENT_ID: 5f2947dd-a3e7-4759-9f0b-4bd32e7898b8
+
+      at Object.log (medusa-config.ts:41:9)
+
+  console.log
+    BACKEND_URL: https://commerce.patarutera.pe
+
+      at Object.log (medusa-config.ts:42:9)
+
+  console.log
+    MEDUSA_BACKEND_URL: https://commerce.patarutera.pe
+
+      at Object.log (medusa-config.ts:43:9)
+
+  console.log
+    DATABASE_URL: postgres://medusa-starter:medusa-password@postgres-medusa:5432/medusa-starter
+
+      at Object.log (medusa-config.ts:44:9)
+
+[32minfo[39m:    Disabling admin as we run integration tests
+[32minfo[39m:    redisUrl not found. A fake redis instance will be used.
+[32minfo[39m:    Creating database medusa-01kkw6fm290th8mwvct5g71fcg-integration-1
+[32minfo[39m:    Creating migrations table 'mikro_orm_migrations'...
+[32minfo[39m:    Migrations table created successfully
+[32minfo[39m:    Migrating database with core migrations and links medusa-01kkw6fm290th8mwvct5g71fcg-integration-1
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: stock_location
+[32minfo[39m:      ● Migrating Migration20240307161216
+[32minfo[39m:      ✔ Migrated Migration20240307161216
+[32minfo[39m:      ● Migrating Migration20241210073813
+[32minfo[39m:      ✔ Migrated Migration20241210073813
+[32minfo[39m:      ● Migrating Migration20250106142624
+[32minfo[39m:      ✔ Migrated Migration20250106142624
+[32minfo[39m:      ● Migrating Migration20250120110820
+[32minfo[39m:      ✔ Migrated Migration20250120110820
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: inventory
+[32minfo[39m:      ● Migrating Migration20240307132720
+[32minfo[39m:      ✔ Migrated Migration20240307132720
+[32minfo[39m:      ● Migrating Migration20240719123015
+[32minfo[39m:      ✔ Migrated Migration20240719123015
+[32minfo[39m:      ● Migrating Migration20241213063611
+[32minfo[39m:      ✔ Migrated Migration20241213063611
+[32minfo[39m:      ● Migrating Migration20251010131115
+[32minfo[39m:      ✔ Migrated Migration20251010131115
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: product
+[32minfo[39m:      ● Migrating InitialSetup20240401153642
+[32minfo[39m:      ✔ Migrated InitialSetup20240401153642
+[32minfo[39m:      ● Migrating Migration20240601111544
+[32minfo[39m:      ✔ Migrated Migration20240601111544
+[32minfo[39m:      ● Migrating Migration202408271511
+[32minfo[39m:      ✔ Migrated Migration202408271511
+[32minfo[39m:      ● Migrating Migration20241122120331
+[32minfo[39m:      ✔ Migrated Migration20241122120331
+[32minfo[39m:      ● Migrating Migration20241125090957
+[32minfo[39m:      ✔ Migrated Migration20241125090957
+[32minfo[39m:      ● Migrating Migration20250411073236
+[32minfo[39m:      ✔ Migrated Migration20250411073236
+[32minfo[39m:      ● Migrating Migration20250516081326
+[32minfo[39m:      ✔ Migrated Migration20250516081326
+[32minfo[39m:      ● Migrating Migration20250910154539
+[32minfo[39m:      ✔ Migrated Migration20250910154539
+[32minfo[39m:      ● Migrating Migration20250911092221
+[32minfo[39m:      ✔ Migrated Migration20250911092221
+[32minfo[39m:      ● Migrating Migration20250929204438
+[32minfo[39m:      ✔ Migrated Migration20250929204438
+[32minfo[39m:      ● Migrating Migration20251008132218
+[32minfo[39m:      ✔ Migrated Migration20251008132218
+[32minfo[39m:      ● Migrating Migration20251011090511
+[32minfo[39m:      ✔ Migrated Migration20251011090511
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: pricing
+[32minfo[39m:      ● Migrating Migration20230929122253
+[32minfo[39m:      ✔ Migrated Migration20230929122253
+[32minfo[39m:      ● Migrating Migration20240322094407
+[32minfo[39m:      ✔ Migrated Migration20240322094407
+[32minfo[39m:      ● Migrating Migration20240322113359
+[32minfo[39m:      ✔ Migrated Migration20240322113359
+[32minfo[39m:      ● Migrating Migration20240322120125
+[32minfo[39m:      ✔ Migrated Migration20240322120125
+[32minfo[39m:      ● Migrating Migration20240626133555
+[32minfo[39m:      ✔ Migrated Migration20240626133555
+[32minfo[39m:      ● Migrating Migration20240704094505
+[32minfo[39m:      ✔ Migrated Migration20240704094505
+[32minfo[39m:      ● Migrating Migration20241127114534
+[32minfo[39m:      ✔ Migrated Migration20241127114534
+[32minfo[39m:      ● Migrating Migration20241127223829
+[32minfo[39m:      ✔ Migrated Migration20241127223829
+[32minfo[39m:      ● Migrating Migration20241128055359
+[32minfo[39m:      ✔ Migrated Migration20241128055359
+[32minfo[39m:      ● Migrating Migration20241212190401
+[32minfo[39m:      ✔ Migrated Migration20241212190401
+[32minfo[39m:      ● Migrating Migration20250408145122
+[32minfo[39m:      ✔ Migrated Migration20250408145122
+[32minfo[39m:      ● Migrating Migration20250409122219
+[32minfo[39m:      ✔ Migrated Migration20250409122219
+[32minfo[39m:      ● Migrating Migration20251009110625
+[32minfo[39m:      ✔ Migrated Migration20251009110625
+[32minfo[39m:      ● Migrating Migration20251112192723
+[32minfo[39m:      ✔ Migrated Migration20251112192723
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: promotion
+[32minfo[39m:      ● Migrating Migration20240227120221
+[32minfo[39m:      ✔ Migrated Migration20240227120221
+[32minfo[39m:      ● Migrating Migration20240617102917
+[32minfo[39m:      ✔ Migrated Migration20240617102917
+[32minfo[39m:      ● Migrating Migration20240624153824
+[32minfo[39m:      ✔ Migrated Migration20240624153824
+[32minfo[39m:      ● Migrating Migration20241211061114
+[32minfo[39m:      ✔ Migrated Migration20241211061114
+[32minfo[39m:      ● Migrating Migration20250113094144
+[32minfo[39m:      ✔ Migrated Migration20250113094144
+[32minfo[39m:      ● Migrating Migration20250120110700
+[32minfo[39m:      ✔ Migrated Migration20250120110700
+[32minfo[39m:      ● Migrating Migration20250226130616
+[32minfo[39m:      ✔ Migrated Migration20250226130616
+[32minfo[39m:      ● Migrating Migration20250508081510
+[32minfo[39m:      ✔ Migrated Migration20250508081510
+[32minfo[39m:      ● Migrating Migration20250828075407
+[32minfo[39m:      ✔ Migrated Migration20250828075407
+[32minfo[39m:      ● Migrating Migration20250909083125
+[32minfo[39m:      ✔ Migrated Migration20250909083125
+[32minfo[39m:      ● Migrating Migration20250916120552
+[32minfo[39m:      ✔ Migrated Migration20250916120552
+[32minfo[39m:      ● Migrating Migration20250917143818
+[32minfo[39m:      ✔ Migrated Migration20250917143818
+[32minfo[39m:      ● Migrating Migration20250919122137
+[32minfo[39m:      ✔ Migrated Migration20250919122137
+[32minfo[39m:      ● Migrating Migration20251006000000
+[32minfo[39m:      ✔ Migrated Migration20251006000000
+[32minfo[39m:      ● Migrating Migration20251015113934
+[32minfo[39m:      ✔ Migrated Migration20251015113934
+[32minfo[39m:      ● Migrating Migration20251107050148
+[32minfo[39m:      ✔ Migrated Migration20251107050148
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: customer
+[32minfo[39m:      ● Migrating Migration20240124154000
+[32minfo[39m:      ✔ Migrated Migration20240124154000
+[32minfo[39m:      ● Migrating Migration20240524123112
+[32minfo[39m:      ✔ Migrated Migration20240524123112
+[32minfo[39m:      ● Migrating Migration20240602110946
+[32minfo[39m:      ✔ Migrated Migration20240602110946
+[32minfo[39m:      ● Migrating Migration20241211074630
+[32minfo[39m:      ✔ Migrated Migration20241211074630
+[32minfo[39m:      ● Migrating Migration20251010130829
+[32minfo[39m:      ✔ Migrated Migration20251010130829
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: sales_channel
+[32minfo[39m:      ● Migrating Migration20240115152146
+[32minfo[39m:      ✔ Migrated Migration20240115152146
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: cart
+[32minfo[39m:      ● Migrating Migration20240222170223
+[32minfo[39m:      ✔ Migrated Migration20240222170223
+[32minfo[39m:      ● Migrating Migration20240831125857
+[32minfo[39m:      ✔ Migrated Migration20240831125857
+[32minfo[39m:      ● Migrating Migration20241106085918
+[32minfo[39m:      ✔ Migrated Migration20241106085918
+[32minfo[39m:      ● Migrating Migration20241205095237
+[32minfo[39m:      ✔ Migrated Migration20241205095237
+[32minfo[39m:      ● Migrating Migration20241216183049
+[32minfo[39m:      ✔ Migrated Migration20241216183049
+[32minfo[39m:      ● Migrating Migration20241218091938
+[32minfo[39m:      ✔ Migrated Migration20241218091938
+[32minfo[39m:      ● Migrating Migration20250120115059
+[32minfo[39m:      ✔ Migrated Migration20250120115059
+[32minfo[39m:      ● Migrating Migration20250212131240
+[32minfo[39m:      ✔ Migrated Migration20250212131240
+[32minfo[39m:      ● Migrating Migration20250326151602
+[32minfo[39m:      ✔ Migrated Migration20250326151602
+[32minfo[39m:      ● Migrating Migration20250508081553
+[32minfo[39m:      ✔ Migrated Migration20250508081553
+[32minfo[39m:      ● Migrating Migration20251017153909
+[32minfo[39m:      ✔ Migrated Migration20251017153909
+[32minfo[39m:      ● Migrating Migration20251208130704
+[32minfo[39m:      ✔ Migrated Migration20251208130704
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: region
+[32minfo[39m:      ● Migrating Migration20240205173216
+[32minfo[39m:      ✔ Migrated Migration20240205173216
+[32minfo[39m:      ● Migrating Migration20240624200006
+[32minfo[39m:      ✔ Migrated Migration20240624200006
+[32minfo[39m:      ● Migrating Migration20250120110744
+[32minfo[39m:      ✔ Migrated Migration20250120110744
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: api_key
+[32minfo[39m:      ● Migrating InitialSetup20240221144943
+[32minfo[39m:      ✔ Migrated InitialSetup20240221144943
+[32minfo[39m:      ● Migrating Migration20240604080145
+[32minfo[39m:      ✔ Migrated Migration20240604080145
+[32minfo[39m:      ● Migrating Migration20241205122700
+[32minfo[39m:      ✔ Migrated Migration20241205122700
+[32minfo[39m:      ● Migrating Migration20251015123842
+[32minfo[39m:      ✔ Migrated Migration20251015123842
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: store
+[32minfo[39m:      ● Migrating InitialSetup20240227075933
+[32minfo[39m:      ✔ Migrated InitialSetup20240227075933
+[32minfo[39m:      ● Migrating Migration20240621145944
+[32minfo[39m:      ✔ Migrated Migration20240621145944
+[32minfo[39m:      ● Migrating Migration20241206083313
+[32minfo[39m:      ✔ Migrated Migration20241206083313
+[32minfo[39m:      ● Migrating Migration20251202184737
+[32minfo[39m:      ✔ Migrated Migration20251202184737
+[32minfo[39m:      ● Migrating Migration20251212161429
+[32minfo[39m:      ✔ Migrated Migration20251212161429
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: tax
+[32minfo[39m:      ● Migrating Migration20240227090331
+[32minfo[39m:      ✔ Migrated Migration20240227090331
+[32minfo[39m:      ● Migrating Migration20240710135844
+[32minfo[39m:      ✔ Migrated Migration20240710135844
+[32minfo[39m:      ● Migrating Migration20240924114005
+[32minfo[39m:      ✔ Migrated Migration20240924114005
+[32minfo[39m:      ● Migrating Migration20241212052837
+[32minfo[39m:      ✔ Migrated Migration20241212052837
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: currency
+[32minfo[39m:      ● Migrating InitialSetup20240228133303
+[32minfo[39m:      ✔ Migrated InitialSetup20240228133303
+[32minfo[39m:      ● Migrating Migration20240624082354
+[32minfo[39m:      ✔ Migrated Migration20240624082354
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: payment
+[32minfo[39m:      ● Migrating Migration20240225134525
+[32minfo[39m:      ✔ Migrated Migration20240225134525
+[32minfo[39m:      ● Migrating Migration20240806072619
+[32minfo[39m:      ✔ Migrated Migration20240806072619
+[32minfo[39m:      ● Migrating Migration20241211151053
+[32minfo[39m:      ✔ Migrated Migration20241211151053
+[32minfo[39m:      ● Migrating Migration20250115160517
+[32minfo[39m:      ✔ Migrated Migration20250115160517
+[32minfo[39m:      ● Migrating Migration20250120110552
+[32minfo[39m:      ✔ Migrated Migration20250120110552
+[32minfo[39m:      ● Migrating Migration20250123122334
+[32minfo[39m:      ✔ Migrated Migration20250123122334
+[32minfo[39m:      ● Migrating Migration20250206105639
+[32minfo[39m:      ✔ Migrated Migration20250206105639
+[32minfo[39m:      ● Migrating Migration20250207132723
+[32minfo[39m:      ✔ Migrated Migration20250207132723
+[32minfo[39m:      ● Migrating Migration20250625084134
+[32minfo[39m:      ✔ Migrated Migration20250625084134
+[32minfo[39m:      ● Migrating Migration20250924135437
+[32minfo[39m:      ✔ Migrated Migration20250924135437
+[32minfo[39m:      ● Migrating Migration20250929124701
+[32minfo[39m:      ✔ Migrated Migration20250929124701
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: payment
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: payment
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: order
+[32minfo[39m:      ● Migrating Migration20240219102530
+[32minfo[39m:      ✔ Migrated Migration20240219102530
+[32minfo[39m:      ● Migrating Migration20240604100512
+[32minfo[39m:      ✔ Migrated Migration20240604100512
+[32minfo[39m:      ● Migrating Migration20240715102100
+[32minfo[39m:      ✔ Migrated Migration20240715102100
+[32minfo[39m:      ● Migrating Migration20240715174100
+[32minfo[39m:      ✔ Migrated Migration20240715174100
+[32minfo[39m:      ● Migrating Migration20240716081800
+[32minfo[39m:      ✔ Migrated Migration20240716081800
+[32minfo[39m:      ● Migrating Migration20240801085921
+[32minfo[39m:      ✔ Migrated Migration20240801085921
+[32minfo[39m:      ● Migrating Migration20240821164505
+[32minfo[39m:      ✔ Migrated Migration20240821164505
+[32minfo[39m:      ● Migrating Migration20240821170920
+[32minfo[39m:      ✔ Migrated Migration20240821170920
+[32minfo[39m:      ● Migrating Migration20240827133639
+[32minfo[39m:      ✔ Migrated Migration20240827133639
+[32minfo[39m:      ● Migrating Migration20240902195921
+[32minfo[39m:      ✔ Migrated Migration20240902195921
+[32minfo[39m:      ● Migrating Migration20240913092514
+[32minfo[39m:      ✔ Migrated Migration20240913092514
+[32minfo[39m:      ● Migrating Migration20240930122627
+[32minfo[39m:      ✔ Migrated Migration20240930122627
+[32minfo[39m:      ● Migrating Migration20241014142943
+[32minfo[39m:      ✔ Migrated Migration20241014142943
+[32minfo[39m:      ● Migrating Migration20241106085223
+[32minfo[39m:      ✔ Migrated Migration20241106085223
+[32minfo[39m:      ● Migrating Migration20241129124827
+[32minfo[39m:      ✔ Migrated Migration20241129124827
+[32minfo[39m:      ● Migrating Migration20241217162224
+[32minfo[39m:      ✔ Migrated Migration20241217162224
+[32minfo[39m:      ● Migrating Migration20250326151554
+[32minfo[39m:      ✔ Migrated Migration20250326151554
+[32minfo[39m:      ● Migrating Migration20250522181137
+[32minfo[39m:      ✔ Migrated Migration20250522181137
+[32minfo[39m:      ● Migrating Migration20250702095353
+[32minfo[39m:      ✔ Migrated Migration20250702095353
+[32minfo[39m:      ● Migrating Migration20250704120229
+[32minfo[39m:      ✔ Migrated Migration20250704120229
+[32minfo[39m:      ● Migrating Migration20250910130000
+[32minfo[39m:      ✔ Migrated Migration20250910130000
+[32minfo[39m:      ● Migrating Migration20251016160403
+[32minfo[39m:      ✔ Migrated Migration20251016160403
+[32minfo[39m:      ● Migrating Migration20251016182939
+[32minfo[39m:      ✔ Migrated Migration20251016182939
+[32minfo[39m:      ● Migrating Migration20251017155709
+[32minfo[39m:      ✔ Migrated Migration20251017155709
+[32minfo[39m:      ● Migrating Migration20251114100559
+[32minfo[39m:      ✔ Migrated Migration20251114100559
+[32minfo[39m:      ● Migrating Migration20251125164002
+[32minfo[39m:      ✔ Migrated Migration20251125164002
+[32minfo[39m:      ● Migrating Migration20251210112909
+[32minfo[39m:      ✔ Migrated Migration20251210112909
+[32minfo[39m:      ● Migrating Migration20251210112924
+[32minfo[39m:      ✔ Migrated Migration20251210112924
+[32minfo[39m:      ● Migrating Migration20251225120947
+[32minfo[39m:      ✔ Migrated Migration20251225120947
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: settings
+[32minfo[39m:      ● Migrating Migration20250717162007
+[32minfo[39m:      ✔ Migrated Migration20250717162007
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:      ● Migrating Migration20240205025928
+[32minfo[39m:      ✔ Migrated Migration20240205025928
+[32minfo[39m:      ● Migrating Migration20240529080336
+[32minfo[39m:      ✔ Migrated Migration20240529080336
+[32minfo[39m:      ● Migrating Migration20241202100304
+[32minfo[39m:      ✔ Migrated Migration20241202100304
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: auth
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: user
+[32minfo[39m:      ● Migrating Migration20240214033943
+[32minfo[39m:      ✔ Migrated Migration20240214033943
+[32minfo[39m:      ● Migrating Migration20240703095850
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+[32minfo[39m:      ✔ Migrated Migration20240703095850
+[32minfo[39m:      ● Migrating Migration20241202103352
+[32minfo[39m:      ✔ Migrated Migration20241202103352
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: fulfillment
+[32minfo[39m:      ● Migrating Migration20240311145700_InitialSetupMigration
+[32minfo[39m:      ✔ Migrated Migration20240311145700_InitialSetupMigration
+[32minfo[39m:      ● Migrating Migration20240821170957
+[32minfo[39m:      ✔ Migrated Migration20240821170957
+[32minfo[39m:      ● Migrating Migration20240917161003
+[32minfo[39m:      ✔ Migrated Migration20240917161003
+[32minfo[39m:      ● Migrating Migration20241217110416
+[32minfo[39m:      ✔ Migrated Migration20241217110416
+[32minfo[39m:      ● Migrating Migration20250113122235
+[32minfo[39m:      ✔ Migrated Migration20250113122235
+[32minfo[39m:      ● Migrating Migration20250120115002
+[32minfo[39m:      ✔ Migrated Migration20250120115002
+[32minfo[39m:      ● Migrating Migration20250822130931
+[32minfo[39m:      ✔ Migrated Migration20250822130931
+[32minfo[39m:      ● Migrating Migration20250825132614
+[32minfo[39m:      ✔ Migrated Migration20250825132614
+[32minfo[39m:      ● Migrating Migration20251114133146
+[32minfo[39m:      ✔ Migrated Migration20251114133146
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: fulfillment
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: fulfillment
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: notification
+[32minfo[39m:      ● Migrating Migration20240509083918_InitialSetupMigration
+[32minfo[39m:      ✔ Migrated Migration20240509083918_InitialSetupMigration
+[32minfo[39m:      ● Migrating Migration20240628075401
+[32minfo[39m:      ✔ Migrated Migration20240628075401
+[32minfo[39m:      ● Migrating Migration20240830094712
+[32minfo[39m:      ✔ Migrated Migration20240830094712
+[32minfo[39m:      ● Migrating Migration20250120110514
+[32minfo[39m:      ✔ Migrated Migration20250120110514
+[32minfo[39m:      ● Migrating Migration20251028172715
+[32minfo[39m:      ✔ Migrated Migration20251028172715
+[32minfo[39m:      ● Migrating Migration20251121123942
+[32minfo[39m:      ✔ Migrated Migration20251121123942
+[32minfo[39m:      ● Migrating Migration20251121150408
+[32minfo[39m:      ✔ Migrated Migration20251121150408
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: notification
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: notification
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: cache
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: event_bus
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: workflows
+[32minfo[39m:      ● Migrating Migration20231228143900
+[32minfo[39m:      ✔ Migrated Migration20231228143900
+[32minfo[39m:      ● Migrating Migration20241206101446
+[32minfo[39m:      ✔ Migrated Migration20241206101446
+[32minfo[39m:      ● Migrating Migration20250128174331
+[32minfo[39m:      ✔ Migrated Migration20250128174331
+[32minfo[39m:      ● Migrating Migration20250505092459
+[32minfo[39m:      ✔ Migrated Migration20250505092459
+[32minfo[39m:      ● Migrating Migration20250819104213
+[32minfo[39m:      ✔ Migrated Migration20250819104213
+[32minfo[39m:      ● Migrating Migration20250819110924
+[32minfo[39m:      ✔ Migrated Migration20250819110924
+[32minfo[39m:      ● Migrating Migration20250908080305
+[32minfo[39m:      ✔ Migrated Migration20250908080305
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: locking
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: file
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: file
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: file
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: caching
+[32minfo[39m:    Skipped. Database is up-to-date for module.
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: tourModule
+[32minfo[39m:      ● Migrating Migration20260206073934
+[32minfo[39m:      ✔ Migrated Migration20260206073934
+[32minfo[39m:      ● Migrating Migration20260209173550
+[32minfo[39m:      ✔ Migrated Migration20260209173550
+[32minfo[39m:      ● Migrating Migration20260209211228
+[32minfo[39m:      ✔ Migrated Migration20260209211228
+[32minfo[39m:      ● Migrating Migration20260210235107
+[32minfo[39m:      ✔ Migrated Migration20260210235107
+[32minfo[39m:      ● Migrating Migration20260212204221
+[32minfo[39m:      ✔ Migrated Migration20260212204221
+[32minfo[39m:      ● Migrating Migration20260304230000
+[32minfo[39m:      ✔ Migrated Migration20260304230000
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: packageModule
+[32minfo[39m:      ● Migrating Migration20260127204825
+[32minfo[39m:      ✔ Migrated Migration20260127204825
+[32minfo[39m:      ● Migrating Migration20260209173822
+[32minfo[39m:      ✔ Migrated Migration20260209173822
+[32minfo[39m:      ● Migrating Migration20260209211229
+[32minfo[39m:      ✔ Migrated Migration20260209211229
+[32minfo[39m:      ● Migrating Migration20260212204240
+[32minfo[39m:      ✔ Migrated Migration20260212204240
+[32minfo[39m:      ● Migrating Migration20260219000749
+[32minfo[39m:      ✔ Migrated Migration20260219000749
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: orderNotificationModule
+[32minfo[39m:      ● Migrating Migration20260310010000
+[32minfo[39m:      ✔ Migrated Migration20260310010000
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    
+[32minfo[39m:    
+[32minfo[39m:    MODULE: izipay
+[32minfo[39m:      ● Migrating Migration20260310120000
+[32minfo[39m:      ✔ Migrated Migration20260310120000
+[32minfo[39m:    Completed successfully
+[32minfo[39m:    No link to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/links. skipped.
+[32minfo[39m:    Sync links: "create" cart_payment_collection
+[32minfo[39m:    Sync links: "create" cart_promotion
+[32minfo[39m:    Sync links: "create" location_fulfillment_provider
+[32minfo[39m:    Sync links: "create" location_fulfillment_set
+[32minfo[39m:    Sync links: "create" order_cart
+[32minfo[39m:    Sync links: "create" order_fulfillment
+[32minfo[39m:    Sync links: "create" order_payment_collection
+[32minfo[39m:    Sync links: "create" order_promotion
+[32minfo[39m:    Sync links: "create" return_fulfillment
+[32minfo[39m:    Sync links: "create" product_sales_channel
+[32minfo[39m:    Sync links: "create" product_variant_inventory_item
+[32minfo[39m:    Sync links: "create" product_variant_price_set
+[32minfo[39m:    Sync links: "create" publishable_api_key_sales_channel
+[32minfo[39m:    Sync links: "create" region_payment_provider
+[32minfo[39m:    Sync links: "create" sales_channel_stock_location
+[32minfo[39m:    Sync links: "create" shipping_option_price_set
+[32minfo[39m:    Sync links: "create" product_shipping_profile
+[32minfo[39m:    Sync links: "create" customer_account_holder
+[32minfo[39m:    Sync links: "create" packagemodule_package_booking_order_order
+[32minfo[39m:    Sync links: "create" packagemodule_package_product_product
+[32minfo[39m:    Sync links: "create" packagemodule_package_variant_product_product_variant
+[32minfo[39m:    Sync links: "create" tourmodule_tour_booking_order_order
+[32minfo[39m:    Sync links: "create" tourmodule_tour_product_product
+[32minfo[39m:    Sync links: "create" tourmodule_tour_variant_product_product_variant
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    redisUrl not found. A fake redis instance will be used.
+[32minfo[39m:    No link to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/links. skipped.
+[32minfo[39m:    No workflow to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/workflows. skipped.
+[32minfo[39m:    No subscriber to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/subscribers. skipped.
+[32minfo[39m:    No job to load from /home/node/app/node_modules/@medusajs/medusa/dist/jobs. skipped.
+[32minfo[39m:    No job to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/jobs. skipped.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6G1VDQJQC0FG4C67G0ZW4
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6G1N9FNE4CAGR5XQC4N6V for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6G3W2S0GANXES1CXAV4FB
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6G3Q9NQYB28RS99FAHW9J for date 2026-06-15 with 3 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6G5MDN0649M9M52A4212G
+[32minfo[39m:    [VALIDATE] Cart found with 2 items
+[32minfo[39m:    [VALIDATE] Found 2 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6G5E4QNK51WVXQ3JYHN8Q for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6G5JQNXD769Y5V1P0D3K9 for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6G7XDDXM5KVD1HS82N9QH
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6G7NHHWYR0WNN01G4YWR7 for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GA5HF0K96VDS186034VR
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6G9ZRKEQ6DBEXB5RSB4EC for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":false,"reason":"This date is not available for booking"}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GC3F62MDT03ZV1E013JB
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GBYTFKD1S7FTFWWVJJYM for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":false,"reason":"Packages are not available on Mondays"}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GDKYNWVV5CW8J4FHDMRP
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GDFHM1S3JXYWRJEMJBS1 for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GFG2EH6ZGQB9R6KNNYAV
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GFB3S9Z7AP05S3SJG7E4 for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":false,"reason":"Bookings must be made at least 12 months in advance"}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GH95WFZ0WT34GDQC4T42
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GH43JZSJM4CT3HG2H9WR for date 2020-01-01 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":false,"reason":"Cannot book packages for past dates"}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GK1GHX1QQ82XAX8H4667
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GJWYB9NF0S0K7SN8NBZ9 for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GN1ZK46TWK8P6P3DHFBD
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GMWAHQ8KKQMRJ1BS1XEJ for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GQERZS4K0FMET6EJ2CKD
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GQAFRSKCQ17JEZ7C5HR2 for date 2026-06-15 with 3 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart invalid_cart_id
+[31merror[39m:   [VALIDATE] Cart invalid_cart_id not found
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6GY84N969BBT6S78600YH
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6GY376J1D2X56RY7MKQ2S for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+[33mwarn[39m:    Local Event Bus installed. This is not recommended for production.
+[32minfo[39m:    Locking module: Using "in-memory" as default.
+[32minfo[39m:    [VALIDATE] Starting validation for cart cart_01KKW6H07P38YFVKXTER8XYXD0
+[32minfo[39m:    [VALIDATE] Cart found with 1 items
+[32minfo[39m:    [VALIDATE] Found 1 package items
+[32minfo[39m:    [VALIDATE] Validating package 01KKW6H01WAE3E5MJN70HGQX61 for date 2026-06-15 with 1 passengers
+[32minfo[39m:    [VALIDATE] Validation result: {"valid":true}
+FAIL integration-tests/http/package-purchase-flow.spec.ts (51.216 s)
+    Package Purchase Flow E2E
+      Complete Purchase Flow - Success Cases
+        ✕ should complete full purchase flow and create order and booking (1120 ms)
+        ✕ should create booking with correct metadata (1910 ms)
+        ✕ should handle multiple packages in same cart (2047 ms)
+        ✕ should complete full purchase flow for a single adult passenger (2435 ms)
+        ✓ should reject booking for blocked date (2014 ms)
+        ✓ should reject booking for blocked weekday (1764 ms)
+        ✕ should reject booking when capacity is exceeded (1770 ms)
+        ✓ should reject booking when min months ahead not met (1767 ms)
+        ✓ should reject booking for past dates (1783 ms)
+      Capacity Validation
+        ✕ should validate capacity before allowing checkout (2042 ms)
+      Order and Booking Link
+        ✕ should create link between order and package booking (2375 ms)
+        ✕ should preserve order totals correctly (2054 ms)
+      Error Handling
+        ✓ should handle invalid cart id gracefully (2264 ms)
+        ✓ should validate booking for a valid future date with available capacity (1465 ms)
+        ✓ should validate booking date is not in the past (1394 ms)
+      Booking Status Flow
+        ✕ should create booking with pending status initially (1900 ms)
+        ✕ should allow updating booking status (2023 ms)
+
+  ●  › Package Purchase Flow E2E › Complete Purchase Flow - Success Cases › should complete full purchase flow and create order and booking
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      392 |           expect(cart.items[0].metadata.package_id).toBe(pkg.id)
+      393 |
+    > 394 |           const { result } = await completeCartWithPackagesWorkflow(container).run({
+          |                              ^
+      395 |             input: {
+      396 |               cart_id: cart.id,
+      397 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:394:30)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Complete Purchase Flow - Success Cases › should create booking with correct metadata
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      426 |           const { cart } = await createCartWithPackage("meta@example.com", { adults: 3, children: 0, infants: 0 })
+      427 |
+    > 428 |           const { result } = await completeCartWithPackagesWorkflow(container).run({
+          |                              ^
+      429 |             input: {
+      430 |               cart_id: cart.id,
+      431 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:428:30)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Complete Purchase Flow - Success Cases › should handle multiple packages in same cart
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      571 |
+      572 |           // Complete checkout
+    > 573 |           const result = await completeCartWithPackagesWorkflow(container).run({
+          |                          ^
+      574 |             input: {
+      575 |               cart_id: cart.id,
+      576 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:573:26)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Complete Purchase Flow - Success Cases › should complete full purchase flow for a single adult passenger
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      617 |           expect(cart.items[0].metadata.package_id).toBe(pkg.id)
+      618 |
+    > 619 |           const { result } = await completeCartWithPackagesWorkflow(container).run({
+          |                              ^
+      620 |             input: {
+      621 |               cart_id: cart.id,
+      622 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:619:30)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Complete Purchase Flow - Success Cases › should reject booking when capacity is exceeded
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      689 |               { adults: 1, children: 0, infants: 0 }
+      690 |             )
+    > 691 |             await completeCartWithPackagesWorkflow(container).run({
+          |             ^
+      692 |               input: { cart_id: cart.id },
+      693 |             })
+      694 |             
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:691:13)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Capacity Validation › should validate capacity before allowing checkout
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      805 |           for (let i = 0; i < packageCapacity; i++) {
+      806 |             const { cart } = await createCartWithPackage(`fill${i}@test.com`, { adults: 1, children: 0, infants: 0 })
+    > 807 |             await completeCartWithPackagesWorkflow(container).run({
+          |             ^
+      808 |               input: { cart_id: cart.id },
+      809 |             })
+      810 |             await new Promise(resolve => setTimeout(resolve, 100))
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:807:13)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Order and Booking Link › should create link between order and package booking
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      832 |           const { cart } = await createCartWithPackage("link@example.com", { adults: 1, children: 0, infants: 0 })
+      833 |
+    > 834 |           const { result } = await completeCartWithPackagesWorkflow(container).run({
+          |                              ^
+      835 |             input: {
+      836 |               cart_id: cart.id,
+      837 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:834:30)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Order and Booking Link › should preserve order totals correctly
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      856 |           const { cart } = await createCartWithPackage("totals@example.com", { adults: 3, children: 0, infants: 0 })
+      857 |
+    > 858 |           const { result } = await completeCartWithPackagesWorkflow(container).run({
+          |                              ^
+      859 |             input: {
+      860 |               cart_id: cart.id,
+      861 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:858:30)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Booking Status Flow › should create booking with pending status initially
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      913 |           const { cart } = await createCartWithPackage("pending@example.com", { adults: 1, children: 0, infants: 0 })
+      914 |
+    > 915 |           const { result } = await completeCartWithPackagesWorkflow(container).run({
+          |                              ^
+      916 |             input: {
+      917 |               cart_id: cart.id,
+      918 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:915:30)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+  ●  › Package Purchase Flow E2E › Booking Status Flow › should allow updating booking status
+
+    No shipping method selected but the cart contains items that require shipping.
+
+      932 |           const { cart } = await createCartWithPackage("update@example.com", { adults: 1, children: 0, infants: 0 })
+      933 |
+    > 934 |           const { result } = await completeCartWithPackagesWorkflow(container).run({
+          |                              ^
+      935 |             input: {
+      936 |               cart_id: cart.id,
+      937 |             },
+
+      at Object.<anonymous> (node_modules/@medusajs/core-flows/src/cart/steps/validate-shipping.ts:88:13)
+      at invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:67)
+      at Object.handle.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-step.ts:381:12)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at newRun (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Function.exportedWorkflow.run (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:502:12)
+      at Object.step.container.container (node_modules/@medusajs/workflows-sdk/src/utils/composer/create-workflow.ts:246:25)
+      at Object.invoke (node_modules/@medusajs/workflows-sdk/src/utils/composer/helpers/create-step-handler.ts:91:52)
+      at DistributedTransaction.handler (node_modules/@medusajs/orchestration/src/workflow/workflow-manager.ts:214:16)
+      at stepHandler (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1186:14)
+          at async Promise.allSettled (index 0)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at TransactionOrchestrator.executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1030:7)
+      at executeNext (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1431:14)
+      at TransactionOrchestrator.resume (node_modules/@medusajs/orchestration/src/transaction/transaction-orchestrator.ts:1446:5)
+      at LocalWorkflow.run (node_modules/@medusajs/orchestration/src/workflow/local-workflow.ts:375:5)
+      at originalExecution (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:144:26)
+      at LocalWorkflow.newRun [as run] (node_modules/@medusajs/workflows-sdk/src/helper/workflow-export.ts:226:12)
+      at Object.<anonymous> (integration-tests/http/package-purchase-flow.spec.ts:934:30)
+      ⮑ sat /home/node/app/node_modules/@medusajs/core-flows/dist/cart/workflows/complete-cart.js: [complete-cart -> validate-shipping (invoke)]
+      ⮑ sat /home/node/app/src/workflows/create-package-booking.ts: [complete-cart-with-packages -> complete-cart-as-step (invoke)]
+
+Test Suites: 1 failed, 1 total
+Tests:       10 failed, 7 passed, 17 total
+Snapshots:   0 total
+Time:        51.307 s
+Ran all test suites matching /integration-tests\/http\/package-purchase-flow.spec.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

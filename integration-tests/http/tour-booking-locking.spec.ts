@@ -109,6 +109,7 @@ medusaIntegrationTestRunner({
         // Create tour with capacity
         tour = await tourModuleService.createTours({
           product_id: product.id,
+          slug: `tour-locking-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Machu Picchu",
           description: "Full day tour to Machu Picchu",
           duration_days: 1,

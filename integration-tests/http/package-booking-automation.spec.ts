@@ -61,6 +61,7 @@ medusaIntegrationTestRunner({
 
         pkg = await packageModuleService.createPackages({
           product_id: product.id,
+          slug: `package-machu-picchu-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Machu Picchu",
           description: "Full day package to Machu Picchu",
           duration_days: 1,
@@ -255,6 +256,7 @@ medusaIntegrationTestRunner({
 
           secondPackage = await packageModuleService.createPackages({
             product_id: secondProduct.id,
+            slug: `package-sacred-valley-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
             destination: "Sacred Valley",
             description: "Full day Sacred Valley package",
             duration_days: 1,

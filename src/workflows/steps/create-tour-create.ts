@@ -5,6 +5,7 @@ import { TOUR_MODULE } from "../../modules/tour"
 export type CreateToursStepInput = {
   tours: {
     product_id: string
+    slug: string
     destination: string
     description?: string
     duration_days: number

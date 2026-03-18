@@ -76,6 +76,7 @@ medusaIntegrationTestRunner({
 
         tour = await tourModuleService.createTours({
           product_id: product.id,
+          slug: `tour-cusco-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Cusco",
           description: "Full day city tour of Cusco",
           duration_days: 1,
@@ -98,6 +99,7 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": type.charAt(0).toUpperCase() + type.slice(1),
             },
+            requires_shipping: false,
             manage_inventory: false,
             allow_backorder: true,
           })
@@ -196,6 +198,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: adultVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 150 * passengerCounts.adults,
             title: `${tour.destination} - ${testDate} (Adults)`,
             metadata: {
@@ -227,6 +230,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: childVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 100 * passengerCounts.children,
             title: `${tour.destination} - ${testDate} (Children)`,
             metadata: {
@@ -258,6 +262,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: infantVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 0,
             title: `${tour.destination} - ${testDate} (Infants)`,
             metadata: {
@@ -398,6 +403,7 @@ medusaIntegrationTestRunner({
             itemsToAdd.push({
               variant_id: adultVariant.id,
               quantity: 1,
+              requires_shipping: false,
               unit_price: 150 * 2,
               title: `${tour.destination} - ${testDate} (Adults)`,
               metadata: {
@@ -418,6 +424,7 @@ medusaIntegrationTestRunner({
             itemsToAdd.push({
               variant_id: childVariant.id,
               quantity: 1,
+              requires_shipping: false,
               unit_price: 100 * 2,
               title: `${tour.destination} - ${testDate} (Children)`,
               metadata: {
@@ -959,6 +966,7 @@ medusaIntegrationTestRunner({
 
           const tour2 = await tourModuleService.createTours({
             product_id: product2.id,
+            slug: `tour-lima-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
             destination: "Lima",
             description: "City tour in Lima",
             duration_days: 1,
@@ -979,6 +987,9 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": "Adult",
             },
+            requires_shipping: false,
+            manage_inventory: false,
+            allow_backorder: true,
           })
 
           await tourModuleService.createTourVariants({
@@ -1001,6 +1012,7 @@ medusaIntegrationTestRunner({
               {
                 variant_id: adultVariant1.id,
                 quantity: 1,
+                requires_shipping: false,
                 unit_price: 150,
                 title: `Cusco - ${testDate}`,
                 metadata: {
@@ -1014,6 +1026,7 @@ medusaIntegrationTestRunner({
               {
                 variant_id: variant2.id,
                 quantity: 1,
+                requires_shipping: false,
                 unit_price: 50,
                 title: `Lima - ${testDate}`,
                 metadata: {
@@ -1235,6 +1248,7 @@ medusaIntegrationTestRunner({
             items: [{
               variant_id: adultVariant.id,
               quantity: 1,
+              requires_shipping: false,
               unit_price: 150,
               title: `${tour.destination} - ${pastDate}`,
               metadata: {

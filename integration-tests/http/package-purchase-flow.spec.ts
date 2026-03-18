@@ -94,6 +94,7 @@ medusaIntegrationTestRunner({
         // Create package with capacity
         pkg = await packageModuleService.createPackages({
           product_id: product.id,
+          slug: `package-cusco-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           destination: "Cusco",
           description: "3-day adventure package in Cusco",
           duration_days: 3,
@@ -119,6 +120,7 @@ medusaIntegrationTestRunner({
             },
             manage_inventory: false,
             allow_backorder: true,
+            requires_shipping: false,
           })
 
           productVariants.push(variant)
@@ -241,6 +243,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: adultVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 100 * passengerCounts.adults,
             title: `${pkg.destination} - ${testDate} (Adults)`,
             metadata: {
@@ -272,6 +275,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: childVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 70 * passengerCounts.children,
             title: `${pkg.destination} - ${testDate} (Children)`,
             metadata: {
@@ -303,6 +307,7 @@ medusaIntegrationTestRunner({
           items.push({
             variant_id: infantVariant.id,
             quantity: 1,
+            requires_shipping: false,
             unit_price: 0,
             title: `${pkg.destination} - ${testDate} (Infants)`,
             metadata: {
@@ -468,6 +473,7 @@ medusaIntegrationTestRunner({
 
           const pkg2 = await packageModuleService.createPackages({
             product_id: product2.id,
+            slug: `package-lima-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
             destination: "Lima",
             description: "City tour package in Lima",
             duration_days: 1,
@@ -488,6 +494,9 @@ medusaIntegrationTestRunner({
             options: {
               "Passenger Type": "Adult",
             },
+            manage_inventory: false,
+            allow_backorder: true,
+            requires_shipping: false,
           })
 
           await packageModuleService.createPackageVariants({
@@ -519,6 +528,7 @@ medusaIntegrationTestRunner({
               {
                 variant_id: adultVariant1.id,
                 quantity: 1,
+                requires_shipping: false,
                 unit_price: 100,
                 title: `Cusco - ${testDate}`,
                 metadata: {
@@ -532,6 +542,7 @@ medusaIntegrationTestRunner({
               {
                 variant_id: variant2.id,
                 quantity: 1,
+                requires_shipping: false,
                 unit_price: 50,
                 title: `Lima - ${testDate}`,
                 metadata: {
@@ -759,6 +770,7 @@ medusaIntegrationTestRunner({
             items: [{
               variant_id: adultVariant.id,
               quantity: 1,
+              requires_shipping: false,
               unit_price: 100,
               title: `${pkg.destination} - ${pastDate}`,
               metadata: {
