@@ -20,9 +20,20 @@ let adminBookingNotificationEmail:
   | AdminBookingNotificationEmailFn
   | null = null
 
+const isTestRuntime = process.env.NODE_ENV === "test" || !!process.env.TEST_TYPE
+
 async function getTravelBookingNotificationEmail(): Promise<TravelBookingNotificationEmailFn> {
   if (travelBookingNotificationEmail) {
     return travelBookingNotificationEmail
+  }
+
+  if (isTestRuntime) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const module = require("../emails/travel-booking-notification.tsx") as {
+      TravelBookingNotificationEmail: TravelBookingNotificationEmailFn
+    }
+    travelBookingNotificationEmail = module.TravelBookingNotificationEmail
+    return module.TravelBookingNotificationEmail
   }
 
   const module = await import("../emails/travel-booking-notification.js")
@@ -33,6 +44,15 @@ async function getTravelBookingNotificationEmail(): Promise<TravelBookingNotific
 async function getAdminBookingNotificationEmail(): Promise<AdminBookingNotificationEmailFn> {
   if (adminBookingNotificationEmail) {
     return adminBookingNotificationEmail
+  }
+
+  if (isTestRuntime) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const module = require("../emails/admin-booking-notification.tsx") as {
+      AdminBookingNotificationEmail: AdminBookingNotificationEmailFn
+    }
+    adminBookingNotificationEmail = module.AdminBookingNotificationEmail
+    return module.AdminBookingNotificationEmail
   }
 
   const module = await import("../emails/admin-booking-notification.js")
@@ -218,7 +238,7 @@ export default async function handlePackageOrderPlaced({
 
     if (resend && customerEmail && !hasTourItemsInOrder) {
       try {
-        const customerSubject = `Nueva reserva de paquete - Pedido #${order.display_id || orderId}`
+        const customerSubject = "Nueva reserva de paquete"
         const TravelBookingNotificationEmail =
           await getTravelBookingNotificationEmail()
         const customerResult = await resend.emails.send({
@@ -227,7 +247,7 @@ export default async function handlePackageOrderPlaced({
           subject: customerSubject,
           react: TravelBookingNotificationEmail({
             reservationType: "Package",
-            orderId: String(order.display_id || orderId),
+            orderId: String(orderId),
             bookingId: bookingReference,
             recipientName: customerName,
             destination:
@@ -267,7 +287,7 @@ export default async function handlePackageOrderPlaced({
 
     if (resend && !hasTourItemsInOrder && notificationRecipients.length > 0) {
       try {
-        const opsSubject = `Nueva reserva de paquete - Pedido #${order.display_id || orderId}`
+        const opsSubject = "Nueva reserva de paquete"
         
         const AdminBookingNotificationEmail = await getAdminBookingNotificationEmail()
         const opsRes = await resend.emails.send({

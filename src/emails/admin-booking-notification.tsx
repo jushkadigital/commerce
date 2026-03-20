@@ -9,7 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components"
-import { Fragment } from "react"
+import React, { Fragment } from "react"
 
 type Passenger = {
   name?: string
@@ -91,9 +91,9 @@ function formatDate(value: string | Date | null | undefined): string {
   }
 
   return new Intl.DateTimeFormat("es-PE", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
   }).format(date)
 }
 
@@ -393,12 +393,7 @@ export function AdminBookingNotificationEmail(
                   <Fragment key={group.groupKey}>
                     <tr style={groupHeaderRow}>
                       <td style={groupHeaderCell} colSpan={5}>
-                        <Text style={groupHeaderText}>
-                          {`Grupo ${group.groupLabel}`}
-                          {formatPassengerSummary(group.passengerCounts)
-                            ? ` - ${formatPassengerSummary(group.passengerCounts)}`
-                            : ""}
-                        </Text>
+                        <Text style={groupHeaderText}>{props.orderId}</Text>
                       </td>
                     </tr>
                     {group.items.map((item, index) => (
@@ -408,7 +403,6 @@ export function AdminBookingNotificationEmail(
                         </td>
                         <td style={tableCell}>
                           <Text style={itemName}>{item.name}</Text>
-                          <Text style={itemMeta}>Pedido: {props.orderId}</Text>
                           {formatPassengerSummary(item.passengerCounts) && (
                             <Text style={itemMeta}>
                               {formatPassengerSummary(item.passengerCounts)}

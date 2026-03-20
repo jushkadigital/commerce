@@ -11,9 +11,25 @@ import completeCartWithToursWorkflow from "../../src/modules/tour/workflows/crea
 
 jest.setTimeout(120 * 1000)
 
+const DEBUG_CUSTOMER_EMAIL = "urgosxd@gmail.com"
+
+const DEBUG_RESEND_API_KEY =
+  process.env.RESEND_API_KEY || process.env.TEST_RESEND_API_KEY || ""
+
+if (!DEBUG_RESEND_API_KEY) {
+  throw new Error(
+    "Set RESEND_API_KEY (or TEST_RESEND_API_KEY) to run tour purchase tests with debug email sending enabled."
+  )
+}
+
 medusaIntegrationTestRunner({
   inApp: true,
-  env: {},
+  env: {
+    RESEND_API_KEY: DEBUG_RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || "",
+    ORDER_NOTIFICATION_EMAILS:
+      process.env.ORDER_NOTIFICATION_EMAILS || DEBUG_CUSTOMER_EMAIL,
+  },
   testSuite: ({ api, getContainer }) => {
     describe("Tour Purchase Flow - E2E", () => {
       let container: any
@@ -22,6 +38,7 @@ medusaIntegrationTestRunner({
       let cartModule: any
       let salesChannelModule: any
       let regionModule: any
+      let customerModule: any
       let orderModule: any
       let paymentModule: any
       let remoteLink: any
@@ -43,6 +60,7 @@ medusaIntegrationTestRunner({
         cartModule = container.resolve(Modules.CART)
         salesChannelModule = container.resolve(Modules.SALES_CHANNEL)
         regionModule = container.resolve(Modules.REGION)
+        customerModule = container.resolve(Modules.CUSTOMER)
         orderModule = container.resolve(Modules.ORDER)
         paymentModule = container.resolve(Modules.PAYMENT)
         remoteLink = container.resolve(ContainerRegistrationKeys.LINK)
@@ -177,6 +195,21 @@ medusaIntegrationTestRunner({
         customerEmail: string,
         passengerCounts: { adults: number; children: number; infants: number } = { adults: 1, children: 0, infants: 0 }
       ) {
+        const customers = await customerModule.listCustomers({
+          email: customerEmail,
+        })
+
+        let customer
+        if (customers.length === 0) {
+          customer = await customerModule.createCustomers({
+            email: customerEmail,
+            first_name: "Test",
+            last_name: "Customer",
+          })
+        } else {
+          customer = customers[0]
+        }
+
         const adultVariant = product.variants.find(
           (v: any) => v.title === "Adult Ticket"
         )
@@ -293,6 +326,7 @@ medusaIntegrationTestRunner({
         const cart = await cartModule.createCarts({
           currency_code: "usd",
           email: customerEmail,
+          customer_id: customer.id,
           sales_channel_id: salesChannel.id,
           region_id: region.id,
           items,
@@ -339,7 +373,7 @@ medusaIntegrationTestRunner({
           expect(initialCapacity).toBe(tourCapacity)
 
           const { cart, totalPassengers } = await createCartWithTour(
-            "test@example.com",
+            DEBUG_CUSTOMER_EMAIL,
             { adults: 1, children: 0, infants: 0 }
           )
 
@@ -357,7 +391,8 @@ medusaIntegrationTestRunner({
           expect(result).toBeDefined()
           expect((result as any).order).toBeDefined()
           expect((result as any).order.id).toBeDefined()
-          expect((result as any).order.email).toBe("test@example.com")
+          expect((result as any).order.email).toBe(DEBUG_CUSTOMER_EMAIL)
+          expect((result as any).order.customer?.email).toBe(DEBUG_CUSTOMER_EMAIL)
           expect((result as any).order.items).toHaveLength(1)
 
           const orderId = (result as any).order.id

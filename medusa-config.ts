@@ -10,10 +10,72 @@ if (
 
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 import dotenv from 'dotenv'
+import path from 'path'
+
+type MinimalRequestForPublishableKey = {
+  method?: string
+  originalUrl?: string
+  baseUrl?: string
+  path?: string
+}
+
+type PublishableKeyNext = (error?: unknown) => void
+
+type EnsurePublishableApiKeyMiddleware = (
+  req: MinimalRequestForPublishableKey,
+  res: unknown,
+  next: PublishableKeyNext
+) => Promise<void> | void
+
+type EnsurePublishableModule = {
+  ensurePublishableApiKeyMiddleware: EnsurePublishableApiKeyMiddleware
+}
+
+function isStoreAuthKeycloakRequest(req: MinimalRequestForPublishableKey) {
+  const method = typeof req.method === 'string' ? req.method.toUpperCase() : ''
+  const originalUrl = typeof req.originalUrl === 'string' ? req.originalUrl : ''
+  const baseUrl = typeof req.baseUrl === 'string' ? req.baseUrl : ''
+  const path = typeof req.path === 'string' ? req.path : ''
+  const combinedPath = `${baseUrl}${path}`
+
+  if (method !== 'POST' && method !== 'OPTIONS') {
+    return false
+  }
+
+  return (
+    originalUrl.startsWith('/store/auth/keycloak') ||
+    combinedPath === '/store/auth/keycloak' ||
+    path === '/auth/keycloak'
+  )
+}
+
+const frameworkEntryPath = require.resolve('@medusajs/framework')
+const frameworkDistDir = path.dirname(frameworkEntryPath)
+const ensurePublishablePath = path.join(
+  frameworkDistDir,
+  'http',
+  'middlewares',
+  'ensure-publishable-api-key.js'
+)
+
+const ensurePublishableModule = require(ensurePublishablePath) as EnsurePublishableModule
+
+const originalEnsurePublishableApiKeyMiddleware =
+  ensurePublishableModule.ensurePublishableApiKeyMiddleware
+
+ensurePublishableModule.ensurePublishableApiKeyMiddleware = async (req, res, next) => {
+  if (isStoreAuthKeycloakRequest(req)) {
+    return next()
+  }
+
+  return originalEnsurePublishableApiKeyMiddleware(req, res, next)
+}
+
 // Don't let .env.development overwrite NODE_ENV when running tests.
 // Setting override: false ensures TEST_TYPE -> NODE_ENV='test' set above is preserved.
-dotenv.config({ path: process.cwd() + process.env.NODE_ENV === 'development' ? '/.env.development' : '/.env', override: true })
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
+const envFile = process.env.NODE_ENV === 'development' ? '/.env.development' : '/.env'
+dotenv.config({ path: process.cwd() + envFile, override: false })
 // ========================================================================
 // 1. DETECCIÓN DE MODO BUILD (CRÍTICO PARA DOCKER)
 // ========================================================================

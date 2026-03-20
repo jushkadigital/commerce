@@ -22,4 +22,10 @@ declare module "jsonwebtoken" {
     token: string,
     options?: DecodeOptions
   ): null | string | JwtPayload | DecodedComplete
+
+  export function verify(
+    token: string,
+    secret: string,
+    options?: Record<string, unknown>
+  ): string | JwtPayload
 }

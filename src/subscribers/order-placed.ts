@@ -20,9 +20,20 @@ let adminBookingNotificationEmail:
   | AdminBookingNotificationEmailFn
   | null = null
 
+const isTestRuntime = process.env.NODE_ENV === "test" || !!process.env.TEST_TYPE
+
 async function getTravelBookingNotificationEmail(): Promise<TravelBookingNotificationEmailFn> {
   if (travelBookingNotificationEmail) {
     return travelBookingNotificationEmail
+  }
+
+  if (isTestRuntime) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const module = require("../emails/travel-booking-notification.tsx") as {
+      TravelBookingNotificationEmail: TravelBookingNotificationEmailFn
+    }
+    travelBookingNotificationEmail = module.TravelBookingNotificationEmail
+    return module.TravelBookingNotificationEmail
   }
 
   const module = await import("../emails/travel-booking-notification.js")
@@ -33,6 +44,15 @@ async function getTravelBookingNotificationEmail(): Promise<TravelBookingNotific
 async function getAdminBookingNotificationEmail(): Promise<AdminBookingNotificationEmailFn> {
   if (adminBookingNotificationEmail) {
     return adminBookingNotificationEmail
+  }
+
+  if (isTestRuntime) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const module = require("../emails/admin-booking-notification.tsx") as {
+      AdminBookingNotificationEmail: AdminBookingNotificationEmailFn
+    }
+    adminBookingNotificationEmail = module.AdminBookingNotificationEmail
+    return module.AdminBookingNotificationEmail
   }
 
   const module = await import("../emails/admin-booking-notification.js")
@@ -49,12 +69,7 @@ export default async function handleOrderPlaced({
 
   try {
     const existingBookings = await findExistingBooking(orderId, container)
-    if (existingBookings.length > 0) {
-      logger.info(
-        `[order.placed] Bookings already exist for order ${orderId}, skipping (idempotent).`
-      )
-      return
-    }
+    const hasExistingBookings = existingBookings.length > 0
 
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
     const { data: [order] } = await query.graph({
@@ -100,43 +115,51 @@ export default async function handleOrderPlaced({
         : undefined
     const orderPreData = orderPreDataRaw == null ? undefined : orderPreDataRaw
 
-    const bookingsToCreate = tourItems.map((item: any) => {
-      const bookingMetadata: Record<string, any> = {}
+    let createdBookings: any[] = existingBookings
 
-      if (typeof item.metadata?.group_id === "string") {
-        bookingMetadata.group_id = item.metadata.group_id
-      }
+    if (hasExistingBookings) {
+      logger.info(
+        `[order.placed] Bookings already exist for order ${orderId}, skipping booking creation (idempotent) and continuing with notifications.`
+      )
+    } else {
+      const bookingsToCreate = tourItems.map((item: any) => {
+        const bookingMetadata: Record<string, any> = {}
 
-      if (orderPreData !== undefined) {
-        bookingMetadata.preData = structuredClone(orderPreData)
-      }
+        if (typeof item.metadata?.group_id === "string") {
+          bookingMetadata.group_id = item.metadata.group_id
+        }
 
-      return {
-        order_id: orderId,
-        tour_id: item.metadata.tour_id,
-        tour_date: new Date(item.metadata.tour_date),
-        status: "pending" as const,
-        metadata: Object.keys(bookingMetadata).length > 0 ? bookingMetadata : undefined,
-        line_items: {
-          item_id: item.id,
-          variant_id: item.variant_id,
-          title: item.title,
-          quantity: item.quantity,
-          passengers: item.metadata.passengers || [],
-        },
-      }
-    })
+        if (orderPreData !== undefined) {
+          bookingMetadata.preData = structuredClone(orderPreData)
+        }
 
-    const createdBookingsRaw =
-      await tourModuleService.createTourBookings(bookingsToCreate)
-    // createdBookingsRaw might be a single object or an array depending on implementation
-    const createdBookings = Array.isArray(createdBookingsRaw)
-      ? createdBookingsRaw
-      : [createdBookingsRaw]
+        return {
+          order_id: orderId,
+          tour_id: item.metadata.tour_id,
+          tour_date: new Date(item.metadata.tour_date),
+          status: "pending" as const,
+          metadata: Object.keys(bookingMetadata).length > 0 ? bookingMetadata : undefined,
+          line_items: {
+            item_id: item.id,
+            variant_id: item.variant_id,
+            title: item.title,
+            quantity: item.quantity,
+            passengers: item.metadata.passengers || [],
+          },
+        }
+      })
 
-    logger.info(
-      `[order.placed] Created ${createdBookings.length} tour booking(s) for order ${orderId}: ${createdBookings.map((b: any) => b.id).join(", ")}`
-    )
+      const createdBookingsRaw =
+        await tourModuleService.createTourBookings(bookingsToCreate)
+      // createdBookingsRaw might be a single object or an array depending on implementation
+      createdBookings = Array.isArray(createdBookingsRaw)
+        ? createdBookingsRaw
+        : [createdBookingsRaw]
+
+      logger.info(
+        `[order.placed] Created ${createdBookings.length} tour booking(s) for order ${orderId}: ${createdBookings.map((b: any) => b.id).join(", ")}`
+      )
+    }
 
     const notificationRecipients = await getOrderNotificationEmails(container)
 
@@ -223,8 +246,8 @@ export default async function handleOrderPlaced({
     if (resend && customerEmail) {
       try {
         const customerSubject = hasPackageItemsForCustomer
-          ? `Nueva reserva de viaje - Pedido #${order.display_id || orderId}`
-          : `Nueva reserva de tour - Pedido #${order.display_id || orderId}`
+          ? "Nueva reserva de viaje"
+          : "Nueva reserva de tour"
         const TravelBookingNotificationEmail =
           await getTravelBookingNotificationEmail()
         const customerRes = await resend.emails.send({
@@ -233,7 +256,7 @@ export default async function handleOrderPlaced({
           subject: customerSubject,
           react: TravelBookingNotificationEmail({
             reservationType: customerReservationType,
-            orderId: String(order.display_id || orderId),
+            orderId: String(orderId),
             bookingId: bookingReference,
             recipientName: customerName,
             destination:
@@ -274,8 +297,8 @@ export default async function handleOrderPlaced({
     if (resend && notificationRecipients.length > 0) {
       try {
         const opsSubject = hasPackageItemsForCustomer
-          ? `Nueva reserva de viaje - Pedido #${order.display_id || orderId}`
-          : `Nueva reserva de tour - Pedido #${order.display_id || orderId}`
+          ? "Nueva reserva de viaje"
+          : "Nueva reserva de tour"
         
         const AdminBookingNotificationEmail = await getAdminBookingNotificationEmail()
         const opsRes = await resend.emails.send({

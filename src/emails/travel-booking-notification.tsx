@@ -9,7 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components"
-import { Fragment } from "react"
+import React, { Fragment } from "react"
 
 type Passenger = {
   name?: string
@@ -90,9 +90,9 @@ function formatDate(value: string | Date | null | undefined): string {
   }
 
   return new Intl.DateTimeFormat("es-PE", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
   }).format(date)
 }
 
@@ -360,11 +360,10 @@ export function TravelBookingNotificationEmail(
           <Heading style={heading}>{`TU RESERVA DE ${reservationTypeLabel.toUpperCase()} FUE CONFIRMADA`}</Heading>
 
           <Text style={description}>
-            Hola {customerName}, gracias por realizar tu compra con nosotros. Estamos preparando todo
-            para que vivas una experiencia inolvidable.
+            Gracias por realizar tu compra con Pata Rutera. Estamos felices de que hayas decidido unirte a esta aventura con nosotros. Nuestro equipo ya está preparando todo para que vivas una experiencia inolvidable
           </Text>
 
-          <Heading style={subheading}>Nos vemos muy pronto, {customerName}</Heading>
+          <Heading style={subheading}>Nos vemos muy pronto Ruter@ </Heading>
 
           <Section style={orderSection}>
             <Text style={orderTitle}>Detalles de la Reserva</Text>
@@ -389,10 +388,7 @@ export function TravelBookingNotificationEmail(
                     <tr style={groupHeaderRow}>
                       <td style={groupHeaderCell} colSpan={5}>
                         <Text style={groupHeaderText}>
-                          {`Grupo ${group.groupLabel}`}
-                          {formatPassengerSummary(group.passengerCounts)
-                            ? ` - ${formatPassengerSummary(group.passengerCounts)}`
-                            : ""}
+                          {props.orderId}
                         </Text>
                       </td>
                     </tr>
@@ -403,7 +399,6 @@ export function TravelBookingNotificationEmail(
                         </td>
                         <td style={tableCell}>
                           <Text style={itemName}>{item.name}</Text>
-                          <Text style={itemMeta}>Pedido: {props.orderId}</Text>
                           {formatPassengerSummary(item.passengerCounts) && (
                             <Text style={itemMeta}>
                               {formatPassengerSummary(item.passengerCounts)}

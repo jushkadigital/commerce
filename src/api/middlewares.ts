@@ -44,6 +44,46 @@ function getPromotionCodesFromRequest(req: MedusaRequest) {
   return body.promo_codes.filter((code): code is string => typeof code === "string")
 }
 
+function resolveAllowedStoreOrigins() {
+  const raw = process.env.STORE_CORS || "https://commerce.patarutera.pe"
+
+  return raw
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => Boolean(origin) && origin !== "*")
+}
+
+function applyStoreAuthCors(
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) {
+  const allowedOrigins = resolveAllowedStoreOrigins()
+  const requestOrigin = typeof req.headers.origin === "string"
+    ? req.headers.origin
+    : undefined
+
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    res.setHeader("Access-Control-Allow-Origin", requestOrigin)
+    res.setHeader("Vary", "Origin")
+  } else if (allowedOrigins.length === 1) {
+    res.setHeader("Access-Control-Allow-Origin", allowedOrigins[0])
+  }
+
+  res.setHeader("Access-Control-Allow-Credentials", "true")
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "content-type, authorization, x-publishable-api-key"
+  )
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).send()
+  }
+
+  return next()
+}
+
 async function enforceStoreCartPromotionCouponPolicy(
   req: MedusaRequest,
   res: MedusaResponse,
@@ -105,6 +145,11 @@ async function enforceStoreCartPromotionCouponPolicy(
 export default defineMiddlewares({
   routes: [
     ...customMiddlewares,
+    {
+      matcher: "/store/auth/keycloak",
+      methods: ["POST", "OPTIONS"],
+      middlewares: [applyStoreAuthCors],
+    },
     {
       matcher: "/store/carts/:id/promotions",
       methods: ["POST", "DELETE"],
