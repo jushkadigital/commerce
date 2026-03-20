@@ -307,7 +307,7 @@ export default async function handleOrderPlaced({
           subject: opsSubject,
           react: AdminBookingNotificationEmail({
             reservationType: customerReservationType,
-            orderId: String(order.display_id || orderId),
+            orderId: String(orderId),
             bookingId: bookingReference,
             customerName: customerName,
             customerEmail: customerEmail,

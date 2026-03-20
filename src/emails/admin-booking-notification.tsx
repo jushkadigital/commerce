@@ -368,12 +368,13 @@ export function AdminBookingNotificationEmail(
             <br />
             <strong>Email:</strong> {customerEmail}
             <br />
-            <strong>Pedido:</strong> #{props.orderId}
+            <strong>Order ID:</strong> {props.orderId}
           </Text>
 
           <Section style={orderSection}>
             <Text style={orderTitle}>Detalles de la Reserva</Text>
             <Text style={typeBadge}>{`Tipo de reserva: ${reservationTypeLabel}`}</Text>
+            <Text style={typeBadge}>{`Id: ${props.orderId}`}</Text>
             {passengerSummary && (
               <Text style={groupSummaryText}>{`Total de Pasajeros: ${passengerSummary}`}</Text>
             )}
@@ -381,11 +382,11 @@ export function AdminBookingNotificationEmail(
             <table style={table}>
               <thead>
                 <tr>
-                  <th style={tableHeader}>Imagen</th>
-                  <th style={tableHeader}>Nombre</th>
+                  <th style={tableHeader}>Servicio</th>
+                  <th style={tableHeader}></th>
                   <th style={tableHeader}>Fecha</th>
-                  <th style={tableHeader}>Cantidad</th>
-                  <th style={tableHeader}>Total</th>
+                  <th style={tableHeader}>Pasajeros</th>
+                  <th style={tableHeader}>Precio</th>
                 </tr>
               </thead>
               <tbody>
@@ -393,7 +394,7 @@ export function AdminBookingNotificationEmail(
                   <Fragment key={group.groupKey}>
                     <tr style={groupHeaderRow}>
                       <td style={groupHeaderCell} colSpan={5}>
-                        <Text style={groupHeaderText}>{props.orderId}</Text>
+                        <Text style={groupHeaderText}>{`Order ID: ${props.orderId}`}</Text>
                       </td>
                     </tr>
                     {group.items.map((item, index) => (

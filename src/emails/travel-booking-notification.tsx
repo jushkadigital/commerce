@@ -1,4 +1,5 @@
 import {
+  Button,
   Body,
   Container,
   Head,
@@ -94,6 +95,40 @@ function formatDate(value: string | Date | null | undefined): string {
     month: "2-digit",
     year: "numeric"
   }).format(date)
+}
+
+function sanitizeBaseUrl(value: string | null | undefined): string | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const trimmed = value.trim()
+  if (trimmed.length === 0) {
+    return null
+  }
+
+  return trimmed.replace(/\/+$/, "")
+}
+
+function buildOrderDetailsUrl(baseUrl: string | null, orderId: string, bookingId: string): string | null {
+  if (!baseUrl) {
+    return null
+  }
+
+  const normalizedOrderId = orderId.trim()
+  const normalizedBookingId = bookingId.trim()
+  const reservationId = normalizedOrderId.length > 0 ? normalizedOrderId : normalizedBookingId
+
+  if (reservationId.length === 0) {
+    return null
+  }
+
+  const hasPeSuffix = /\/pe$/i.test(baseUrl)
+  const orderPath = hasPeSuffix
+    ? `/account/orders/details/${encodeURIComponent(reservationId)}`
+    : `/pe/account/orders/details/${encodeURIComponent(reservationId)}`
+
+  return `${baseUrl}${orderPath}`
 }
 
 function formatPrice(amount: number | null | undefined, currencyCode?: string | null): string {
@@ -307,6 +342,8 @@ function groupCartItemsById(items: NormalizedCartItem[]): GroupedCartItems[] {
 export function TravelBookingNotificationEmail(
   props: TravelBookingNotificationEmailProps
 ) {
+  const frontstoreUrl = sanitizeBaseUrl(process.env.FRONTSTORE_URL ?? process.env.STORE_URL)
+  const reservationDetailsUrl = buildOrderDetailsUrl(frontstoreUrl, props.orderId, props.bookingId)
   const reservationType =
     props.reservationType === "Package" ||
       props.reservationType === "Tour" ||
@@ -368,6 +405,7 @@ export function TravelBookingNotificationEmail(
           <Section style={orderSection}>
             <Text style={orderTitle}>Detalles de la Reserva</Text>
             <Text style={typeBadge}>{`Tipo de reserva: ${reservationTypeLabel}`}</Text>
+            <Text style={typeBadge}>{`Id compra: ${props.orderId}`}</Text>
             {passengerSummary && (
               <Text style={groupSummaryText}>{`Pasajeros: ${passengerSummary}`}</Text>
             )}
@@ -375,23 +413,16 @@ export function TravelBookingNotificationEmail(
             <table style={table}>
               <thead>
                 <tr>
-                  <th style={tableHeader}>Imagen</th>
-                  <th style={tableHeader}>Nombre</th>
+                  <th style={tableHeader}>Servicio</th>
+                  <th style={tableHeader}></th>
                   <th style={tableHeader}>Fecha</th>
-                  <th style={tableHeader}>Cantidad</th>
-                  <th style={tableHeader}>Total</th>
+                  <th style={tableHeader}>Viajeros</th>
+                  <th style={tableHeader}>Precio</th>
                 </tr>
               </thead>
               <tbody>
                 {groupedCartItems.map((group) => (
                   <Fragment key={group.groupKey}>
-                    <tr style={groupHeaderRow}>
-                      <td style={groupHeaderCell} colSpan={5}>
-                        <Text style={groupHeaderText}>
-                          {props.orderId}
-                        </Text>
-                      </td>
-                    </tr>
                     {group.items.map((item, index) => (
                       <tr style={tableRow} key={`${group.groupKey}-${index}`}>
                         <td style={tableCell}>
@@ -437,6 +468,14 @@ export function TravelBookingNotificationEmail(
               </tbody>
             </table>
           </Section>
+
+          {reservationDetailsUrl && (
+            <Section style={ctaSection}>
+              <Button href={reservationDetailsUrl} style={viewReservationButton}>
+                Ver reserva
+              </Button>
+            </Section>
+          )}
 
           {passengers.length > 0 && (
             <Section style={orderSection}>
@@ -664,6 +703,22 @@ const passengerLine = {
   color: "#4a5568",
   fontSize: "13px",
   margin: "0 0 6px",
+}
+
+const ctaSection = {
+  margin: "24px 0 8px",
+  textAlign: "center" as const,
+}
+
+const viewReservationButton = {
+  backgroundColor: "#2b6cb0",
+  borderRadius: "8px",
+  color: "#ffffff",
+  display: "inline-block",
+  fontSize: "14px",
+  fontWeight: "700",
+  padding: "12px 22px",
+  textDecoration: "none",
 }
 
 const footer = {
