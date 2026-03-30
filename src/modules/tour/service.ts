@@ -93,7 +93,7 @@ class TourModuleService extends MedusaService({
     if (requestedDateObj < today) {
       return {
         valid: false,
-        reason: "Cannot book tours for past dates",
+        reason: "No puedes reservar para fechas pasadas",
       }
     }
 
@@ -102,7 +102,7 @@ class TourModuleService extends MedusaService({
     if (requestedDateObj < minBookingDate) {
       return {
         valid: false,
-        reason: `Bookings must be made at least ${tour.booking_min_days_ahead} days in advance`,
+        reason: `Se deben hacer reservas al menos ${tour.booking_min_days_ahead} dias en adelante`,
       }
     }
 
@@ -111,17 +111,17 @@ class TourModuleService extends MedusaService({
     if (blockedDates.includes(requestedDateStr)) {
       return {
         valid: false,
-        reason: "This date is not available for booking",
+        reason: "Esta fecha no esta disponible para reservar",
       }
     }
 
     const dayOfWeek = requestedDateObj.getDay()
     const blockedWeekDays = tour.blocked_week_days || []
     if (blockedWeekDays.map(Number).includes(dayOfWeek)) {
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      const days = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado']
       return {
         valid: false,
-        reason: `Tours are not available on ${days[dayOfWeek]}s`,
+        reason: `Tours no estan disponibles los ${days[dayOfWeek]}`,
       }
     }
 
@@ -130,7 +130,7 @@ class TourModuleService extends MedusaService({
     if (availableCapacity < quantity) {
       return {
         valid: false,
-        reason: `Only ${availableCapacity} spots available`,
+        reason: `Solo ${availableCapacity} espacios disponibles`,
       }
     }
 

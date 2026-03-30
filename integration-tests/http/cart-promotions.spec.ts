@@ -180,6 +180,25 @@ medusaIntegrationTestRunner({
         return cart
       }
 
+      async function createStoreCart() {
+        const response = await api.post(
+          "/store/carts",
+          {
+            email: `store-cart-${Date.now()}@medusa-test.com`,
+            region_id: region.id,
+            sales_channel_id: salesChannel.id,
+          },
+          {
+            headers: storeHeaders,
+          }
+        )
+
+        expect(response.status).toBe(200)
+        expect(response.data?.cart?.id).toBeDefined()
+
+        return response.data.cart
+      }
+
       async function createPromotion(code: string, type: "percentage" | "fixed") {
         const response = await api.post(
           "/admin/promotions",
@@ -457,6 +476,33 @@ medusaIntegrationTestRunner({
         const removePersistedCart = await retrieveCart(cartWithCoupon.id)
         expect(removePersistedCart.promotions ?? []).toHaveLength(1)
         expect(removePersistedCart.promotions?.[0].code).toBe("WELCOME10")
+      })
+
+      it("keeps coupon flow working when cart starts on store create fast-path", async () => {
+        await createPromotion("WELCOME10", "percentage")
+
+        const cart = await createStoreCart()
+
+        await cartModule.addLineItems(cart.id, [
+          {
+            variant_id: variant.id,
+            quantity: baseItemQuantity,
+            unit_price: baseItemPrice,
+            title: "Cart Promotion Item",
+          },
+        ])
+
+        const applyResponse = await api.post(
+          `/store/carts/${cart.id}/promotions`,
+          { promo_codes: ["WELCOME10"] },
+          { headers: storeHeaders }
+        )
+
+        expect(applyResponse.status).toBe(200)
+        expect(applyResponse.data.cart.promotions).toHaveLength(1)
+        expect(applyResponse.data.cart.promotions[0].code).toBe("WELCOME10")
+        expect(applyResponse.data.cart.discount_total).toBe(20)
+        expect(applyResponse.data.cart.total).toBe(180)
       })
     })
   },

@@ -3,7 +3,29 @@ import { PassengerType } from "../models/package-variant"
 const mockListPackageBookings = jest.fn()
 const mockRetrievePackage = jest.fn()
 
-const availableDates = ["2026-03-15", "2026-03-16", "2026-03-17", "2026-12-25"]
+const toIsoDate = (date: Date) => date.toISOString().split("T")[0]
+
+const addDays = (date: Date, days: number) => {
+  const nextDate = new Date(date)
+  nextDate.setDate(nextDate.getDate() + days)
+  return nextDate
+}
+
+const baseAvailableDate = (() => {
+  const date = new Date()
+  date.setHours(0, 0, 0, 0)
+  date.setDate(date.getDate() + 30)
+  return date
+})()
+
+const availableBookingDate = new Date(baseAvailableDate)
+const availableBookingDateWithTime = new Date(baseAvailableDate)
+availableBookingDateWithTime.setHours(8, 0, 0, 0)
+const unavailableFutureDate = addDays(baseAvailableDate, 90)
+
+const availableDates = [0, 1, 2, 60].map((offsetDays) =>
+  toIsoDate(addDays(baseAvailableDate, offsetDays))
+)
 
 jest.mock("../service", () => {
   return jest.fn().mockImplementation(() => ({
@@ -534,7 +556,7 @@ describe("PackageModuleService", () => {
         },
       ])
 
-      const result = await service.validateBooking("pkg_123", new Date("2026-03-15"), 3)
+      const result = await service.validateBooking("pkg_123", availableBookingDate, 3)
 
       expect(result.valid).toBe(true)
       expect(result.reason).toBeUndefined()
@@ -552,7 +574,7 @@ describe("PackageModuleService", () => {
 
     it("should reject booking for unavailable dates", async () => {
       mockRetrievePackage.mockResolvedValue(mockPackage)
-      const unavailableDate = new Date("2030-12-25")
+      const unavailableDate = unavailableFutureDate
 
       const result = await service.validateBooking("pkg_123", unavailableDate, 1)
 
@@ -685,7 +707,7 @@ describe("PackageModuleService", () => {
         },
       ])
 
-      const result = await service.validateBooking("pkg_123", new Date("2026-03-15"), 5)
+      const result = await service.validateBooking("pkg_123", availableBookingDate, 5)
 
       expect(result.valid).toBe(false)
       expect(result.reason).toBe("Only 2 spots available")
@@ -801,7 +823,7 @@ describe("PackageModuleService", () => {
         },
       ])
 
-      const result = await service.validateBooking("pkg_123", new Date("2026-03-15"), 3)
+      const result = await service.validateBooking("pkg_123", availableBookingDate, 3)
 
       expect(result.valid).toBe(true)
     })
@@ -810,7 +832,7 @@ describe("PackageModuleService", () => {
       mockRetrievePackage.mockResolvedValue(mockPackage)
       mockListPackageBookings.mockResolvedValue([])
 
-      const result = await service.validateBooking("pkg_123", new Date("2026-03-15T08:00:00.000Z"), 1)
+      const result = await service.validateBooking("pkg_123", availableBookingDateWithTime, 1)
 
       expect(result.valid).toBe(true)
     })

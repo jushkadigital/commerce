@@ -155,6 +155,15 @@ export default defineMiddlewares({
       methods: ["POST", "DELETE"],
       middlewares: [enforceStoreCartPromotionCouponPolicy],
     },
+    {
+      matcher: "/store/products/external/*",
+      methods: ["GET"],
+      middlewares: [
+        authenticate("customer", ["session", "bearer"], {
+          allowUnauthenticated: true,
+        }),
+      ],
+    },
     // Admin routes
     {
       matcher: "/admin/tours*",

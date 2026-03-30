@@ -116,7 +116,7 @@ class PackageModuleService extends MedusaService({
     if (requestedDateObj < today) {
       return {
         valid: false,
-        reason: "Cannot book packages for past dates",
+        reason: "No puedes reservar para fechas pasadas",
       }
     }
 
@@ -126,7 +126,7 @@ class PackageModuleService extends MedusaService({
     if (requestedDateObj < minBookingDate) {
       return {
         valid: false,
-        reason: `Bookings must be made at least ${pkg.booking_min_months_ahead} months in advance`,
+        reason: `Se deben hacer reservas al menos ${pkg.booking_min_months_ahead} dias en adelante`,
       }
     }
 
@@ -136,7 +136,7 @@ class PackageModuleService extends MedusaService({
     if (blockedDates.includes(requestedDateStr)) {
       return {
         valid: false,
-        reason: "This date is not available for booking",
+        reason: "Esta fecha no esta disponible para reservar",
       }
     }
 
@@ -144,10 +144,10 @@ class PackageModuleService extends MedusaService({
     const dayOfWeek = requestedDateObj.getDay()
     const blockedWeekDays = pkg.blocked_week_days || []
     if (blockedWeekDays.map(Number).includes(dayOfWeek)) {
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      const days = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado']
       return {
         valid: false,
-        reason: `Packages are not available on ${days[dayOfWeek]}s`,
+        reason: `Paquetes no estan disponibles los ${days[dayOfWeek]}`,
       }
     }
 
@@ -156,7 +156,7 @@ class PackageModuleService extends MedusaService({
     if (availableCapacity < quantity) {
       return {
         valid: false,
-        reason: `Only ${availableCapacity} spots available`,
+        reason: `Solo ${availableCapacity} espacios disponibles`,
       }
     }
 
