@@ -39,9 +39,9 @@ export const TourDetailsStep = ({
   return (
     <div className="flex flex-col gap-y-8">
       <div>
-        <Heading level="h2">Tour Details</Heading>
+        <Heading level="h2">Informacion del Tour </Heading>
         <Text className="text-ui-fg-subtle">
-          Enter the basic information about your tour.
+          Aqui podras modificar informacion y las reglas de este tour
         </Text>
       </div>
 
@@ -49,17 +49,17 @@ export const TourDetailsStep = ({
         {thumbnail && (
           <div className="flex flex-col gap-2">
             <Label>Thumbnail</Label>
-            <img 
-              src={thumbnail} 
-              alt="Tour thumbnail" 
-              className="w-full h-48 object-cover rounded-md border border-ui-border-base" 
+            <img
+              src={thumbnail}
+              alt="Tour thumbnail"
+              className="w-52 h-48 object-cover rounded-md border border-ui-border-base"
             />
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Destination</Label>
+            <Label>Destino</Label>
             <Input
               placeholder="e.g. Machu Picchu"
               value={destination}
@@ -68,7 +68,7 @@ export const TourDetailsStep = ({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Duration (Days)</Label>
+            <Label>Duracion en (Dias)</Label>
             <Input
               type="number"
               min={1}
@@ -81,7 +81,7 @@ export const TourDetailsStep = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label>Max Capacity (People)</Label>
+          <Label>Maxima capacidad para un grupo</Label>
           <Input
             type="number"
             min={1}
@@ -92,7 +92,7 @@ export const TourDetailsStep = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label>Description</Label>
+          <Label>Descripcion</Label>
           <Textarea
             placeholder="Tour description..."
             rows={3}
@@ -110,16 +110,16 @@ export const TourDetailsStep = ({
           />
           <div className="flex flex-col gap-1">
             <Label htmlFor="is-special" className="cursor-pointer">
-              Mark as Special Tour
+              Marcar como Tour especial
             </Label>
             <Text className="text-ui-fg-subtle text-xs">
-              Special tours receive highlighted placement in listings
+              Los tours especiales tendran caracteristicas unicas
             </Text>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label>Minimum Days Ahead for Booking</Label>
+          <Label>Dias minimos para poder hacer una reserva</Label>
           <Input
             type="number"
             min={0}
@@ -128,14 +128,14 @@ export const TourDetailsStep = ({
             onChange={(e) => setBookingMinDays(e.target.value === "" ? "" : Number(e.target.value))}
           />
           <Text className="text-ui-fg-subtle text-xs">
-            Number of days customers must book in advance (0 for same-day booking)
+            Numero de dias en que los pasajeros deberan reservar en adelante (0 para el mismo dia de reserva)
           </Text>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label className="text-base font-medium">Blocked Dates</Label>
+          <Label className="text-base font-medium">Fechas bloqueadas</Label>
           <Text className="text-ui-fg-subtle text-xs mb-2">
-            Select dates when this tour is unavailable for booking
+            Seleciona las fechas cuando no estara disponible este tour
           </Text>
           <BlockedDatesComponent
             value={blockedDates}

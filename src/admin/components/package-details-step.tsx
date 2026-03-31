@@ -39,9 +39,9 @@ export const PackageDetailsStep = ({
   return (
     <div className="flex flex-col gap-y-8">
       <div>
-        <Heading level="h2">Package Details</Heading>
+        <Heading level="h2">Informacion del Paquete</Heading>
         <Text className="text-ui-fg-subtle">
-          Enter basic information about your package.
+          Aqui podras modificar informacion y las reglas de este paquete
         </Text>
       </div>
 
@@ -49,17 +49,17 @@ export const PackageDetailsStep = ({
         {thumbnail && (
           <div className="flex flex-col gap-2">
             <Label>Thumbnail</Label>
-            <img 
-              src={thumbnail} 
-              alt="Package thumbnail" 
-              className="w-full h-48 object-cover rounded-md border border-ui-border-base" 
+            <img
+              src={thumbnail}
+              alt="Package thumbnail"
+              className="w-52 h-48 object-cover rounded-md border border-ui-border-base"
             />
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Destination</Label>
+            <Label>Destinos</Label>
             <Input
               placeholder="e.g. Machu Picchu"
               value={destination}
@@ -68,7 +68,7 @@ export const PackageDetailsStep = ({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Duration (Days)</Label>
+            <Label>Duracios en (Meses)</Label>
             <Input
               type="number"
               min={1}
@@ -81,7 +81,7 @@ export const PackageDetailsStep = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label>Max Capacity (People)</Label>
+          <Label>Maxima capacidad para un grupo</Label>
           <Input
             type="number"
             min={1}
@@ -92,7 +92,7 @@ export const PackageDetailsStep = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label>Description</Label>
+          <Label>Descripcion</Label>
           <Textarea
             placeholder="Package description..."
             rows={3}
@@ -110,16 +110,16 @@ export const PackageDetailsStep = ({
           />
           <div className="flex flex-col gap-1">
             <Label htmlFor="is-special-package" className="cursor-pointer">
-              Mark as Special Package
+              Marcar como Paquete especial
             </Label>
             <Text className="text-ui-fg-subtle text-xs">
-              Special packages receive highlighted placement in listings
+              Los paquetes especiales tendran caracteristicas unicas
             </Text>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label>Minimum Months Ahead for Booking</Label>
+          <Label>Meses minimos para poder hacer una reserva</Label>
           <Input
             type="number"
             min={0}
@@ -128,14 +128,14 @@ export const PackageDetailsStep = ({
             onChange={(e) => setBookingMinMonths(e.target.value === "" ? "" : Number(e.target.value))}
           />
           <Text className="text-ui-fg-subtle text-xs">
-            Number of months customers must book in advance (0 for immediate booking)
+            Numero de meses en que los pasajeros deberan reservar en adelante (0 para el mismo mes de reserva)
           </Text>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label className="text-base font-medium">Blocked Dates</Label>
+          <Label className="text-base font-medium">Fechas bloqueadas</Label>
           <Text className="text-ui-fg-subtle text-xs mb-2">
-            Select dates when this package is unavailable for booking
+            Seleciona las fechas cuando no estara disponible este paquete
           </Text>
           <BlockedDatesComponent
             value={blockedDates}
