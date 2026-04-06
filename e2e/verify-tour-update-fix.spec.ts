@@ -2,6 +2,28 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Tour update via dashboard UI', () => {
   test('navigates to tours list, opens first tour edit modal, and updates fields', async ({ page }) => {
+    const tourId = '01KK23VHNZACBZJEX7FFW359QV'
+
+    await page.request.post(`/admin/tours/${tourId}`, {
+      data: {
+        id: tourId,
+        destination: 'Ruta Misterio 4 en 1',
+        description: ' Naturaleza y misticismo en un recorrido por esculturas, humedales y paisajes mágicos de Cusco.',
+        duration_days: 1,
+        max_capacity: 20,
+        is_special: false,
+        booking_min_days_ahead: 2,
+        blocked_dates: [],
+        blocked_week_days: [],
+        prices: {
+          adult: 30,
+          child: 0,
+          infant: 0,
+          currency_code: 'pen',
+        },
+      },
+    })
+
     await page.goto('/app/tours')
     await page.waitForLoadState('networkidle')
     console.log('Loaded tours page')
@@ -31,6 +53,10 @@ test.describe('Tour update via dashboard UI', () => {
     const originalBookingMinDays = await bookingMinDaysInput.inputValue()
     console.log('Original booking_min_days_ahead:', originalBookingMinDays)
 
+    const selectedBlockedDaysText = page.locator('p').filter({ hasText: /^Lunes, Martes$/ })
+    const originalBlockedDaysSummary = (await page.locator('body').textContent()) || ''
+    console.log('Original blocked days summary:', originalBlockedDaysSummary)
+
     await specialSwitch.click()
     await page.waitForTimeout(500)
     const toggledState = await specialSwitch.getAttribute('data-state')
@@ -41,6 +67,24 @@ test.describe('Tour update via dashboard UI', () => {
 
     await bookingMinDaysInput.fill('7')
     console.log('Set booking_min_days_ahead to 7')
+
+    const mondayButton = page.getByRole('button', { name: 'Lun' })
+    const tuesdayButton = page.getByRole('button', { name: 'Mar' })
+
+    await mondayButton.click()
+    await tuesdayButton.click()
+    console.log('Selected blocked week days: Lun, Mar')
+
+    await expect(selectedBlockedDaysText).toBeVisible({ timeout: 5000 })
+
+    const calendarGroup = page.getByRole('group', { name: 'Calendar Date input' })
+    await calendarGroup.getByRole('spinbutton', { name: 'month' }).fill('04')
+    await calendarGroup.getByRole('spinbutton', { name: 'day' }).fill('08')
+    await calendarGroup.getByRole('spinbutton', { name: 'year' }).fill('2026')
+    await page.getByRole('button', { name: 'Add Date' }).click()
+    console.log('Added blocked date 2026-04-08')
+
+    await expect(page.getByText('08/04/2026')).toBeVisible({ timeout: 5000 })
 
     const nextButton = page.getByRole('button', { name: 'Next' }).filter({ hasNot: page.locator('[disabled]') })
     await nextButton.click()
@@ -99,6 +143,12 @@ test.describe('Tour update via dashboard UI', () => {
     const verifyBookingInput = page.locator('input[type="number"]').nth(2)
     await expect(verifyBookingInput).toHaveValue('7')
     console.log('✓ booking_min_days_ahead persisted as 7')
+
+    await expect(page.getByText('Lunes, Martes')).toBeVisible({ timeout: 5000 })
+    console.log('✓ blocked_week_days persisted as Lunes, Martes')
+
+    await expect(page.getByText('08/04/2026')).toBeVisible({ timeout: 5000 })
+    console.log('✓ blocked_dates persisted as 08/04/2026')
 
     console.log('✅ Tour update test completed successfully')
   })

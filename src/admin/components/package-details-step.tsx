@@ -1,5 +1,6 @@
 import { Heading, Input, Label, Text, Textarea, Switch } from "@medusajs/ui"
 import { BlockedDatesComponent } from "./blocked-dates-component"
+import { BlockedWeekDaysComponent } from "./blocked-week-days-component"
 
 interface PackageDetailsStepProps {
   destination: string
@@ -12,10 +13,12 @@ interface PackageDetailsStepProps {
   setCapacity: (v: number | "") => void
   isSpecial: boolean
   setIsSpecial: (v: boolean) => void
-  bookingMinMonths: number | ""
-  setBookingMinMonths: (v: number | "") => void
+  bookingMinDays: number | ""
+  setBookingMinDays: (v: number | "") => void
   blockedDates: string[]
   setBlockedDates: (v: string[]) => void
+  blockedWeekDays: string[]
+  setBlockedWeekDays: (v: string[]) => void
   thumbnail?: string
 }
 
@@ -30,10 +33,12 @@ export const PackageDetailsStep = ({
   setCapacity,
   isSpecial,
   setIsSpecial,
-  bookingMinMonths,
-  setBookingMinMonths,
+  bookingMinDays,
+  setBookingMinDays,
   blockedDates,
   setBlockedDates,
+  blockedWeekDays,
+  setBlockedWeekDays,
   thumbnail,
 }: PackageDetailsStepProps) => {
   return (
@@ -119,16 +124,16 @@ export const PackageDetailsStep = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label>Meses minimos para poder hacer una reserva</Label>
+          <Label>Dias minimos para poder hacer una reserva</Label>
           <Input
             type="number"
             min={0}
             placeholder="0"
-            value={bookingMinMonths}
-            onChange={(e) => setBookingMinMonths(e.target.value === "" ? "" : Number(e.target.value))}
+            value={bookingMinDays}
+            onChange={(e) => setBookingMinDays(e.target.value === "" ? "" : Number(e.target.value))}
           />
           <Text className="text-ui-fg-subtle text-xs">
-            Numero de meses en que los pasajeros deberan reservar en adelante (0 para el mismo mes de reserva)
+            Numero de dias en que los pasajeros deberan reservar en adelante (0 para el mismo dia de reserva)
           </Text>
         </div>
 
@@ -140,6 +145,17 @@ export const PackageDetailsStep = ({
           <BlockedDatesComponent
             value={blockedDates}
             onChange={setBlockedDates}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label className="text-base font-medium">Días bloqueados</Label>
+          <Text className="text-ui-fg-subtle text-xs mb-2">
+            Selecciona los días de la semana en los que no se permiten reservas
+          </Text>
+          <BlockedWeekDaysComponent
+            value={blockedWeekDays}
+            onChange={setBlockedWeekDays}
           />
         </div>
       </div>

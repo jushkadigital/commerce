@@ -7,7 +7,7 @@ import { test, expect, Page } from '@playwright/test';
  * 1. Tours List: No "Create" button exists
  * 2. Packages List: No "Create" button exists (including empty state)
  * 3. Tour Edit: destination, description, duration disabled; is_special, booking_min_days_ahead, blocked_dates work
- * 4. Package Edit: destination, description, duration disabled; is_special, booking_min_months_ahead, blocked_dates work
+ * 4. Package Edit: destination, description, duration disabled; is_special, booking_min_days_ahead, blocked_dates work
  */
 
 // Mock data for Tours
@@ -75,7 +75,7 @@ const mockPackagesList = {
       max_capacity: 25,
       product_id: 'prod_pkg_789',
       is_special: true,
-      booking_min_months_ahead: 2,
+  booking_min_days_ahead: 2,
       blocked_dates: ['2026-06-01', '2026-07-15'],
       thumbnail: 'https://via.placeholder.com/150',
       created_at: '2026-01-10T00:00:00Z',
@@ -96,7 +96,7 @@ const mockPackageDetail = {
     max_capacity: 25,
     product_id: 'prod_pkg_789',
     is_special: true,
-    booking_min_months_ahead: 2,
+  booking_min_days_ahead: 2,
     blocked_dates: ['2026-06-01', '2026-07-15'],
     thumbnail: 'https://via.placeholder.com/150',
     created_at: '2026-01-10T00:00:00Z',
@@ -398,7 +398,7 @@ test.describe('Admin Dashboard QA - Packages', () => {
       expect(isChecked).toBeTruthy();
     }
 
-    // Verify booking_min_months_ahead input exists (CRITICAL: label should say "Months")
+  // Verify booking_min_days_ahead input exists
     const bookingMinMonthsInput = page.locator('input[name*="booking"]').or(
       page.locator('input[id*="booking"]')
     );
@@ -477,7 +477,7 @@ test.describe('Admin Dashboard QA - Interactive Field Testing', () => {
     }
   });
 
-  test('Package Edit - Test booking_min_months_ahead input', async ({ page }) => {
+test('Package Edit - Test booking_min_days_ahead input', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
     // Navigate to packages list
     await page.goto('/app/packages');

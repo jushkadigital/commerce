@@ -1,8 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-const IZIPAY_DOMAIN = "sandbox-api-pw.izipay.pe"
+import { resolveIzipayConfig } from "../../../../utils/izipay-config"
 
 interface IzipayPaymentBody {
-  merchantCode: string
   amount: number
   [key: string]: unknown
 }
@@ -16,20 +15,32 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const body = req.body as IzipayPaymentBody
     const transactionId = req.headers["transactionid"] as string
+    const { merchantCode, tokenEndpoint } = resolveIzipayConfig(process.env.NODE_ENV)
 
-    if (!transactionId || !body?.merchantCode || !body?.amount) {
+    if (!transactionId || !body?.amount) {
       return res.status(400).json({
         error: "Missing required fields",
       })
     }
 
-    const response = await fetch(`https://${IZIPAY_DOMAIN}/security/v1/Token/Generate`, {
+    if (!merchantCode || !tokenEndpoint) {
+      return res.status(500).json({
+        error: "Izipay server configuration is incomplete",
+      })
+    }
+
+    const payload = {
+      ...body,
+      merchantCode,
+    }
+
+    const response = await fetch(tokenEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "transactionId": transactionId,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
 
     const data = await response.json()

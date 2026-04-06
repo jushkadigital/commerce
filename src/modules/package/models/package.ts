@@ -16,7 +16,7 @@ export const Package = model.define("package", {
   blocked_dates: model.array().default([]),
   blocked_week_days: model.array().default([]),
   cancellation_deadline_hours: model.number().default(12),
-  booking_min_months_ahead: model.number().default(2),
+  booking_min_days_ahead: model.number().default(2),
   metadata: model.json().nullable(),
   variants: model.hasMany(() => PackageVariant, {
     mappedBy: "package",

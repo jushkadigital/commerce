@@ -30,8 +30,9 @@ export const PackageFormModal = ({
   const [duration, setDuration] = useState<number | "">("")
   const [capacity, setCapacity] = useState<number | "">("")
   const [isSpecial, setIsSpecial] = useState(false)
-  const [bookingMinMonths, setBookingMinMonths] = useState<number | "">("")
+  const [bookingMinDays, setBookingMinDays] = useState<number | "">("")
   const [blockedDates, setBlockedDates] = useState<string[]>([])
+  const [blockedWeekDays, setBlockedWeekDays] = useState<string[]>([])
 
   const [prices, setPrices] = useState<Record<string, Record<string, number>>>({})
 
@@ -79,8 +80,9 @@ export const PackageFormModal = ({
       setDuration(packageToEdit.duration_days)
       setCapacity(packageToEdit.max_capacity)
       setIsSpecial(packageToEdit.is_special || false)
-      setBookingMinMonths(packageToEdit.booking_min_months_ahead ?? "")
+      setBookingMinDays(packageToEdit.booking_min_days_ahead ?? "")
       setBlockedDates(packageToEdit.blocked_dates || [])
+      setBlockedWeekDays((packageToEdit.blocked_week_days || []).map((day) => String(day)))
 
       if (packageToEdit.variants && packageToEdit.variants.length > 0) {
         const mappedPrices: Record<string, Record<string, number>> = {}
@@ -121,8 +123,9 @@ export const PackageFormModal = ({
     setDuration("")
     setCapacity("")
     setIsSpecial(false)
-    setBookingMinMonths("")
+    setBookingMinDays("")
     setBlockedDates([])
+    setBlockedWeekDays([])
     setPrices({})
     setCurrentStep("0")
   }
@@ -149,14 +152,18 @@ export const PackageFormModal = ({
         duration_days: Number(duration),
         max_capacity: Number(capacity),
         is_special: isSpecial,
-        booking_min_months_ahead: bookingMinMonths === "" ? 0 : Number(bookingMinMonths),
         blocked_dates: blockedDates,
+        blocked_week_days: blockedWeekDays,
         prices: {
           adult: prices["Adult"]?.[priceKey] || prices["adult"]?.[priceKey] || 0,
           child: prices["Child"]?.[priceKey] || prices["child"]?.[priceKey] || 0,
           infant: prices["Infant"]?.[priceKey] || prices["infant"]?.[priceKey] || 0,
           currency_code: defaultCurrency
         },
+      }
+
+      if (bookingMinDays !== "") {
+        payload.booking_min_days_ahead = Number(bookingMinDays)
       }
 
       if (isEditMode && onUpdated) {
@@ -185,8 +192,9 @@ export const PackageFormModal = ({
           duration={duration} setDuration={setDuration}
           capacity={capacity} setCapacity={setCapacity}
           isSpecial={isSpecial} setIsSpecial={setIsSpecial}
-          bookingMinMonths={bookingMinMonths} setBookingMinMonths={setBookingMinMonths}
+          bookingMinDays={bookingMinDays} setBookingMinDays={setBookingMinDays}
           blockedDates={blockedDates} setBlockedDates={setBlockedDates}
+          blockedWeekDays={blockedWeekDays} setBlockedWeekDays={setBlockedWeekDays}
           thumbnail={packageToEdit?.thumbnail}
         />
       )

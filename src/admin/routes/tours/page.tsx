@@ -1,20 +1,17 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { MapPin, EllipsisHorizontal, PencilSquare, Trash, CurrencyDollar } from "@medusajs/icons"
+import { MapPin, EllipsisHorizontal, PencilSquare } from "@medusajs/icons"
 import {
   Container,
   Heading,
-  Button,
   DataTable,
   useDataTable,
   createDataTableColumnHelper,
   DataTablePaginationState,
-  Badge,
   toast,
   DropdownMenu,
   IconButton
 } from "@medusajs/ui"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "react-router-dom"
 import { useMemo, useState } from "react"
 import { sdk } from "../../lib/sdk" // Asegúrate de tener configurado tu sdk client
 import { Tour } from "../../types"
@@ -25,7 +22,7 @@ import { TourFormModal } from "../../components/create-tour-modal"
 const columnHelper = createDataTableColumnHelper<Tour>()
 
 // 2. Definimos las columnas fuera del componente para mejor rendimiento
-const getColumns = (navigate: Function, handleDelete: Function, handlerUpdate: Function) => [
+const getColumns = (handlerUpdate: Function) => [
   columnHelper.accessor("thumbnail", {
     header: "Imagen",
     cell: ({ getValue, row }) => {
@@ -96,7 +93,6 @@ const getColumns = (navigate: Function, handleDelete: Function, handlerUpdate: F
 
 
 const ToursListPage = () => {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   // Configuración de Paginación
@@ -114,13 +110,6 @@ const ToursListPage = () => {
     setGetTour(tour)
     setIsModalOpen(true)
   }
-  const handlerCreateModal = () => {
-    setGetTour(null)
-    setIsModalOpen(true)
-  }
-
-
-
   const offset = useMemo(() => {
     return pagination.pageIndex * pagination.pageSize
   }, [pagination])
@@ -140,26 +129,8 @@ const ToursListPage = () => {
 
   console.log(data)
   // 4. Manejo de la eliminación
-  const handleDeleteTour = async (id: string) => {
-    // Nota: Para producción, considera usar un componente de Prompt o Dialog para confirmar
-    if (!confirm("¿Estás seguro de eliminar este tour?")) return
-
-    try {
-      await sdk.client.fetch(`/admin/tours/${id}`, {
-        method: "DELETE",
-      })
-
-      toast.success("Tour eliminado correctamente")
-
-      // Invalidar la query refresca la tabla automáticamente
-      queryClient.invalidateQueries({ queryKey: ["tours"] })
-    } catch (err: any) {
-      toast.error(`Error al eliminar: ${err.message}`)
-    }
-  }
-
   // Memorizar columnas para evitar re-renders innecesarios
-  const columns = useMemo(() => getColumns(navigate, handleDeleteTour, handlerUpdateModal), [isModalOpen, setIsModalOpen])
+  const columns = useMemo(() => getColumns(handlerUpdateModal), [isModalOpen, setIsModalOpen])
 
   // 5. Hook de DataTable
   const table = useDataTable({
@@ -196,10 +167,36 @@ const ToursListPage = () => {
   const handleUpdateTours = async (data: any) => {
     console.log(data)
     try {
-      await sdk.client.fetch(`/admin/tours/${data.id}`, {
+      const response = await sdk.client.fetch(`/admin/tours/${data.id}`, {
         method: "POST",
         body: data,
       })
+
+      const updatedTour = (response as any)?.tour
+
+      if (updatedTour?.id) {
+        queryClient.setQueriesData({ queryKey: ["tour"] }, (current: any) => {
+          if (!current?.tours) {
+            return current
+          }
+
+          return {
+            ...current,
+            tours: current.tours.map((tour: Tour) =>
+              tour.id === updatedTour.id
+                ? { ...tour, ...updatedTour }
+                : tour
+            ),
+          }
+        })
+
+        setGetTour((current) =>
+          current?.id === updatedTour.id
+            ? { ...current, ...updatedTour }
+            : current
+        )
+      }
+
       queryClient.invalidateQueries({ queryKey: ["tour"] })
       handleCloseModal()
     } catch (error: any) {

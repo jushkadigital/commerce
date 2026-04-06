@@ -213,6 +213,39 @@ medusaIntegrationTestRunner({
           await cleanupTour(result.tour.id)
         })
 
+        it("should persist blocked dates and blocked week days through update workflow", async () => {
+          const input: CreateTourWorkflowInput = {
+            destination: "Workflow Update Availability Tour",
+            duration_days: 1,
+            max_capacity: 10,
+            prices: {
+              adult: 100,
+              child: 0,
+              infant: 0,
+            },
+          }
+
+          const { result } = await createTourWorkflow(container).run({ input })
+
+          const { result: updatedResult } = await updateTourWorkflow(container).run({
+            input: {
+              id: result.tour.id,
+              blocked_dates: ["2026-04-08"],
+              blocked_week_days: ["1", "2"],
+              prices: input.prices,
+            },
+          })
+
+          expect(updatedResult.tour.blocked_dates).toEqual(["2026-04-08"])
+          expect(updatedResult.tour.blocked_week_days).toEqual(["1", "2"])
+
+          const retrieved = await tourModuleService.retrieveTour(result.tour.id)
+          expect(retrieved.blocked_dates).toEqual(["2026-04-08"])
+          expect(retrieved.blocked_week_days).toEqual(["1", "2"])
+
+          await cleanupTour(result.tour.id)
+        })
+
       describe("Pricing and Currency", () => {
         it("should create tour with USD currency by default", async () => {
           const input: CreateTourWorkflowInput = {

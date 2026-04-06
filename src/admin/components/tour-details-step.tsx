@@ -1,5 +1,6 @@
 import { Heading, Input, Label, Text, Textarea, Switch } from "@medusajs/ui"
 import { BlockedDatesComponent } from "./blocked-dates-component"
+import { BlockedWeekDaysComponent } from "./blocked-week-days-component"
 
 interface TourDetailsStepProps {
   destination: string
@@ -16,6 +17,8 @@ interface TourDetailsStepProps {
   setBookingMinDays: (v: number | "") => void
   blockedDates: string[]
   setBlockedDates: (v: string[]) => void
+  blockedWeekDays: string[]
+  setBlockedWeekDays: (v: string[]) => void
   thumbnail?: string
 }
 
@@ -34,6 +37,8 @@ export const TourDetailsStep = ({
   setBookingMinDays,
   blockedDates,
   setBlockedDates,
+  blockedWeekDays,
+  setBlockedWeekDays,
   thumbnail,
 }: TourDetailsStepProps) => {
   return (
@@ -140,6 +145,17 @@ export const TourDetailsStep = ({
           <BlockedDatesComponent
             value={blockedDates}
             onChange={setBlockedDates}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label className="text-base font-medium">Días bloqueados</Label>
+          <Text className="text-ui-fg-subtle text-xs mb-2">
+            Selecciona los días de la semana en los que no se permiten reservas
+          </Text>
+          <BlockedWeekDaysComponent
+            value={blockedWeekDays}
+            onChange={setBlockedWeekDays}
           />
         </div>
       </div>

@@ -90,10 +90,6 @@ export const updateTourWorkflow = createWorkflow(
         let hasUpdates = false
 
         if (data.input.destination || data.input.duration_days) {
-          // Reconstruimos el título: "Cusco - 5 Days"
-          const dest = data.input.destination || "Tour" // Fallback si no viene en input (raro en update parcial, pero seguro)
-          const dur = data.input.duration_days || "X"
-
           // Nota: Si es un PATCH parcial y solo viene destination, duration_days puede ser undefined.
           // Idealmente deberíamos leer el dato actual del tour si quisiéramos ser perfectos, 
           // pero aquí actualizamos solo si vienen los datos.
@@ -127,33 +123,13 @@ export const updateTourWorkflow = createWorkflow(
     // --- Step 4: Actualizar Precios (Usando tu lógica custom) ---
 
 
-    // --- Step 5: Retornar Tour actualizado ---
-    const { data: finalTour } = useQueryGraphStep({
-      entity: "tour",
-      fields: [
-        "id",
-        "destination",
-        "description",
-        "duration_days",
-        "max_capacity",
-        "thumbnail",
-        "is_special",
-        "booking_min_days_ahead",
-        "blocked_dates",
-        "blocked_week_days",
-        "cancellation_deadline_hours",
-        "product_id"
-      ],
-      filters: { id: input.id }
-    }).config({ name: "retrieve-updated-tour" })
-
     emitEventStep({
       eventName: "entityTour.updated",
       data: { id: input.id }
     })
 
     return new WorkflowResponse({
-      tour: finalTour[0]
+      tour: updatedTour
     })
   }
 )

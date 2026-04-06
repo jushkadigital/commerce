@@ -12,7 +12,7 @@ export type UpdatePackageStepInput = {
     max_capacity?: number
     thumbnail?: string
     is_special?: boolean
-    booking_min_months_ahead?: number
+    booking_min_days_ahead?: number
     blocked_dates?: string[]
     blocked_week_days?: string[]
     cancellation_deadline_hours?: number
@@ -45,7 +45,7 @@ export const updatePackageStep = createStep(
       duration_days: previousPackage.duration_days,
       max_capacity: previousPackage.max_capacity,
       is_special: previousPackage.is_special,
-      booking_min_months_ahead: previousPackage.booking_min_months_ahead,
+      booking_min_days_ahead: previousPackage.booking_min_days_ahead,
       blocked_dates: previousPackage.blocked_dates,
       blocked_week_days: previousPackage.blocked_week_days,
       cancellation_deadline_hours: previousPackage.cancellation_deadline_hours,

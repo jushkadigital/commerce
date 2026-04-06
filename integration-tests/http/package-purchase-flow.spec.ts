@@ -723,7 +723,7 @@ medusaIntegrationTestRunner({
         it("should reject booking when min months ahead not met", async () => {
           await packageModuleService.updatePackages({
             id: pkg.id,
-            booking_min_months_ahead: 12
+        booking_min_days_ahead: 12
           })
 
           const { cart } = await createCartWithPackage(
@@ -737,11 +737,11 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("months in advance")
+      expect(errors[0].error.message).toContain("days in advance")
 
           await packageModuleService.updatePackages({
             id: pkg.id,
-            booking_min_months_ahead: 0
+        booking_min_days_ahead: 0
           })
         })
 

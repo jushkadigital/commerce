@@ -49,7 +49,7 @@ export interface Package {
   is_special?: boolean
   blocked_dates?: string[]
   blocked_week_days?: string[]
-  booking_min_months_ahead?: number
+  booking_min_days_ahead?: number
   cancellation_deadline_hours?: number
   metadata?: Record<string, any>
   created_at: string

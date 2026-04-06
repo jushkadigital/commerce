@@ -746,6 +746,31 @@ moduleIntegrationTestRunner<TourModuleService>({
           expect(updated[0].blocked_week_days).toContain(1)
         })
 
+        it("should persist blocked dates and blocked week days when updated as strings", async () => {
+          const tour = await service.createTours([{
+            product_id: generateProductId(),
+            destination: "String Availability Update Tour",
+            description: "Testing string-based availability update",
+            duration_days: 1,
+            max_capacity: 10,
+            blocked_dates: [],
+            blocked_week_days: [],
+          }])
+
+          const updated = await service.updateTours([{
+            id: tour[0].id,
+            blocked_dates: ["2026-04-08"],
+            blocked_week_days: ["1", "2"],
+          }])
+
+          expect(updated[0].blocked_dates).toEqual(["2026-04-08"])
+          expect(updated[0].blocked_week_days).toEqual(["1", "2"])
+
+          const retrieved = await service.retrieveTour(tour[0].id)
+          expect(retrieved.blocked_dates).toEqual(["2026-04-08"])
+          expect(retrieved.blocked_week_days).toEqual(["1", "2"])
+        })
+
         it("should clear blocked week days", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),

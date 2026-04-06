@@ -120,13 +120,12 @@ class PackageModuleService extends MedusaService({
       }
     }
 
-    // Validate booking_min_months_ahead (KEY DIFFERENCE: months, not days)
     const minBookingDate = new Date(today)
-    minBookingDate.setMonth(minBookingDate.getMonth() + (pkg.booking_min_months_ahead || 0))
+    minBookingDate.setDate(minBookingDate.getDate() + (pkg.booking_min_days_ahead || 0))
     if (requestedDateObj < minBookingDate) {
       return {
         valid: false,
-        reason: `Se deben hacer reservas al menos ${pkg.booking_min_months_ahead} dias en adelante`,
+        reason: `Se deben hacer reservas al menos ${pkg.booking_min_days_ahead} dias en adelante`,
       }
     }
 

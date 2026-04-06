@@ -40,7 +40,7 @@ export type CreatePackageWorkflowInput = {
   blocked_dates?: string[]
   blocked_week_days?: string[]
   cancellation_deadline_hours?: number
-  booking_min_months_ahead?: number,
+  booking_min_days_ahead?: number,
   metadata?: Record<string, any>
 }
 
@@ -142,7 +142,7 @@ export const createPackageWorkflow = createWorkflow(
           blocked_dates: data.input.blocked_dates,
           blocked_week_days: data.input.blocked_week_days,
           cancellation_deadline_hours: data.input.cancellation_deadline_hours,
-          booking_min_months_ahead: data.input.booking_min_months_ahead,
+          booking_min_days_ahead: data.input.booking_min_days_ahead,
           ...(data.input.metadata && { metadata: data.input.metadata })
         }]
       }
@@ -198,6 +198,11 @@ export const createPackageWorkflow = createWorkflow(
         "duration_days",
         "max_capacity",
         "thumbnail",
+        "is_special",
+        "blocked_dates",
+        "blocked_week_days",
+        "cancellation_deadline_hours",
+        "booking_min_days_ahead",
         "product_id",
         "product.*",
         "product.variants.*",

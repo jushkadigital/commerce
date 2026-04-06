@@ -25,7 +25,7 @@ export const validateBookingWindowStep = createStep(
     normalizedCurrentDate.setHours(0, 0, 0, 0)
 
     let minRequiredValue: number
-    let minRequiredUnit: "days" | "months"
+    let minRequiredUnit: "days"
     let entityName: string
 
     if (entity_type === "tour") {
@@ -39,33 +39,17 @@ export const validateBookingWindowStep = createStep(
       const packageService: PackageModuleService = container.resolve(PACKAGE_MODULE)
       const packageEntity = await packageService.retrievePackage(entity_id)
 
-      minRequiredValue = packageEntity.booking_min_months_ahead
-      minRequiredUnit = "months"
+      minRequiredValue = packageEntity.booking_min_days_ahead
+      minRequiredUnit = "days"
       entityName = packageEntity.destination || entity_id
     }
 
     let isValid = false
-    let actualDifference: number
+    let actualDifference = 0
 
     if (minRequiredUnit === "days") {
       const diffTime = normalizedBookingDate.getTime() - normalizedCurrentDate.getTime()
       actualDifference = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      isValid = actualDifference >= minRequiredValue
-    } else {
-      const bookingYear = normalizedBookingDate.getFullYear()
-      const bookingMonth = normalizedBookingDate.getMonth()
-      const currentYear = normalizedCurrentDate.getFullYear()
-      const currentMonth = normalizedCurrentDate.getMonth()
-
-      actualDifference = (bookingYear - currentYear) * 12 + (bookingMonth - currentMonth)
-
-      const bookingDay = normalizedBookingDate.getDate()
-      const currentDay = normalizedCurrentDate.getDate()
-
-      if (actualDifference > 0 && bookingDay < currentDay) {
-        actualDifference -= 1
-      }
-
       isValid = actualDifference >= minRequiredValue
     }
 

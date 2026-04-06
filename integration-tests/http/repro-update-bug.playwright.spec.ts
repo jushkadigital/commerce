@@ -29,7 +29,7 @@ const mockPackageDetail = {
     max_capacity: 25,
     product_id: 'prod_pkg_789',
     is_special: true,
-    booking_min_months_ahead: 2,
+  booking_min_days_ahead: 2,
     blocked_dates: ['2026-06-01'],
     blocked_week_days: ['0'],
     cancellation_deadline_hours: 72,
@@ -93,7 +93,7 @@ test.describe('Repro: update payload includes new Tour/Package fields', () => {
     expect(capturedPayload).toHaveProperty('cancellation_deadline_hours', 48)
   })
 
-  test('Package update payload includes is_special, booking_min_months_ahead, blocked_dates, blocked_week_days, cancellation_deadline_hours', async ({ page }) => {
+test('Package update payload includes is_special, booking_min_days_ahead, blocked_dates, blocked_week_days, cancellation_deadline_hours', async ({ page }) => {
     // Mock GET for package detail
     await page.route('**/admin/packages/pkg_789', async (route) => {
       if (route.request().method() === 'GET') {
@@ -124,7 +124,7 @@ test.describe('Repro: update payload includes new Tour/Package fields', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             is_special: true,
-            booking_min_months_ahead: 2,
+    booking_min_days_ahead: 2,
             blocked_dates: ['2026-06-01'],
             blocked_week_days: ['0'],
             cancellation_deadline_hours: 72,
@@ -139,7 +139,7 @@ test.describe('Repro: update payload includes new Tour/Package fields', () => {
     // Verify captured payload contains all fields
     expect(capturedPayload).not.toBeNull()
     expect(capturedPayload).toHaveProperty('is_special', true)
-    expect(capturedPayload).toHaveProperty('booking_min_months_ahead', 2)
+  expect(capturedPayload).toHaveProperty('booking_min_days_ahead', 2)
     expect(capturedPayload).toHaveProperty('blocked_dates')
     expect(capturedPayload.blocked_dates).toEqual(['2026-06-01'])
     expect(capturedPayload).toHaveProperty('blocked_week_days')

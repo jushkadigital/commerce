@@ -31,6 +31,11 @@ export const CreatePackageSchema = z.object({
   description: z.string().optional(),
   duration_days: z.number().int().positive("Duration must be at least 1 day"),
   max_capacity: z.number().int().positive("Max capacity must be at least 1"),
+  is_special: z.boolean().optional(),
+  blocked_dates: z.array(z.string()).optional(),
+  blocked_week_days: z.array(z.string()).optional(),
+  cancellation_deadline_hours: z.number().int().nonnegative().optional(),
+  booking_min_days_ahead: z.number().int().nonnegative().optional(),
   thumbnail: z.string().optional(),
   metadata: z.record(z.unknown()) // Acepta un objeto con cualquier clave y valor
     .nullable()          // Permite que sea null

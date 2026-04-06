@@ -427,6 +427,11 @@ medusaIntegrationTestRunner({
           const { result } = await createPackageWorkflow(container).run({ input })
 
           expect(result.package).toBeDefined()
+          expect(result.package.is_special).toBe(false)
+          expect(result.package.blocked_dates).toEqual([])
+          expect(result.package.blocked_week_days).toEqual([])
+          expect(result.package.cancellation_deadline_hours).toBe(12)
+          expect(result.package.booking_min_days_ahead).toBe(2)
 
           const packageFromDb = await packageModuleService.retrievePackage(result.package.id)
 
@@ -434,7 +439,7 @@ medusaIntegrationTestRunner({
           expect(packageFromDb.blocked_dates).toEqual([])
           expect(packageFromDb.blocked_week_days).toEqual([])
           expect(packageFromDb.cancellation_deadline_hours).toBe(12)
-          expect(packageFromDb.booking_min_months_ahead).toBe(2)
+          expect(packageFromDb.booking_min_days_ahead).toBe(2)
 
           await cleanupPackage(result.package.id)
         })
@@ -537,12 +542,12 @@ medusaIntegrationTestRunner({
           await packageModuleService.updatePackages({
             id: result.package.id,
             cancellation_deadline_hours: 72,
-            booking_min_months_ahead: 2,
+      booking_min_days_ahead: 2,
           })
 
           const updatedPackage = await packageModuleService.retrievePackage(result.package.id)
           expect(updatedPackage.cancellation_deadline_hours).toBe(72)
-          expect(updatedPackage.booking_min_months_ahead).toBe(2)
+          expect(updatedPackage.booking_min_days_ahead).toBe(2)
 
           await cleanupPackage(result.package.id)
         })
@@ -749,7 +754,7 @@ medusaIntegrationTestRunner({
             blocked_dates: ["2026-07-04", "2026-11-26"],
             blocked_week_days: ["2"],
             cancellation_deadline_hours: 48,
-            booking_min_months_ahead: 3,
+      booking_min_days_ahead: 3,
           }
 
           const { result } = await createPackageWorkflow(container).run({ input })
@@ -763,7 +768,7 @@ medusaIntegrationTestRunner({
           expect(packageFromDb.blocked_dates).toContain("2026-11-26")
           expect(packageFromDb.blocked_week_days.map(Number)).toContain(2)
           expect(packageFromDb.cancellation_deadline_hours).toBe(48)
-          expect(packageFromDb.booking_min_months_ahead).toBe(3)
+          expect(packageFromDb.booking_min_days_ahead).toBe(3)
 
           await cleanupPackage(result.package.id)
         })
@@ -823,14 +828,14 @@ medusaIntegrationTestRunner({
               child: 2000,
               infant: 0,
             },
-            booking_min_months_ahead: 6,
+      booking_min_days_ahead: 6,
             cancellation_deadline_hours: 168,
           }
 
           const { result } = await createPackageWorkflow(container).run({ input })
 
           const packageFromDb = await packageModuleService.retrievePackage(result.package.id)
-          expect(packageFromDb.booking_min_months_ahead).toBe(6)
+          expect(packageFromDb.booking_min_days_ahead).toBe(6)
           expect(packageFromDb.cancellation_deadline_hours).toBe(168)
 
           await cleanupPackage(result.package.id)
@@ -870,7 +875,7 @@ medusaIntegrationTestRunner({
               infant: 0,
             },
             blocked_dates: ["2026-08-15"],
-            booking_min_months_ahead: 0,
+      booking_min_days_ahead: 0,
           }
 
           const { result } = await createPackageWorkflow(container).run({ input })
@@ -882,7 +887,7 @@ medusaIntegrationTestRunner({
             2
           )
           expect(blockedValidation.valid).toBe(false)
-          expect(blockedValidation.reason).toContain("not available")
+          expect(blockedValidation.reason).toContain("no esta disponible")
 
           const allowedValidation = await packageModuleService.validateBooking(
             packageId,
@@ -905,7 +910,7 @@ medusaIntegrationTestRunner({
               infant: 0,
             },
             blocked_week_days: ["0"],
-            booking_min_months_ahead: 0,
+      booking_min_days_ahead: 0,
           }
 
           const { result } = await createPackageWorkflow(container).run({ input })
@@ -917,7 +922,7 @@ medusaIntegrationTestRunner({
             2
           )
           expect(sundayValidation.valid).toBe(false)
-          expect(sundayValidation.reason).toContain("Sunday")
+          expect(sundayValidation.reason).toContain("Domingo")
 
           const mondayValidation = await packageModuleService.validateBooking(
             packageId,
@@ -929,7 +934,7 @@ medusaIntegrationTestRunner({
           await cleanupPackage(packageId)
         })
 
-        it("should validate booking against minimum months ahead requirement", async () => {
+        it("should validate booking against minimum days ahead requirement", async () => {
           const input: CreatePackageWorkflowInput = {
             destination: "Advance Booking Package",
             duration_days: 1,
@@ -939,7 +944,7 @@ medusaIntegrationTestRunner({
               child: 150,
               infant: 0,
             },
-            booking_min_months_ahead: 3,
+      booking_min_days_ahead: 3,
           }
 
           const { result } = await createPackageWorkflow(container).run({ input })
@@ -947,19 +952,19 @@ medusaIntegrationTestRunner({
 
           const today = new Date()
 
-          const nextMonth = new Date(today)
-          nextMonth.setMonth(nextMonth.getMonth() + 1)
+          const nextDay = new Date(today)
+          nextDay.setDate(nextDay.getDate() + 1)
 
           const shortValidation = await packageModuleService.validateBooking(
             packageId,
-            nextMonth,
+            nextDay,
             2
           )
           expect(shortValidation.valid).toBe(false)
-          expect(shortValidation.reason).toContain("months in advance")
+          expect(shortValidation.reason).toContain("3 dias en adelante")
 
           const futureDate = new Date(today)
-          futureDate.setMonth(futureDate.getMonth() + 4)
+          futureDate.setDate(futureDate.getDate() + 4)
 
           const futureValidation = await packageModuleService.validateBooking(
             packageId,
@@ -983,7 +988,7 @@ medusaIntegrationTestRunner({
             },
             blocked_dates: ["2026-09-07"],
             blocked_week_days: ["0", "6"],
-            booking_min_months_ahead: 1,
+      booking_min_days_ahead: 1,
           }
 
           const { result } = await createPackageWorkflow(container).run({ input })

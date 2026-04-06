@@ -11,6 +11,7 @@ if (
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 import dotenv from 'dotenv'
 import path from 'path'
+import { isIzipayProviderConfigured, resolveIzipayConfig } from './src/utils/izipay-config'
 
 type MinimalRequestForPublishableKey = {
   method?: string
@@ -148,11 +149,8 @@ const STRIPE_API_KEY = process.env.STRIPE_API_KEY
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 
 // Izipay Configuration
-const IZIPAY_MERCHANT_CODE = process.env.IZIPAY_MERCHANT_CODE
-const IZIPAY_PUBLIC_KEY = process.env.IZIPAY_PUBLIC_KEY
-const IZIPAY_HASH_KEY = process.env.IZIPAY_HASH_KEY
-const IZIPAY_API_ENDPOINT = process.env.IZIPAY_API_ENDPOINT
-const IZIPAY_SDK_URL = process.env.IZIPAY_SDK_URL
+const IZIPAY_CONFIG = resolveIzipayConfig(process.env.NODE_ENV)
+const IZIPAY_IS_CONFIGURED = isIzipayProviderConfigured(process.env.NODE_ENV)
 
 // Search
 const MEILISEARCH_HOST = process.env.MEILISEARCH_HOST
@@ -353,7 +351,7 @@ module.exports = defineConfig({
     // --------------------------------------------------------------------
     // PAYMENTS
     // --------------------------------------------------------------------
-    ...((STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET) || IZIPAY_MERCHANT_CODE ? [{
+    ...((STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET) || IZIPAY_IS_CONFIGURED ? [{
       key: Modules.PAYMENT,
       resolve: '@medusajs/payment',
       options: {
@@ -368,15 +366,15 @@ module.exports = defineConfig({
             },
           }] : []),
           // Izipay provider
-          ...(IZIPAY_MERCHANT_CODE && IZIPAY_PUBLIC_KEY && IZIPAY_HASH_KEY ? [{
+          ...(IZIPAY_IS_CONFIGURED ? [{
             resolve: './src/modules/izipay-payment',
             id: 'izipay',
             options: {
-              merchantCode: IZIPAY_MERCHANT_CODE,
-              publicKey: IZIPAY_PUBLIC_KEY,
-              hashKey: IZIPAY_HASH_KEY,
-              apiEndpoint: IZIPAY_API_ENDPOINT || 'https://testapi-pw.izipay.pe',
-              sdkUrl: IZIPAY_SDK_URL || 'https://testcheckout.izipay.pe/payments/v1/js/index.js',
+              merchantCode: IZIPAY_CONFIG.merchantCode!,
+              publicKey: IZIPAY_CONFIG.publicKey!,
+              hashKey: IZIPAY_CONFIG.hashKey!,
+              apiEndpoint: IZIPAY_CONFIG.apiEndpoint!,
+              sdkUrl: IZIPAY_CONFIG.sdkUrl!,
             },
           }] : []),
         ],

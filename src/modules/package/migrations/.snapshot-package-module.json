@@ -109,8 +109,8 @@
           "default": "12",
           "mappedType": "integer"
         },
-        "booking_min_months_ahead": {
-          "name": "booking_min_months_ahead",
+        "booking_min_days_ahead": {
+          "name": "booking_min_days_ahead",
           "type": "integer",
           "unsigned": false,
           "autoincrement": false,

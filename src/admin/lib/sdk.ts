@@ -7,8 +7,8 @@ if (import.meta.env.VITE_MEDUSA_BACKEND_URL) {
 }
 const publicUrl = 'https://commerce.patarutera.pe'
 export const sdk = new Medusa({
-  baseUrl: publicUrl,
-  debug: false,
+  baseUrl: MEDUSA_BACKEND_URL,
+  debug: true,
   auth: {
     type: "session",
   },

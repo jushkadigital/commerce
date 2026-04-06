@@ -20,7 +20,7 @@ export type UpdatePackageWorkflowInput = {
   max_capacity?: number
   thumbnail?: string
   is_special?: boolean
-  booking_min_months_ahead?: number
+  booking_min_days_ahead?: number
   blocked_dates?: string[]
   blocked_week_days?: string[]
   cancellation_deadline_hours?: number
@@ -62,7 +62,7 @@ export const updatePackageWorkflow = createWorkflow(
         max_capacity: input.max_capacity,
         thumbnail: input.thumbnail,
         is_special: input.is_special,
-        booking_min_months_ahead: input.booking_min_months_ahead,
+        booking_min_days_ahead: input.booking_min_days_ahead,
         blocked_dates: input.blocked_dates,
         blocked_week_days: input.blocked_week_days,
         cancellation_deadline_hours: input.cancellation_deadline_hours,
@@ -118,7 +118,7 @@ export const updatePackageWorkflow = createWorkflow(
         "max_capacity",
         "thumbnail",
         "is_special",
-        "booking_min_months_ahead",
+        "booking_min_days_ahead",
         "blocked_dates",
         "blocked_week_days",
         "cancellation_deadline_hours",

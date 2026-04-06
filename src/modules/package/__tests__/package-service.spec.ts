@@ -11,9 +11,9 @@ moduleIntegrationTestRunner<PackageModuleService>({
   moduleName: PACKAGE_MODULE,
   moduleModels: [Package, PackageBooking, PackageVariant, PackageServiceVariant],
   resolve: "./src/modules/package",
-  testSuite: ({ service }) => {
-    describe("PackageModuleService Integration Tests", () => {
-      describe("CRUD operations with new fields", () => {
+    testSuite: ({ service }) => {
+      describe("PackageModuleService Integration Tests", () => {
+        describe("CRUD operations with new fields", () => {
         it("should create package with all new fields", async () => {
           const availableDateStr = "2026-06-15T00:00:00.000Z"
           
@@ -26,7 +26,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
             blocked_dates: ["2026-12-25", "2026-12-31"],
             blocked_week_days: [0, 6],
             cancellation_deadline_hours: 48,
-            booking_min_months_ahead: 3
+            booking_min_days_ahead: 3
           })
           
           expect(pkg.is_special).toBe(true)
@@ -35,7 +35,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           expect(pkg.blocked_week_days.map(Number)).toContain(0)
           expect(pkg.blocked_week_days.map(Number)).toContain(6)
           expect(pkg.cancellation_deadline_hours).toBe(48)
-          expect(pkg.booking_min_months_ahead).toBe(3)
+          expect(pkg.booking_min_days_ahead).toBe(3)
           expect(pkg.destination).toBe("Machu Picchu")
           expect(pkg.duration_days).toBe(3)
           expect(pkg.max_capacity).toBe(10)
@@ -53,7 +53,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
             blocked_dates: [],
             blocked_week_days: [],
             cancellation_deadline_hours: 12,
-            booking_min_months_ahead: 2
+            booking_min_days_ahead: 2
           })
 
           const updated = await service.updatePackages({
@@ -63,7 +63,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
               blocked_dates: ["2026-12-25"],
               blocked_week_days: [0],
               cancellation_deadline_hours: 72,
-              booking_min_months_ahead: 4
+               booking_min_days_ahead: 4
             }
           })
 
@@ -71,7 +71,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           expect(updated[0].blocked_dates).toContain("2026-12-25")
           expect(updated[0].blocked_week_days.map(Number)).toContain(0)
           expect(updated[0].cancellation_deadline_hours).toBe(72)
-          expect(updated[0].booking_min_months_ahead).toBe(4)
+          expect(updated[0].booking_min_days_ahead).toBe(4)
         })
 
         it("should retrieve package with all new fields", async () => {
@@ -86,7 +86,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
             blocked_dates: ["2026-12-25"],
             blocked_week_days: [0, 6],
             cancellation_deadline_hours: 48,
-            booking_min_months_ahead: 3
+            booking_min_days_ahead: 3
           })
 
           const retrieved = await service.retrievePackage(created.id)
@@ -95,7 +95,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           expect(retrieved.blocked_dates).toEqual(["2026-12-25"])
           expect(retrieved.blocked_week_days.map(Number)).toEqual([0, 6])
           expect(retrieved.cancellation_deadline_hours).toBe(48)
-          expect(retrieved.booking_min_months_ahead).toBe(3)
+          expect(retrieved.booking_min_days_ahead).toBe(3)
         })
 
         it("should list packages and filter by new fields", async () => {
@@ -142,10 +142,10 @@ moduleIntegrationTestRunner<PackageModuleService>({
           expect(pkg.blocked_dates).toEqual([])
           expect(pkg.blocked_week_days).toEqual([])
           expect(pkg.cancellation_deadline_hours).toBe(12)
-          expect(pkg.booking_min_months_ahead).toBe(2)
+          expect(pkg.booking_min_days_ahead).toBe(2)
         })
 
-        it("should apply default booking_min_months_ahead of 2 months", async () => {
+        it("should apply default booking_min_days_ahead of 2 days", async () => {
           const availableDateStr = "2026-10-01T00:00:00.000Z"
           
           const pkg = await service.createPackages({
@@ -155,7 +155,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
             max_capacity: 5,
           })
           
-          expect(pkg.booking_min_months_ahead).toBe(2)
+          expect(pkg.booking_min_days_ahead).toBe(2)
         })
       })
       
@@ -227,7 +227,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           expect(result.valid).toBe(true)
         })
 
-        it("should verify booking_min_months_ahead field exists and has default", async () => {
+        it("should verify booking_min_days_ahead field exists and has default", async () => {
           const availableDateStr = "2026-12-15T00:00:00.000Z"
           
           const pkg = await service.createPackages({
@@ -237,12 +237,12 @@ moduleIntegrationTestRunner<PackageModuleService>({
             max_capacity: 10,
           })
 
-          expect(pkg.booking_min_months_ahead).toBeDefined()
-          expect(pkg.booking_min_months_ahead).toBe(2)
+          expect(pkg.booking_min_days_ahead).toBeDefined()
+          expect(pkg.booking_min_days_ahead).toBe(2)
           
           const retrieved = await service.retrievePackage(pkg.id)
-          expect(retrieved).toHaveProperty("booking_min_months_ahead")
-          expect(retrieved).not.toHaveProperty("booking_min_days_ahead")
+          expect(retrieved).toHaveProperty("booking_min_days_ahead")
+          expect(retrieved).not.toHaveProperty("booking_min_months_ahead")
         })
       })
       
@@ -628,8 +628,8 @@ moduleIntegrationTestRunner<PackageModuleService>({
         })
       })
 
-      describe("Key difference: Package uses months not days", () => {
-        it("should verify Package uses booking_min_months_ahead (months)", async () => {
+      describe("Package booking lead time uses days", () => {
+        it("should verify Package uses booking_min_days_ahead", async () => {
           const availableDateStr = "2026-05-15T00:00:00.000Z"
           
           const pkg = await service.createPackages({
@@ -639,12 +639,12 @@ moduleIntegrationTestRunner<PackageModuleService>({
             max_capacity: 10,
           })
 
-          expect(pkg).toHaveProperty("booking_min_months_ahead")
-          expect(pkg.booking_min_months_ahead).toBe(2)
-          expect(pkg).not.toHaveProperty("booking_min_days_ahead")
+          expect(pkg).toHaveProperty("booking_min_days_ahead")
+          expect(pkg.booking_min_days_ahead).toBe(2)
+          expect(pkg).not.toHaveProperty("booking_min_months_ahead")
         })
 
-        it("should allow setting booking_min_months_ahead to various values", async () => {
+        it("should allow setting booking_min_days_ahead to various values", async () => {
           const availableDateStr = "2026-05-15T00:00:00.000Z"
           
           const pkg1Month = await service.createPackages({
@@ -652,7 +652,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "1 Month Ahead",
             duration_days: 2,
             max_capacity: 10,
-            booking_min_months_ahead: 1
+            booking_min_days_ahead: 1
           })
 
           const pkg6Months = await service.createPackages({
@@ -660,7 +660,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "6 Months Ahead",
             duration_days: 2,
             max_capacity: 10,
-            booking_min_months_ahead: 6
+            booking_min_days_ahead: 6
           })
 
           const pkg12Months = await service.createPackages({
@@ -668,12 +668,12 @@ moduleIntegrationTestRunner<PackageModuleService>({
             destination: "12 Months Ahead",
             duration_days: 2,
             max_capacity: 10,
-            booking_min_months_ahead: 12
+            booking_min_days_ahead: 12
           })
 
-          expect(pkg1Month.booking_min_months_ahead).toBe(1)
-          expect(pkg6Months.booking_min_months_ahead).toBe(6)
-          expect(pkg12Months.booking_min_months_ahead).toBe(12)
+          expect(pkg1Month.booking_min_days_ahead).toBe(1)
+          expect(pkg6Months.booking_min_days_ahead).toBe(6)
+          expect(pkg12Months.booking_min_days_ahead).toBe(12)
         })
       })
     })

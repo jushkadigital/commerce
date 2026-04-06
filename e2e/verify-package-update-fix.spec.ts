@@ -29,7 +29,7 @@ test.describe('Package update via dashboard UI', () => {
 
     const bookingMinMonthsInput = page.locator('input[type="number"]').nth(2)
     const originalBookingMinMonths = await bookingMinMonthsInput.inputValue()
-    console.log('Original booking_min_months_ahead:', originalBookingMinMonths)
+console.log('Original booking_min_days_ahead:', originalBookingMinMonths)
 
     await specialSwitch.click()
     await page.waitForTimeout(500)
@@ -40,7 +40,7 @@ test.describe('Package update via dashboard UI', () => {
     console.log('Set max_capacity to 15')
 
     await bookingMinMonthsInput.fill('3')
-    console.log('Set booking_min_months_ahead to 3')
+console.log('Set booking_min_days_ahead to 3')
 
     const nextButton = page.getByRole('button', { name: 'Next' }).filter({ hasNot: page.locator('[disabled]') })
     await nextButton.click()
@@ -98,7 +98,7 @@ test.describe('Package update via dashboard UI', () => {
 
     const verifyBookingInput = page.locator('input[type="number"]').nth(2)
     await expect(verifyBookingInput).toHaveValue('3')
-    console.log('✓ booking_min_months_ahead persisted as 3')
+console.log('✓ booking_min_days_ahead persisted as 3')
 
     console.log('✅ Package update test completed successfully')
   })

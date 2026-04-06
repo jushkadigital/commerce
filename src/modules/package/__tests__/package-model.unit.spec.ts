@@ -30,18 +30,18 @@ describe("Package Model - New Fields", () => {
       expect(cancellationMatch?.[1]).toBe("12")
     })
 
-    it("should have booking_min_months_ahead field defined (not days)", () => {
-      expect(packageModelContent).toContain("booking_min_months_ahead")
+    it("should have booking_min_days_ahead field defined", () => {
+      expect(packageModelContent).toContain("booking_min_days_ahead")
     })
 
-    it("should have booking_min_months_ahead default to 2", () => {
-      const bookingMinMatch = packageModelContent.match(/booking_min_months_ahead[^,}]+default\((\d+)\)/)
+    it("should have booking_min_days_ahead default to 2", () => {
+      const bookingMinMatch = packageModelContent.match(/booking_min_days_ahead[^,}]+default\((\d+)\)/)
       expect(bookingMinMatch).toBeTruthy()
       expect(bookingMinMatch?.[1]).toBe("2")
     })
 
-    it("should NOT have booking_min_days_ahead field", () => {
-      expect(packageModelContent).not.toContain("booking_min_days_ahead")
+    it("should NOT have booking_min_months_ahead field", () => {
+      expect(packageModelContent).not.toContain("booking_min_months_ahead")
     })
 
     it("should have blocked_dates field defined", () => {

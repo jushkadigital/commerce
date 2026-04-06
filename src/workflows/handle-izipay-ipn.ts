@@ -2,6 +2,7 @@ import { createWorkflow, WorkflowResponse, createStep, StepResponse, transform, 
 import { Modules } from "@medusajs/framework/utils"
 import { completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import crypto from "crypto"
+import { resolveIzipayConfig } from "../utils/izipay-config"
 
 function validateSignature(payload: string, signature: string, hashKey: string): boolean {
   if (!hashKey || !signature) return false
@@ -37,11 +38,11 @@ export const validateIzipaySignatureStep = createStep(
   "validate-izipay-signature",
   async (input: IzipayWebhookInput, { container }) => {
     const { rawPayload, signature } = input
-    const hashKey = process.env.IZIPAY_HASH_KEY || ""
+    const { hashKey } = resolveIzipayConfig(process.env.NODE_ENV)
     const code = input.payload?.code
     
     if (!hashKey) {
-        throw new Error("IZIPAY_HASH_KEY not configured")
+        throw new Error("Izipay hash key is not configured for the current NODE_ENV")
     }
 
     if (code === "021" || code === "COMMUNICATION_ERROR") {

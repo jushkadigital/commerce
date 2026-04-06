@@ -36,6 +36,7 @@ export const TourFormModal = ({
   const [isSpecial, setIsSpecial] = useState(false)
   const [bookingMinDays, setBookingMinDays] = useState<number | "">("")
   const [blockedDates, setBlockedDates] = useState<string[]>([])
+  const [blockedWeekDays, setBlockedWeekDays] = useState<string[]>([])
 
   // --- Step 2 Data ---
   // CORRECCIÓN 1: Inicializar como objeto vacío, NO null
@@ -95,6 +96,7 @@ export const TourFormModal = ({
       setIsSpecial(tourToEdit.is_special || false)
       setBookingMinDays(tourToEdit.booking_min_days_ahead ?? "")
       setBlockedDates(tourToEdit.blocked_dates || [])
+      setBlockedWeekDays((tourToEdit.blocked_week_days || []).map((day) => String(day)))
 
       // 3. LÓGICA DE PRECIOS CORREGIDA
       if (tourToEdit.variants && tourToEdit.variants.length > 0) {
@@ -154,6 +156,7 @@ export const TourFormModal = ({
     setIsSpecial(false)
     setBookingMinDays("")
     setBlockedDates([])
+    setBlockedWeekDays([])
     setPrices({})
     setCurrentStep("0")
   }
@@ -184,6 +187,7 @@ export const TourFormModal = ({
         is_special: isSpecial,
         booking_min_days_ahead: bookingMinDays === "" ? 0 : Number(bookingMinDays),
         blocked_dates: blockedDates,
+        blocked_week_days: blockedWeekDays,
         prices: {
           // CORRECCIÓN 4: Acceso seguro con ?. y usando la clave correcta
           // Nota: Usa mayúscula "Adult" si así está en tu PricingStep (PASSENGER_TYPES)
@@ -223,6 +227,7 @@ export const TourFormModal = ({
           isSpecial={isSpecial} setIsSpecial={setIsSpecial}
           bookingMinDays={bookingMinDays} setBookingMinDays={setBookingMinDays}
           blockedDates={blockedDates} setBlockedDates={setBlockedDates}
+          blockedWeekDays={blockedWeekDays} setBlockedWeekDays={setBlockedWeekDays}
           thumbnail={tourToEdit?.thumbnail}
         />
       )

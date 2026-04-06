@@ -36,7 +36,7 @@ const UpdatePackageSchema = z.object({
   duration_days: z.coerce.number().optional(),
   is_special: z.boolean().optional(),
   max_capacity: z.coerce.number().optional(),
-  booking_min_months_ahead: z.coerce.number().optional(),
+  booking_min_days_ahead: z.coerce.number().int().nonnegative().optional(),
   thumbnail: z.string().optional(),
   prices: z.object({
     adult: z.coerce.number().optional(),
@@ -46,7 +46,7 @@ const UpdatePackageSchema = z.object({
   }).optional(),
   blocked_dates: z.array(z.string()).optional(),
   blocked_week_days: z.array(z.string()).optional(),
-  cancellation_deadline_hours: z.coerce.number().optional(),
+  cancellation_deadline_hours: z.coerce.number().int().nonnegative().optional(),
 })
 
 type UpdatePackageSchemaType = z.infer<typeof UpdatePackageSchema>
