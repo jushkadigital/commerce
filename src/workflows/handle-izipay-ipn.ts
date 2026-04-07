@@ -4,6 +4,72 @@ import { completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import crypto from "crypto"
 import { resolveIzipayConfig } from "../utils/izipay-config"
 
+function parseJsonValue(value: unknown): Record<string, any> | null {
+  if (!value) {
+    return null
+  }
+
+  if (typeof value === "object") {
+    return value as Record<string, any>
+  }
+
+  if (typeof value !== "string") {
+    return null
+  }
+
+  try {
+    return JSON.parse(value) as Record<string, any>
+  } catch {
+    return null
+  }
+}
+
+function getIzipayAnswerPayload(payload: Record<string, any>): Record<string, any> {
+  return parseJsonValue(payload["kr-answer"]) ?? payload
+}
+
+function getIzipayOrderDetails(payload: Record<string, any>): Record<string, any> {
+  const answer = getIzipayAnswerPayload(payload)
+
+  if (payload.response?.order?.[0] && typeof payload.response.order[0] === "object") {
+    return payload.response.order[0] as Record<string, any>
+  }
+
+  if (answer.orderDetails && typeof answer.orderDetails === "object") {
+    return answer.orderDetails as Record<string, any>
+  }
+
+  return {}
+}
+
+function getIzipayTransactionId(payload: Record<string, any>): string {
+  const answer = getIzipayAnswerPayload(payload)
+
+  if (typeof payload.transactionId === "string" && payload.transactionId.length > 0) {
+    return payload.transactionId
+  }
+
+  if (Array.isArray(answer.transactions) && answer.transactions[0]?.uuid) {
+    return String(answer.transactions[0].uuid)
+  }
+
+  return "unknown"
+}
+
+function getIzipayOrderId(payload: Record<string, any>): string {
+  const orderDetails = getIzipayOrderDetails(payload)
+
+  if (typeof orderDetails.orderNumber === "string" && orderDetails.orderNumber.length > 0) {
+    return orderDetails.orderNumber
+  }
+
+  if (typeof orderDetails.orderId === "string" && orderDetails.orderId.length > 0) {
+    return orderDetails.orderId
+  }
+
+  return "unknown"
+}
+
 function validateSignature(payload: string, signature: string, hashKey: string): boolean {
   if (!hashKey || !signature) return false
   
@@ -63,25 +129,14 @@ export const storeIzipayEventStep = createStep(
   "store-izipay-event",
   async (input: { payload: any, signature: string }, { container }) => {
     const izipayService = container.resolve("izipay") as any
-    
+
     let transactionId = "unknown"
     let orderId = "unknown"
-    
+
     try {
-        const body = input.payload
-        const answer = body['kr-answer'] || body
-        
-        if (body.transactionId) {
-             transactionId = body.transactionId;
-        } else if (answer.transactions && answer.transactions.length > 0) {
-            transactionId = answer.transactions[0].uuid
-        }
-        
-        if (body.response?.order?.[0]?.orderNumber) {
-            orderId = body.response.order[0].orderNumber
-        } else if (answer.orderDetails) {
-            orderId = answer.orderDetails.orderId
-        }
+        const body = input.payload as Record<string, any>
+        transactionId = getIzipayTransactionId(body)
+        orderId = getIzipayOrderId(body)
     } catch (e) {
         console.error("Error parsing Izipay payload:", e)
     }
@@ -135,8 +190,8 @@ export const validateAndAuthorizeStep = createStep(
     if (!cart) return new StepResponse({ success: false })
 
     const paymentModule = container.resolve(Modules.PAYMENT)
-    
-    const orderDetails = payload.response?.order?.[0] || {}
+
+    const orderDetails = getIzipayOrderDetails(payload as Record<string, any>)
     const amountStr = orderDetails.amount 
     const stateMessage = orderDetails.stateMessage
     const codeAuth = orderDetails.codeAuth 

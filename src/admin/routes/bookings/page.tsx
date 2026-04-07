@@ -8,6 +8,7 @@ import {
   Input,
   Popover,
   Text,
+  Tooltip,
   clx,
 } from "@medusajs/ui"
 import { useQuery } from "@tanstack/react-query"
@@ -118,6 +119,41 @@ type ReservationOrderRow = {
   items: ApiBooking[]
 }
 
+function normalizeReservationStatus(status: string | null | undefined): string | null {
+  if (!status) {
+    return null
+  }
+
+  switch (status) {
+    case "authorized":
+    case "captured":
+    case "partially_authorized":
+    case "partially_captured":
+      return "Aceptado"
+    case "pending":
+      return "Pendiente"
+    case "canceled":
+    case "cancelled":
+      return "Cancelado"
+    default:
+      return status
+  }
+}
+
+function getReservationStatus(order?: OrderSummary | null, bookingStatus?: string | null): string | null {
+  const paymentStatus = normalizeReservationStatus(order?.payment_status)
+  if (paymentStatus) {
+    return paymentStatus
+  }
+
+  const orderStatus = normalizeReservationStatus(order?.status)
+  if (orderStatus) {
+    return orderStatus
+  }
+
+  return normalizeReservationStatus(bookingStatus)
+}
+
 type SelectedReservation = {
   orderLabel: string
   dates: string[]
@@ -218,6 +254,37 @@ function getOrderLabel(orderId: string | null, fallback: string): string {
   }
 
   return `Reserva ${fallback.slice(-6).toUpperCase()}`
+}
+
+function getCompactOrderLabel(orderId: string): string {
+  if (orderId.length <= 12) {
+    return orderId
+  }
+
+  return `${orderId.slice(0, 8)}…${orderId.slice(-4)}`
+}
+
+function OrderLabelWithTooltip({ orderLabel, orderId }: { orderLabel: string; orderId: string | null }) {
+  if (!orderId) {
+    return (
+      <Text size="small" leading="compact" weight="plus">
+        {orderLabel}
+      </Text>
+    )
+  }
+
+  return (
+    <Tooltip content={orderLabel} side="top">
+      <span
+        tabIndex={0}
+        className="inline-block max-w-full cursor-help truncate rounded outline-none focus-visible:shadow-borders-interactive-with-focus"
+      >
+        <Text size="small" leading="compact" weight="plus">
+          {`Pedido ${getCompactOrderLabel(orderId)}`}
+        </Text>
+      </span>
+    </Tooltip>
+  )
 }
 
 function getLineItemQuantity(item: BookingLineItem): number {
@@ -456,7 +523,7 @@ const BookingListPage = () => {
           latestDate: dateKey,
           totalPassengers: getBookingQuantity(booking),
           bookingsCount: 1,
-          status: order?.status ?? booking.status ?? null,
+          status: getReservationStatus(order, booking.status),
           items: [booking],
         })
         return
@@ -499,7 +566,7 @@ const BookingListPage = () => {
       }
 
       if (!current.status) {
-        current.status = order?.status ?? booking.status ?? null
+        current.status = getReservationStatus(order, booking.status)
       }
     })
 
@@ -861,9 +928,7 @@ const BookingListPage = () => {
                       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div className="flex flex-1 flex-col gap-3">
                           <div className="flex flex-wrap items-center gap-2">
-                            <Text size="small" leading="compact" weight="plus">
-                              {row.orderLabel}
-                            </Text>
+                            <OrderLabelWithTooltip orderLabel={row.orderLabel} orderId={row.orderId} />
                             {row.status ? (
                               <Badge color="grey" size="small">
                                 {row.status}
@@ -991,9 +1056,7 @@ const BookingListPage = () => {
                     <div className="flex flex-col gap-3">
                       {selectedDayOrders.map((row) => (
                         <div key={`selected-day-${row.key}`} className="rounded-md border border-ui-border-base p-3">
-                          <Text size="small" leading="compact" weight="plus">
-                            {row.orderLabel}
-                          </Text>
+                          <OrderLabelWithTooltip orderLabel={row.orderLabel} orderId={row.orderId} />
                           <Text size="small" leading="compact" className="text-ui-fg-subtle">
                             {row.destinations.join(" • ") || "Sin destino"}
                           </Text>
