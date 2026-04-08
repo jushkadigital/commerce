@@ -2,6 +2,10 @@ import { createWorkflow, WorkflowResponse, createStep, StepResponse, transform, 
 import { Modules } from "@medusajs/framework/utils"
 import { completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import crypto from "crypto"
+import { PACKAGE_MODULE } from "../modules/package"
+import type PackageModuleService from "../modules/package/service"
+import { TOUR_MODULE } from "../modules/tour"
+import type TourModuleService from "../modules/tour/service"
 import { resolveIzipayConfig } from "../utils/izipay-config"
 
 function parseJsonValue(value: unknown): Record<string, any> | null {
@@ -236,6 +240,84 @@ export const validateAndAuthorizeStep = createStep(
   }
 )
 
+type PreviousBookingStatus = {
+  id: string
+  status: string | null
+  kind: "tour" | "package"
+}
+
+export const confirmBookingsForOrderStep = createStep(
+  "confirm-bookings-for-order",
+  async (orderId: string, { container }) => {
+    if (!orderId) {
+      return new StepResponse({ updated_count: 0 }, [])
+    }
+
+    const tourModuleService = container.resolve(TOUR_MODULE) as TourModuleService
+    const packageModuleService = container.resolve(PACKAGE_MODULE) as PackageModuleService
+
+    const [tourBookings, packageBookings] = await Promise.all([
+      tourModuleService.listTourBookings({ order_id: orderId }),
+      packageModuleService.listPackageBookings({ order_id: orderId }),
+    ])
+
+    const tourBookingsToConfirm = tourBookings.filter((booking) => booking.status === "pending")
+    const packageBookingsToConfirm = packageBookings.filter((booking) => booking.status === "pending")
+
+    await Promise.all([
+      ...tourBookingsToConfirm.map((booking) =>
+        tourModuleService.updateTourBookings({ id: booking.id }, { status: "confirmed" })
+      ),
+      ...packageBookingsToConfirm.map((booking) =>
+        packageModuleService.updatePackageBookings({ id: booking.id }, { status: "confirmed" })
+      ),
+    ])
+
+    const previousStatuses: PreviousBookingStatus[] = [
+      ...tourBookingsToConfirm.map((booking) => ({
+        id: booking.id,
+        status: booking.status ?? null,
+        kind: "tour" as const,
+      })),
+      ...packageBookingsToConfirm.map((booking) => ({
+        id: booking.id,
+        status: booking.status ?? null,
+        kind: "package" as const,
+      })),
+    ]
+
+    return new StepResponse(
+      {
+        updated_count: previousStatuses.length,
+      },
+      previousStatuses
+    )
+  },
+  async (previousStatuses: PreviousBookingStatus[], { container }) => {
+    if (!Array.isArray(previousStatuses) || previousStatuses.length === 0) {
+      return
+    }
+
+    const tourModuleService = container.resolve(TOUR_MODULE) as TourModuleService
+    const packageModuleService = container.resolve(PACKAGE_MODULE) as PackageModuleService
+
+    await Promise.all(
+      previousStatuses.map((booking) => {
+        const restoredStatus = booking.status === "confirmed" ? "confirmed" : "pending"
+
+        if (booking.kind === "tour") {
+          return tourModuleService.updateTourBookings({ id: booking.id }, { status: restoredStatus })
+        }
+
+        return packageModuleService.updatePackageBookings(
+          { id: booking.id },
+          { status: restoredStatus }
+        )
+      })
+    )
+  }
+)
+
 export const handleIzipayWebhookWorkflow = createWorkflow(
   "handle-izipay-webhook",
   (input: IzipayWebhookInput) => {
@@ -246,9 +328,9 @@ export const handleIzipayWebhookWorkflow = createWorkflow(
         signature: input.signature
     })
     
-    const orderId = transform({ storageResult }, (data) => data.storageResult.event.order_id)
+    const cartId = transform({ storageResult }, (data) => data.storageResult.event.order_id)
     
-    const cart = retrieveCartAndPaymentStep(orderId)
+    const cart = retrieveCartAndPaymentStep(cartId)
     
     const authResult = validateAndAuthorizeStep({
         cart,
@@ -256,7 +338,13 @@ export const handleIzipayWebhookWorkflow = createWorkflow(
     })
     
     when(authResult, (res) => res.success).then(() => {
-        completeCartWorkflow.runAsStep({ input: { id: orderId } })
+        const { id: completedOrderId } = completeCartWorkflow.runAsStep({
+            input: { id: cartId }
+        }).config({ name: "complete-izipay-cart" })
+
+        confirmBookingsForOrderStep(completedOrderId).config({
+            name: "confirm-izipay-bookings"
+        })
     })
     
     return new WorkflowResponse(storageResult)

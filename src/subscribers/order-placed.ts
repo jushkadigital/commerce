@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { TOUR_MODULE } from "../modules/tour"
 import type TourModuleService from "../modules/tour/service"
 import { findExistingBooking } from "../utils/booking-idempotency"
+import { getBookingStatusFromPaymentStatus } from "../utils/booking-payment-status"
 import { resend } from "../utils/email"
 import { getOrderNotificationEmails } from "../utils/order-notification-emails"
 
@@ -79,6 +80,7 @@ export default async function handleOrderPlaced({
         "display_id",
         "email",
         "metadata",
+        "payment_status",
         "currency_code",
         "total",
         "items.*",
@@ -114,6 +116,9 @@ export default async function handleOrderPlaced({
         ? (order.metadata as Record<string, any>).preData
         : undefined
     const orderPreData = orderPreDataRaw == null ? undefined : orderPreDataRaw
+    const orderPaymentStatus =
+      (order as { payment_status?: unknown }).payment_status
+    const bookingStatus = getBookingStatusFromPaymentStatus(orderPaymentStatus)
 
     let createdBookings: any[] = existingBookings
 
@@ -137,7 +142,7 @@ export default async function handleOrderPlaced({
           order_id: orderId,
           tour_id: item.metadata.tour_id,
           tour_date: new Date(item.metadata.tour_date),
-          status: "pending" as const,
+          status: bookingStatus,
           metadata: Object.keys(bookingMetadata).length > 0 ? bookingMetadata : undefined,
           line_items: {
             item_id: item.id,

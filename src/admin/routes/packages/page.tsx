@@ -176,10 +176,36 @@ const PackagesListPage = () => {
 
   const handleUpdatePackages = async (data: any) => {
     try {
-      await sdk.client.fetch(`/admin/packages/${data.id}`, {
+      const response = await sdk.client.fetch(`/admin/packages/${data.id}`, {
         method: "POST",
         body: data,
       })
+
+      const updatedPackage = (response as any)?.package
+
+      if (updatedPackage?.id) {
+        queryClient.setQueriesData({ queryKey: ["package"] }, (current: any) => {
+          if (!current?.packages) {
+            return current
+          }
+
+          return {
+            ...current,
+            packages: current.packages.map((pkg: Package) =>
+              pkg.id === updatedPackage.id
+                ? { ...pkg, ...updatedPackage }
+                : pkg
+            ),
+          }
+        })
+
+        setGetPackage((current) =>
+          current?.id === updatedPackage.id
+            ? { ...current, ...updatedPackage }
+            : current
+        )
+      }
+
       queryClient.invalidateQueries({ queryKey: ["package"] })
       handleCloseModal()
     } catch (error: any) {

@@ -6,7 +6,6 @@ import {
   Container,
   Heading,
   Input,
-  Popover,
   Text,
   Tooltip,
   clx,
@@ -81,6 +80,7 @@ type ApiBooking = {
   id: string
   order_id?: string | null
   bookingType: BookingKind
+  preData?: unknown
   metadata?: BookingMetadata
   line_items?: BookingLineItems | BookingLineItem
   tour?: BookingEntity | null
@@ -274,13 +274,13 @@ function OrderLabelWithTooltip({ orderLabel, orderId }: { orderLabel: string; or
   }
 
   return (
-    <Tooltip content={orderLabel} side="top">
+    <Tooltip content={orderLabel} side="top" maxWidth={420}>
       <span
         tabIndex={0}
         className="inline-block max-w-full cursor-help truncate rounded outline-none focus-visible:shadow-borders-interactive-with-focus"
       >
         <Text size="small" leading="compact" weight="plus">
-          {`Pedido ${getCompactOrderLabel(orderId)}`}
+          {`orderId ${getCompactOrderLabel(orderId)}`}
         </Text>
       </span>
     </Tooltip>
@@ -393,24 +393,78 @@ function getVariantComposition(booking: ApiBooking): Array<{ label: string; quan
   return Array.from(composition.entries()).map(([label, quantity]) => ({ label, quantity }))
 }
 
-function stringifyPreData(preData: unknown): string | null {
+function getBookingPreData(booking: ApiBooking): unknown | null {
+  if (booking.preData !== null && booking.preData !== undefined) {
+    return booking.preData
+  }
+
+  if (booking.metadata?.preData !== null && booking.metadata?.preData !== undefined) {
+    return booking.metadata.preData
+  }
+
+  return null
+}
+
+function extractPreDataAnswers(preData: unknown): unknown | null {
   if (preData === null || preData === undefined) {
     return null
   }
 
+  let normalizedPreData = preData
+
   if (typeof preData === "string") {
     try {
-      const parsed = JSON.parse(preData)
-      return JSON.stringify(parsed, null, 2)
+      normalizedPreData = JSON.parse(preData)
     } catch {
-      return JSON.stringify(preData)
+      return null
     }
   }
 
+  if (!normalizedPreData || typeof normalizedPreData !== "object" || Array.isArray(normalizedPreData)) {
+    return null
+  }
+
+  const groups =
+    "groups" in normalizedPreData && normalizedPreData.groups && typeof normalizedPreData.groups === "object"
+      ? normalizedPreData.groups
+      : null
+
+  if (!groups || Array.isArray(groups)) {
+    return null
+  }
+
+  const answersEntries = Object.entries(groups).flatMap(([groupId, groupValue]) => {
+    if (!groupValue || typeof groupValue !== "object" || Array.isArray(groupValue)) {
+      return []
+    }
+
+    if (!("answers" in groupValue) || groupValue.answers === undefined) {
+      return []
+    }
+
+    return [[groupId, groupValue.answers] as const]
+  })
+
+  if (answersEntries.length === 0) {
+    return null
+  }
+
+  if (answersEntries.length === 1) {
+    return answersEntries[0]?.[1] ?? null
+  }
+
+  return Object.fromEntries(answersEntries)
+}
+
+function stringifyPreDataAnswers(answers: unknown): string | null {
+  if (answers === null || answers === undefined) {
+    return null
+  }
+
   try {
-    return JSON.stringify(preData, null, 2)
+    return JSON.stringify(answers, null, 2)
   } catch {
-    return JSON.stringify(String(preData))
+    return String(answers)
   }
 }
 
@@ -683,20 +737,20 @@ const BookingListPage = () => {
     }
   }, [selectedReservation])
 
-  const selectedPreDataString = useMemo(() => {
+  const selectedAnswersString = useMemo(() => {
     if (!selectedReservation?.items.length) {
       return null
     }
 
     const firstBookingWithPreData = selectedReservation.items.find(
-      (item) => item.metadata?.preData !== null && item.metadata?.preData !== undefined
+      (item) => getBookingPreData(item) !== null
     )
 
     if (!firstBookingWithPreData) {
       return null
     }
 
-    return stringifyPreData(firstBookingWithPreData.metadata?.preData)
+    return stringifyPreDataAnswers(extractPreDataAnswers(getBookingPreData(firstBookingWithPreData)))
   }, [selectedReservation])
 
   const modalTitle = useMemo(() => {
@@ -1151,27 +1205,14 @@ const BookingListPage = () => {
                     </Text>
                   ) : null}
 
-                  {selectedPreDataString ? (
+                  {selectedAnswersString ? (
                     <div className="mt-3">
-                      <Popover>
-                        <Popover.Trigger asChild>
-                          <Button size="small" variant="secondary">
-                            Ver preData
-                          </Button>
-                        </Popover.Trigger>
-                        <Popover.Content
-                          sideOffset={8}
-                          align="start"
-                          className="max-h-[360px] w-[min(92vw,560px)] overflow-auto"
-                        >
-                          <Text size="xsmall" leading="compact" className="text-ui-fg-subtle">
-                            metadata.preData
-                          </Text>
-                          <pre className="mt-2 whitespace-pre-wrap break-words rounded bg-ui-bg-subtle p-2 text-xs text-ui-fg-subtle">
-                            {selectedPreDataString}
-                          </pre>
-                        </Popover.Content>
-                      </Popover>
+                      <Text size="xsmall" leading="compact" className="text-ui-fg-subtle">
+                        answers
+                      </Text>
+                      <pre className="mt-2 max-h-[360px] overflow-auto whitespace-pre-wrap break-words rounded border border-ui-border-base bg-ui-bg-base p-2 text-xs text-ui-fg-subtle">
+                        {selectedAnswersString}
+                      </pre>
                     </div>
                   ) : null}
                 </div>

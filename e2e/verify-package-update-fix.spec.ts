@@ -2,9 +2,56 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Package update via dashboard UI', () => {
   test('navigates to packages list, opens first package edit modal, and updates fields', async ({ page }) => {
+    const targetDate = new Date()
+    targetDate.setDate(targetDate.getDate() + 200)
+    const targetMonth = String(targetDate.getMonth() + 1).padStart(2, '0')
+    const targetDay = String(targetDate.getDate()).padStart(2, '0')
+    const targetYear = String(targetDate.getFullYear())
+    const targetDisplayDate = `${targetDay}/${targetMonth}/${targetYear}`
+
     await page.goto('/app/packages')
     await page.waitForLoadState('networkidle')
     console.log('Loaded packages page')
+
+    const e2ePackageId = await page.evaluate(async () => {
+      const createResponse = await fetch('/admin/packages', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          destination: `E2E Package ${Date.now()}`,
+          description: 'Package created by Playwright for blocked-dates verification',
+          duration_days: 1,
+          max_capacity: 10,
+          is_special: false,
+          booking_min_days_ahead: 1,
+          blocked_dates: [],
+          blocked_week_days: [],
+          prices: {
+            adult: 100,
+            child: 50,
+            infant: 0,
+            currency_code: 'pen',
+          },
+        }),
+      })
+
+      if (!createResponse.ok) {
+        throw new Error(`Failed to create package for test: ${createResponse.status}`)
+      }
+
+      const created = await createResponse.json()
+      return created.package?.id || null
+    })
+
+    expect(e2ePackageId).toBeTruthy()
+    console.log('Created package for e2e verification:', e2ePackageId)
+
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+    await page.waitForSelector('table tbody tr', { state: 'attached', timeout: 15000 })
 
     const firstRowActionButton = page.locator('table tbody tr').first().locator('button').last()
     await expect(firstRowActionButton).toBeVisible({ timeout: 15000 })
@@ -31,6 +78,10 @@ test.describe('Package update via dashboard UI', () => {
     const originalBookingMinMonths = await bookingMinMonthsInput.inputValue()
 console.log('Original booking_min_days_ahead:', originalBookingMinMonths)
 
+    const dialog = page.locator('[role="dialog"]')
+    const originalBlockedDaysSummary = (await dialog.textContent()) || ''
+    console.log('Original blocked days summary:', originalBlockedDaysSummary)
+
     await specialSwitch.click()
     await page.waitForTimeout(500)
     const toggledState = await specialSwitch.getAttribute('data-state')
@@ -41,6 +92,33 @@ console.log('Original booking_min_days_ahead:', originalBookingMinMonths)
 
     await bookingMinMonthsInput.fill('3')
 console.log('Set booking_min_days_ahead to 3')
+
+    const mondayButton = page.getByRole('button', { name: 'Lun' })
+    const tuesdayButton = page.getByRole('button', { name: 'Mar' })
+
+    if (!originalBlockedDaysSummary.includes('Lunes')) {
+      await mondayButton.click()
+    }
+
+    const blockedDaysAfterMonday = (await dialog.textContent()) || ''
+
+    if (!blockedDaysAfterMonday.includes('Martes')) {
+      await tuesdayButton.click()
+    }
+
+    console.log('Ensured blocked week days include Lun and Mar')
+
+    await expect(dialog).toContainText('Lunes')
+    await expect(dialog).toContainText('Martes')
+
+    const calendarGroup = page.getByRole('group', { name: 'Calendar Date input' })
+    await calendarGroup.getByRole('spinbutton', { name: 'month' }).fill(targetMonth)
+    await calendarGroup.getByRole('spinbutton', { name: 'day' }).fill(targetDay)
+    await calendarGroup.getByRole('spinbutton', { name: 'year' }).fill(targetYear)
+    await page.getByRole('button', { name: 'Add Date' }).click()
+    console.log(`Ensured blocked date ${targetDisplayDate}`)
+
+    await expect(page.getByText(targetDisplayDate)).toBeVisible({ timeout: 5000 })
 
     const nextButton = page.getByRole('button', { name: 'Next' }).filter({ hasNot: page.locator('[disabled]') })
     await nextButton.click()
@@ -99,6 +177,13 @@ console.log('Set booking_min_days_ahead to 3')
     const verifyBookingInput = page.locator('input[type="number"]').nth(2)
     await expect(verifyBookingInput).toHaveValue('3')
 console.log('✓ booking_min_days_ahead persisted as 3')
+
+    await expect(page.locator('[role="dialog"]')).toContainText('Lunes')
+    await expect(page.locator('[role="dialog"]')).toContainText('Martes')
+    console.log('✓ blocked_week_days persisted including Lunes y Martes')
+
+    await expect(page.getByText(targetDisplayDate)).toBeVisible({ timeout: 5000 })
+    console.log(`✓ blocked_dates persisted including ${targetDisplayDate}`)
 
     console.log('✅ Package update test completed successfully')
   })

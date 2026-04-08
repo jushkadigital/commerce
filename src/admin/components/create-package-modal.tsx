@@ -152,6 +152,7 @@ export const PackageFormModal = ({
         duration_days: Number(duration),
         max_capacity: Number(capacity),
         is_special: isSpecial,
+        booking_min_days_ahead: bookingMinDays === "" ? 0 : Number(bookingMinDays),
         blocked_dates: blockedDates,
         blocked_week_days: blockedWeekDays,
         prices: {
@@ -160,10 +161,6 @@ export const PackageFormModal = ({
           infant: prices["Infant"]?.[priceKey] || prices["infant"]?.[priceKey] || 0,
           currency_code: defaultCurrency
         },
-      }
-
-      if (bookingMinDays !== "") {
-        payload.booking_min_days_ahead = Number(bookingMinDays)
       }
 
       if (isEditMode && onUpdated) {

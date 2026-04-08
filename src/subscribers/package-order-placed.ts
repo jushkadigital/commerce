@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { PACKAGE_MODULE } from "../modules/package"
 import type PackageModuleService from "../modules/package/service"
 import { findExistingPackageBooking } from "../utils/package-booking-idempotency"
+import { getBookingStatusFromPaymentStatus } from "../utils/booking-payment-status"
 import { resend } from "../utils/email"
 import { getOrderNotificationEmails } from "../utils/order-notification-emails"
 
@@ -86,6 +87,7 @@ export default async function handlePackageOrderPlaced({
         "display_id",
         "email",
         "metadata",
+        "payment_status",
         "currency_code",
         "total",
         "items.*",
@@ -124,6 +126,9 @@ export default async function handlePackageOrderPlaced({
         ? (order.metadata as Record<string, any>).preData
         : undefined
     const orderPreData = orderPreDataRaw == null ? undefined : orderPreDataRaw
+    const orderPaymentStatus =
+      (order as { payment_status?: unknown }).payment_status
+    const bookingStatus = getBookingStatusFromPaymentStatus(orderPaymentStatus)
 
     const bookingsToCreate = packageItems.map((item: any) => {
       const bookingMetadata: Record<string, any> = {}
@@ -140,7 +145,7 @@ export default async function handlePackageOrderPlaced({
         order_id: orderId,
         package_id: item.metadata.package_id,
         package_date: new Date(item.metadata.package_date),
-        status: "pending" as const,
+        status: bookingStatus,
         metadata: Object.keys(bookingMetadata).length > 0 ? bookingMetadata : undefined,
         line_items: {
           item_id: item.id,

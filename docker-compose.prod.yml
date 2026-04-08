@@ -40,7 +40,7 @@ services:
 
   backend-server:
     container_name: medusa-app-server
-    image: urgosxd7/medusa-app:latest
+    image: jushkadigital/medusa-app:latest
     restart: unless-stopped
     volumes:
       - backend-server-data:/data

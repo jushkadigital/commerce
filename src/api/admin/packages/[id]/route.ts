@@ -3,7 +3,6 @@ import { Modules } from "@medusajs/framework/utils"
 import PackageModuleService from "../../../../modules/package/service"
 import { PACKAGE_MODULE } from "../../../../modules/package"
 import { z } from "zod"
-import updatePackageWorkflow from "../../../../workflows/update-package"
 
 export async function GET(
   req: MedusaRequest,
@@ -56,27 +55,73 @@ export const POST = async (
   res: MedusaResponse
 ) => {
   const { id } = req.params
+  const packageModuleService: PackageModuleService = req.scope.resolve(PACKAGE_MODULE)
+  const productModule = req.scope.resolve(Modules.PRODUCT)
 
-  console.log(req.params)
   const validatedBody = UpdatePackageSchema.parse(req.body)
+  const updateData: Record<string, unknown> = {}
 
-  const { result, errors } = await updatePackageWorkflow(req.scope).run({
-    input: {
-      id,
-      ...validatedBody,
-    },
-    throwOnError: false,
-  })
+  if ("slug" in validatedBody) updateData.slug = validatedBody.slug
+  if ("destination" in validatedBody) updateData.destination = validatedBody.destination
+  if ("description" in validatedBody) updateData.description = validatedBody.description
+  if ("duration_days" in validatedBody) updateData.duration_days = validatedBody.duration_days
+  if ("max_capacity" in validatedBody) updateData.max_capacity = validatedBody.max_capacity
+  if ("thumbnail" in validatedBody) updateData.thumbnail = validatedBody.thumbnail
+  if ("is_special" in validatedBody) updateData.is_special = validatedBody.is_special
+  if ("booking_min_days_ahead" in validatedBody) updateData.booking_min_days_ahead = validatedBody.booking_min_days_ahead
+  if ("blocked_dates" in validatedBody) updateData.blocked_dates = validatedBody.blocked_dates
+  if ("blocked_week_days" in validatedBody) updateData.blocked_week_days = validatedBody.blocked_week_days
+  if ("cancellation_deadline_hours" in validatedBody) updateData.cancellation_deadline_hours = validatedBody.cancellation_deadline_hours
 
-  if (errors.length > 0) {
+  try {
+    await packageModuleService.updatePackages([{ id, ...updateData }])
+
+    if (validatedBody.prices) {
+      await packageModuleService.updateVariantPrices(id, validatedBody.prices, req.scope)
+    }
+
+    const currentPackage = await packageModuleService.retrievePackage(id)
+
+    if (currentPackage.product_id) {
+      const productUpdateData: Record<string, unknown> = { id: currentPackage.product_id }
+
+      if (validatedBody.destination) {
+        productUpdateData.title = `${validatedBody.destination}${validatedBody.duration_days ? ` - ${validatedBody.duration_days} Days` : ""}`
+      }
+
+      if (validatedBody.description) {
+        productUpdateData.description = validatedBody.description
+      }
+
+      if (Object.keys(productUpdateData).length > 1) {
+        await productModule.updateProducts(currentPackage.product_id, productUpdateData)
+      }
+    }
+
+    const updatedPackage = await packageModuleService.retrievePackage(id, {
+      relations: ["variants", "bookings"],
+    })
+
+    let thumbnail: string | null = null
+    if (updatedPackage.product_id) {
+      try {
+        const product = await productModule.retrieveProduct(updatedPackage.product_id)
+        thumbnail = product.thumbnail || null
+      } catch (error) {
+        console.warn(`Could not fetch product ${updatedPackage.product_id}:`, error)
+      }
+    }
+
+    res.json({ package: { ...updatedPackage, thumbnail } })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error"
+
+    console.error("Failed to update package", error)
     res.status(500).json({
       message: "Failed to update package",
-      errors: errors.map((e) => e.error.message),
+      errors: [message],
     })
-    return
   }
-
-  res.json({ package: result.package })
 }
 
 export async function DELETE(
