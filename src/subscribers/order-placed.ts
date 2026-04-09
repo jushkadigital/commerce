@@ -6,6 +6,7 @@ import { findExistingBooking } from "../utils/booking-idempotency"
 import { getBookingStatusFromPaymentStatus } from "../utils/booking-payment-status"
 import { resend } from "../utils/email"
 import { getOrderNotificationEmails } from "../utils/order-notification-emails"
+import { trackCommerceEvent, type TrackingItem } from "../utils/conversion-tracking"
 
 type TravelBookingNotificationEmailFn =
   typeof import("../emails/travel-booking-notification.js").TravelBookingNotificationEmail
@@ -94,6 +95,74 @@ export default async function handleOrderPlaced({
     if (!order) {
       logger.warn(`[order.placed] Order ${orderId} not found.`)
       return
+    }
+
+    const bookableItems = (order.items || []).filter(
+      (item: any) => item.metadata?.is_tour === true || item.metadata?.is_package === true
+    )
+
+    if (bookableItems.length > 0) {
+      const trackingItems = bookableItems.reduce<TrackingItem[]>((acc, item: any) => {
+          const contentId =
+            typeof item.variant_id === "string"
+              ? item.variant_id
+              : typeof item.id === "string"
+                ? item.id
+                : undefined
+
+          if (!contentId) {
+            return acc
+          }
+
+          const rawQuantity = Number(item.quantity)
+          const quantity = Number.isFinite(rawQuantity) && rawQuantity > 0 ? rawQuantity : 1
+          const rawUnitPrice = Number(item.unit_price)
+          const unitPrice = Number.isFinite(rawUnitPrice)
+            ? rawUnitPrice
+            : Number(item.total) / quantity
+          const contentType = item.metadata?.is_tour === true
+            ? "tour"
+            : item.metadata?.is_package === true
+              ? "package"
+              : "product"
+
+          acc.push({
+            contentId,
+            contentType,
+            contentCategory: contentType,
+            contentName: typeof item.title === "string" ? item.title : undefined,
+            quantity,
+            ...(Number.isFinite(unitPrice) ? { price: unitPrice } : {}),
+          })
+
+          return acc
+        }, [])
+
+      await trackCommerceEvent({
+        eventName: "Purchase",
+        eventId: `purchase:${orderId}`,
+        currency: typeof order.currency_code === "string" ? order.currency_code : undefined,
+        value: Number(order.total),
+        orderId: String(order.display_id || order.id || orderId),
+        items: trackingItems,
+        user: {
+          email:
+            typeof order.email === "string"
+              ? order.email
+              : typeof order.customer?.email === "string"
+                ? order.customer.email
+                : undefined,
+          firstName:
+            typeof order.customer?.first_name === "string"
+              ? order.customer.first_name
+              : undefined,
+          lastName:
+            typeof order.customer?.last_name === "string"
+              ? order.customer.last_name
+              : undefined,
+        },
+        logger,
+      })
     }
 
     const tourItems = (order.items || []).filter(

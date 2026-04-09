@@ -8,6 +8,7 @@ import {
   QueryContext,
 } from "@medusajs/framework/utils"
 import { wrapVariantsWithInventoryQuantityForSalesChannel } from "@medusajs/medusa/api/utils/middlewares/index"
+import { trackCommerceEvent, type TrackingItem } from "../../../../../utils/conversion-tracking"
 
 const baseExternalProductFields = [
   "id",
@@ -45,13 +46,37 @@ const baseExternalProductFields = [
   "package.is_special",
 ]
 
-type ProductWithVariants = {
-  id?: string
-  variants?: unknown[]
-}
-
 type ProductSalesChannelLink = {
   id?: string
+}
+
+type ProductVariantWithPrice = {
+  id?: string
+  title?: string
+  calculated_price?: {
+    calculated_amount?: number | string
+  }
+}
+
+type RequestWithAuthContext = MedusaStoreRequest & {
+  auth_context?: {
+    actor_id?: string
+  }
+}
+
+type ExternalProductRecord = {
+  id?: string
+  title?: string
+  external_id?: string
+  variants?: ProductVariantWithPrice[]
+  tour?: {
+    id?: string
+    destination?: string
+  }
+  package?: {
+    id?: string
+    destination?: string
+  }
 }
 
 const EXTERNAL_PRODUCT_CACHE_CONTROL =
@@ -101,6 +126,7 @@ export async function GET(
   req: MedusaStoreRequest,
   res: MedusaResponse
 ) {
+  const requestWithAuth = req as RequestWithAuthContext
   const externalId = req.params.external_id
   const regionId = req.query.region_id as string | undefined
   const currencyCode = req.query.currency_code as string | undefined
@@ -116,6 +142,7 @@ export async function GET(
   }
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+  const logger = req.scope.resolve("logger")
   const fields = [...baseExternalProductFields]
 
   if (includeCalculatedPrice) {
@@ -154,7 +181,7 @@ export async function GET(
     return res.status(404).json({ message: "Product by external not found" })
   }
 
-  const productId = (product as ProductWithVariants).id
+  const productId = (product as ExternalProductRecord).id
 
   if (!productId) {
     return res.status(404).json({ message: "Product by external not found" })
@@ -180,7 +207,7 @@ export async function GET(
 
   if (includeInventoryQuantity) {
     const variants = products.flatMap((entry) => {
-      const record = entry as ProductWithVariants
+      const record = entry as ExternalProductRecord
       return Array.isArray(record.variants) ? record.variants : []
     })
 
@@ -207,6 +234,50 @@ export async function GET(
   } else {
     res.setHeader("Cache-Control", EXTERNAL_PRODUCT_CACHE_CONTROL)
     appendVaryHeaders(res, CACHE_VARY_HEADERS)
+  }
+
+  const productRecord = product as ExternalProductRecord
+
+  const contentCategory = productRecord.tour?.id
+    ? "tour"
+    : productRecord.package?.id
+      ? "package"
+      : "product"
+  const contentId =
+    productRecord.external_id ||
+    productRecord.tour?.id ||
+    productRecord.package?.id ||
+    productRecord.id
+  const firstVariantPrice = productRecord.variants
+    ?.map((variant) => Number(variant?.calculated_price?.calculated_amount))
+    .find((amount) => Number.isFinite(amount))
+  const trackingItems: TrackingItem[] = contentId
+    ? [
+        {
+          contentId,
+          contentType: contentCategory,
+          contentCategory,
+          contentName:
+            productRecord.tour?.destination ||
+            productRecord.package?.destination ||
+            productRecord.title,
+          ...(typeof firstVariantPrice === "number" ? { price: firstVariantPrice } : {}),
+        },
+      ]
+    : []
+
+  if (trackingItems.length > 0) {
+    await trackCommerceEvent({
+      eventName: "ViewContent",
+      eventId: `view_content:${externalId}:${Date.now()}`,
+      request: req,
+      currency: currencyCode,
+      items: trackingItems,
+      user: {
+        externalId: requestWithAuth.auth_context?.actor_id,
+      },
+      logger,
+    })
   }
 
   res.json({ product })

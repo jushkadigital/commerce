@@ -6,6 +6,13 @@ import { PACKAGE_MODULE } from "../../../../modules/package"
 import PackageModuleService from "../../../../modules/package/service"
 import { PassengerType } from "../../../../modules/package/models/package-variant"
 import { refetchPromotionAwareCart } from "../refetch-cart"
+import { trackCommerceEvent, type TrackingItem } from "../../../../utils/conversion-tracking"
+
+type RequestWithAuthContext = MedusaRequest & {
+  auth_context?: {
+    actor_id?: string
+  }
+}
 
 /**
  * Add package items to cart
@@ -15,6 +22,7 @@ import { refetchPromotionAwareCart } from "../refetch-cart"
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
+    const requestWithAuth = req as RequestWithAuthContext
     const body = req.body as {
       cart_id?: string
       package_id?: string
@@ -462,6 +470,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     const groupId = generateEntityId(undefined, "pkg")
+    const logger = req.scope.resolve("logger")
 
 
     const variantBreakdown: Array<{
@@ -554,6 +563,33 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     // 6. Retrieve updated cart
     const updatedCart = await refetchPromotionAwareCart(cart_id, req.scope)
+
+    const trackingItems: TrackingItem[] = variantBreakdown.map((entry) => ({
+      contentId: entry.variant_id,
+      contentType: "package",
+      contentCategory: "package",
+      contentName: pkg.destination,
+      quantity: entry.quantity,
+      price: entry.unit_price,
+    }))
+
+    await trackCommerceEvent({
+      eventName: "AddToCart",
+      eventId: `add_to_cart:${groupId}`,
+      request: req,
+      currency: cart.currency_code,
+      value: totalPrice,
+      items: trackingItems,
+      description: pkg.destination,
+      user: {
+        email:
+          customer?.email ||
+          (typeof updatedCart?.email === "string" ? updatedCart.email : undefined),
+        phone: customer?.phone,
+        externalId: requestWithAuth.auth_context?.actor_id,
+      },
+      logger,
+    })
 
     res.json({
       cart: updatedCart,

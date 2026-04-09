@@ -22,7 +22,7 @@ export default async function handleTourDeletedSync({
     }
 
     // Find the tour by metadata.payloadId
-    const [tour] = await tourModule.getTourByMetadata(externalId)
+    const [tour] = await tourModule.getTourByMetadata(externalId + "tour")
 
     if (!tour) {
       logger.warn(`Tour not found for external ID: ${externalId}`)

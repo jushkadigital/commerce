@@ -17,26 +17,26 @@ export default async function handleTourDeletedSync({
     const externalId = event.data?.id || event.data?.payloadId
 
     if (!externalId) {
-      logger.warn("No external ID found in tour.delete event data")
+      logger.warn("No external ID found in package.delete event data")
       return
     }
 
     // Find the tour by metadata.payloadId
-    const [packageM] = await packageModule.getPackageByMetadata(externalId);
+    const [packageM] = await packageModule.getPackageByMetadata(externalId + "package");
 
     if (!packageM) {
-      logger.warn(`Tour not found for external ID: ${externalId}`)
+      logger.warn(`Package not found for external ID: ${externalId}`)
       return
     }
 
-    logger.info(`Found tour to delete: ${packageM.id} (external ID: ${externalId})`)
+    logger.info(`Found package to delete: ${packageM.id} (external ID: ${externalId})`)
 
     // Delete the tour from Medusa
     await packageModule.deletePackages([packageM.id])
 
-    logger.info(`Successfully deleted tour: ${packageM.id}`)
+    logger.info(`Successfully deleted package: ${packageM.id}`)
   } catch (error) {
-    logger.error(`Error in tourDeleted subscriber: ${error}`)
+    logger.error(`Error in packageDeleted subscriber: ${error}`)
   }
 }
 
