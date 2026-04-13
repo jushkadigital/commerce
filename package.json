@@ -23,7 +23,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@medusajs/admin-sdk": "2.12.4",
+    "@medusajs/admin-sdk": "2.13.6",
     "@medusajs/cli": "2.12.4",
     "@medusajs/framework": "2.12.4",
     "@medusajs/medusa": "2.12.4",
