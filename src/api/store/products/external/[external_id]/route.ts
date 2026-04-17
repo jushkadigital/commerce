@@ -270,6 +270,7 @@ export async function GET(
     await trackCommerceEvent({
       eventName: "ViewContent",
       eventId: `view_content:${externalId}:${Date.now()}`,
+      trigger: "store.products.external.get",
       request: req,
       currency: currencyCode,
       items: trackingItems,

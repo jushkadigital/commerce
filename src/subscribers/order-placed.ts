@@ -141,6 +141,7 @@ export default async function handleOrderPlaced({
       await trackCommerceEvent({
         eventName: "Purchase",
         eventId: `purchase:${orderId}`,
+        trigger: "subscriber.order.placed",
         currency: typeof order.currency_code === "string" ? order.currency_code : undefined,
         value: Number(order.total),
         orderId: String(order.display_id || order.id || orderId),

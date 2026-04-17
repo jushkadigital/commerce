@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import type { IPricingModuleService } from "@medusajs/framework/types"
-import { ContainerRegistrationKeys, Modules, QueryContext } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, MedusaError, Modules, QueryContext } from "@medusajs/framework/utils"
 import { generateEntityId } from "@medusajs/utils"
 import { TOUR_MODULE } from "../../../../modules/tour"
 import TourModuleService from "../../../../modules/tour/service"
@@ -12,6 +12,10 @@ type RequestWithAuthContext = MedusaRequest & {
   auth_context?: {
     actor_id?: string
   }
+}
+
+const throwInvalidData = (message: string, code?: string): never => {
+  throw new MedusaError(MedusaError.Types.INVALID_DATA, message, code)
 }
 
 /**
@@ -54,10 +58,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     let customer = body.customer
 
     if (!cart_id) {
-      return res.status(400).json({
-        message: "Missing required field: cart_id",
-      })
+      throwInvalidData("Missing required field: cart_id")
     }
+
+    const ensuredCartId = cart_id!
 
     const tourModuleService: TourModuleService = req.scope.resolve(TOUR_MODULE)
     const cartModule = req.scope.resolve(Modules.CART)
@@ -96,10 +100,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })
 
       if (invalidItem) {
-        return res.status(400).json({
-          message:
-            "Each item must include variant_id, quantity > 0, optional unit_price >= 0, and optional thumbnail as string",
-        })
+        throwInvalidData(
+          "Each item must include variant_id, quantity > 0, optional unit_price >= 0, and optional thumbnail as string"
+        )
       }
 
       for (const item of normalizedItems) {
@@ -110,10 +113,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           item.unit_price !== undefined &&
           existingOverride.unit_price !== item.unit_price
         ) {
-          return res.status(400).json({
-            message: "Conflicting unit_price for same variant_id",
-            variant_id: item.variant_id,
-          })
+          throwInvalidData(`Conflicting unit_price for same variant_id: ${item.variant_id}`)
         }
 
         if (
@@ -121,10 +121,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           item.thumbnail !== undefined &&
           existingOverride.thumbnail !== item.thumbnail
         ) {
-          return res.status(400).json({
-            message: "Conflicting thumbnail for same variant_id",
-            variant_id: item.variant_id,
-          })
+          throwInvalidData(`Conflicting thumbnail for same variant_id: ${item.variant_id}`)
         }
 
         inputOverridesByVariant.set(item.variant_id, {
@@ -149,10 +146,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
       const missingVariantIds = uniqueVariantIds.filter((id) => !tourVariantByVariantId.has(id))
       if (missingVariantIds.length > 0) {
-        return res.status(400).json({
-          message: "Some variants are not linked to any tour",
-          variant_ids: missingVariantIds,
-        })
+        throwInvalidData(`Some variants are not linked to any tour: ${missingVariantIds.join(", ")}`)
       }
 
       const derivedTourIds = [
@@ -162,17 +156,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       ]
 
       if (derivedTourIds.length !== 1) {
-        return res.status(400).json({
-          message: "All items must belong to the same tour",
-        })
+        throwInvalidData("All items must belong to the same tour")
       }
 
       const derivedTourId = derivedTourIds[0]
 
       if (tour_id && tour_id !== derivedTourId) {
-        return res.status(400).json({
-          message: "tour_id does not match the provided variants",
-        })
+        throwInvalidData("tour_id does not match the provided variants")
       }
 
       tour_id = derivedTourId
@@ -189,15 +179,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
 
       if (!tour_date) {
-        return res.status(400).json({
-          message: "Missing required field: tour_date",
-        })
+        throwInvalidData("Missing required field: tour_date")
       }
 
       if (itemTourDates.some((dateValue) => dateValue !== tour_date)) {
-        return res.status(400).json({
-          message: "All items metadata.tour_date must match the requested tour_date",
-        })
+        throwInvalidData("All items metadata.tour_date must match the requested tour_date")
       }
 
       if (!customer) {
@@ -244,37 +230,33 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
     } else {
       if (!tour_id || !tour_date) {
-        return res.status(400).json({
-          message: "Missing required fields: cart_id, tour_id, tour_date",
-        })
+        throwInvalidData("Missing required fields: cart_id, tour_id, tour_date")
       }
     }
 
     const totalPassengers = adults + children + infants
     if (totalPassengers === 0) {
-      return res.status(400).json({
-        message: "At least one passenger is required",
-      })
+      throwInvalidData("At least one passenger is required")
     }
 
+    const ensuredTourId = tour_id!
+    const ensuredTourDate = tour_date!
+
     // 1. Validate tour exists and get tour info
-    const tour = await tourModuleService.retrieveTour(tour_id!, {
+    const tour = await tourModuleService.retrieveTour(ensuredTourId, {
       relations: ["variants"],
     })
 
     // 2. Validate tour availability
     const validation = await tourModuleService.validateBooking(
-      tour_id!,
-      new Date(tour_date!),
+      ensuredTourId,
+      new Date(ensuredTourDate),
       totalPassengers
     )
 
     if (!validation.valid) {
       console.log("Tour not available - Reason:", validation.reason)
-      return res.status(400).json({
-        message: "Tour not available",
-        reason: validation.reason,
-      })
+      throwInvalidData(validation.reason || "Tour not available")
     }
 
     // 3. Map variants by passenger type and collect variant IDs needed
@@ -291,7 +273,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (adults > 0) {
       const adultVariant = variantMap.get(PassengerType.ADULT)
       if (!adultVariant?.variant_id) {
-        return res.status(400).json({ message: "Adult variant not found" })
+        throwInvalidData("Adult variant not found")
       }
       variantIdsNeeded.push(adultVariant.variant_id)
     }
@@ -299,7 +281,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (children > 0) {
       const childVariant = variantMap.get(PassengerType.CHILD)
       if (!childVariant?.variant_id) {
-        return res.status(400).json({ message: "Child variant not found" })
+        throwInvalidData("Child variant not found")
       }
       variantIdsNeeded.push(childVariant.variant_id)
     }
@@ -307,12 +289,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (infants > 0) {
       const infantVariant = variantMap.get(PassengerType.INFANT)
       if (!infantVariant?.variant_id) {
-        return res.status(400).json({ message: "Infant variant not found" })
+        throwInvalidData("Infant variant not found")
       }
       variantIdsNeeded.push(infantVariant.variant_id)
     }
 
-    const cart = await cartModule.retrieveCart(cart_id)
+    const cart = await cartModule.retrieveCart(ensuredCartId)
     const pricingContext = {
       ...((req as any).pricingContext || {}),
       currency_code: (cart.currency_code || "usd").toLowerCase(),
@@ -409,11 +391,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const missingPriceVariantIds = variantIdsNeeded.filter((variantId) => !priceMap.has(variantId))
 
     if (missingPriceVariantIds.length > 0) {
-      return res.status(400).json({
-        message: "Missing variant prices for cart currency",
-        variant_ids: missingPriceVariantIds,
-        currency_code: pricingContext.currency_code,
-      })
+      throwInvalidData(
+        `Missing variant prices for cart currency ${pricingContext.currency_code}: ${missingPriceVariantIds.join(", ")}`
+      )
     }
 
     // 6. Build pricing breakdown and calculate total
@@ -534,7 +514,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         metadata: {
           is_tour: true,
           tour_id: tour.id,
-          tour_date: tour_date!,
+          tour_date: ensuredTourDate,
           tour_destination: tour.destination,
           tour_duration_days: tour.duration_days,
           passenger_type: entry.type,
@@ -553,16 +533,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
 
     if (itemsToAdd.length === 0) {
-      return res.status(400).json({
-        message: "No passenger variants found to add",
-      })
+      throwInvalidData("No passenger variants found to add")
     }
 
 
-    await cartModule.addLineItems(cart_id, itemsToAdd)
+    await cartModule.addLineItems(ensuredCartId, itemsToAdd)
 
     // 6. Retrieve updated cart
-    const updatedCart = await refetchPromotionAwareCart(cart_id, req.scope)
+    const updatedCart = await refetchPromotionAwareCart(ensuredCartId, req.scope)
 
     const trackingItems: TrackingItem[] = variantBreakdown.map((entry) => ({
       contentId: entry.variant_id,
@@ -576,6 +554,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     await trackCommerceEvent({
       eventName: "AddToCart",
       eventId: `add_to_cart:${groupId}`,
+      trigger: "store.cart.tour-items.post",
       request: req,
       currency: cart.currency_code,
       value: totalPrice,
@@ -596,7 +575,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       summary: {
         tour_id: tour.id,
         destination: tour.destination,
-        tour_date: tour_date!,
+        tour_date: ensuredTourDate,
         adults,
         children,
         infants,
@@ -605,10 +584,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
   } catch (error) {
     console.error("Error adding tour items to cart:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    res.status(500).json({
-      message: "Failed to add tour items to cart",
-      error: errorMessage,
-    })
+
+    if (MedusaError.isMedusaError(error)) {
+      throw error
+    }
+
+    throw new MedusaError(
+      MedusaError.Types.UNEXPECTED_STATE,
+      "Failed to add tour items to cart"
+    )
   }
 }

@@ -149,6 +149,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       await trackCommerceEvent({
         eventName: "InitiateCheckout",
         eventId: `initiate_checkout:${transactionId}`,
+        trigger: "store.izipay.create-payment.post",
         request: req,
         currency: cartCurrency,
         value: Number(body.amount),

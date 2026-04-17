@@ -48,6 +48,7 @@ export type TrackCommerceEventInput = {
   eventName: CommerceEventName
   eventId: string
   items: TrackingItem[]
+  trigger?: string
   request?: RequestLike
   sourceUrl?: string
   currency?: string
@@ -65,6 +66,152 @@ const META_ACCESS_TOKEN =
 const TIKTOK_PIXEL_CODE = process.env.TIKTOK_PIXEL_CODE
 const TIKTOK_ACCESS_TOKEN = process.env.TIKTOK_ACCESS_TOKEN
 const REQUEST_TIMEOUT_MS = 8000
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function truncateForLog(value: string, maxLength = 1500): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength)}…` : value
+}
+
+function sanitizeForLog(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeForLog(entry))
+  }
+
+  if (isRecord(value)) {
+    return Object.entries(value).reduce<Record<string, unknown>>((acc, [key, entry]) => {
+      if (/(token|authorization|secret|email|phone|external_id|client_ip_address|client_user_agent|ip|user_agent|ttp|ttclid|fbp|fbc|em|ph|fn|ln)/i.test(key)) {
+        acc[key] = "[REDACTED]"
+        return acc
+      }
+
+      acc[key] = sanitizeForLog(entry)
+      return acc
+    }, {})
+  }
+
+  if (typeof value === "string") {
+    return truncateForLog(value)
+  }
+
+  return value
+}
+
+function serializeError(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    }
+  }
+
+  return sanitizeForLog(error)
+}
+
+function buildLogLine(message: string, context?: Record<string, unknown>) {
+  if (!context) {
+    return message
+  }
+
+  return `${message} ${JSON.stringify(sanitizeForLog(context))}`
+}
+
+function buildRequestDebugLog(
+  provider: "Meta" | "TikTok",
+  url: string,
+  headers: Record<string, string>,
+  payload: unknown
+) {
+  return {
+    provider,
+    request: {
+      url,
+      headers: sanitizeForLog(headers),
+      body: sanitizeForLog(payload),
+    },
+  }
+}
+
+async function buildResponseDebugLog(response: Response) {
+  const contentType = normalizeString(response.headers.get("content-type"))
+  const rawBody = await response.text()
+
+  if (contentType?.toLowerCase().includes("application/json")) {
+    try {
+      return {
+        status: response.status,
+        status_text: response.statusText,
+        url: response.url,
+        content_type: contentType,
+        body: sanitizeForLog(JSON.parse(rawBody) as unknown),
+      }
+    } catch (error) {
+      return {
+        status: response.status,
+        status_text: response.statusText,
+        url: response.url,
+        content_type: contentType,
+        body: truncateForLog(rawBody),
+        body_parse_error: serializeError(error),
+      }
+    }
+  }
+
+  return {
+    status: response.status,
+    status_text: response.statusText,
+    url: response.url,
+    content_type: contentType,
+    body: truncateForLog(rawBody),
+  }
+}
+
+function getTikTokResponseCode(body: unknown): string | number | undefined {
+  if (!isRecord(body)) {
+    return undefined
+  }
+
+  const code = body.code
+
+  if (typeof code === "string" || typeof code === "number") {
+    return code
+  }
+
+  return undefined
+}
+
+function isTikTokBusinessSuccess(body: unknown): boolean | undefined {
+  const code = getTikTokResponseCode(body)
+
+  if (typeof code === "number") {
+    return code === 0
+  }
+
+  if (typeof code === "string") {
+    return code === "0"
+  }
+
+  return undefined
+}
+
+function buildLogContext(input: TrackCommerceEventInput) {
+  const value = resolveValue(input)
+  const currency = resolveCurrency(input.currency)
+
+  return {
+    event_name: input.eventName,
+    event_id: input.eventId,
+    trigger: input.trigger,
+    order_id: input.orderId,
+    currency,
+    value,
+    item_count: input.items.length,
+    content_ids: input.items.map((item) => item.contentId),
+  }
+}
 
 function normalizeString(value: unknown): string | undefined {
   if (typeof value !== "string") {
@@ -266,6 +413,13 @@ function getRequestTimeoutSignal(): AbortSignal | undefined {
 
 async function sendMetaEvent(input: TrackCommerceEventInput) {
   if (!META_PIXEL_ID || !META_ACCESS_TOKEN) {
+    input.logger?.warn?.(
+      buildLogLine("[tracking] Meta skipped: missing configuration", {
+        ...buildLogContext(input),
+        pixel_configured: Boolean(META_PIXEL_ID),
+        token_configured: Boolean(META_ACCESS_TOKEN),
+      })
+    )
     return
   }
 
@@ -330,28 +484,56 @@ async function sendMetaEvent(input: TrackCommerceEventInput) {
     ],
     access_token: META_ACCESS_TOKEN,
   }
+  const url = `https://graph.facebook.com/${META_API_VERSION}/${META_PIXEL_ID}/events`
+  const headers = {
+    "Content-Type": "application/json",
+  }
 
-  const response = await fetch(
-    `https://graph.facebook.com/${META_API_VERSION}/${META_PIXEL_ID}/events`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      signal: getRequestTimeoutSignal(),
-    }
+  input.logger?.info?.(
+    buildLogLine("[tracking] Meta request prepared", {
+      ...buildLogContext(input),
+      ...buildRequestDebugLog("Meta", url, headers, payload),
+    })
   )
 
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+    signal: getRequestTimeoutSignal(),
+  })
+
+  const responseLog = await buildResponseDebugLog(response)
+
   if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`Meta CAPI request failed (${response.status}): ${body.slice(0, 500)}`)
+    input.logger?.error?.(
+      buildLogLine("[tracking] Meta request failed", {
+        ...buildLogContext(input),
+        ...buildRequestDebugLog("Meta", url, headers, payload),
+        response: responseLog,
+      })
+    )
+    throw new Error(`Meta CAPI request failed (${response.status})`)
   }
+
+  input.logger?.info?.(
+    buildLogLine("[tracking] Meta event sent", {
+      ...buildLogContext(input),
+      response: responseLog,
+    })
+  )
 }
 
 
 async function sendTikTokEvent(input: TrackCommerceEventInput) {
   if (!TIKTOK_PIXEL_CODE || !TIKTOK_ACCESS_TOKEN) {
+    input.logger?.warn?.(
+      buildLogLine("[tracking] TikTok skipped: missing configuration", {
+        ...buildLogContext(input),
+        pixel_configured: Boolean(TIKTOK_PIXEL_CODE),
+        token_configured: Boolean(TIKTOK_ACCESS_TOKEN),
+      })
+    )
     return
   }
 
@@ -375,11 +557,11 @@ async function sendTikTokEvent(input: TrackCommerceEventInput) {
   }))
 
   const payload = {
-    event_source: "web",
+    event_source: "PIXEL_EVENTS",
     pixel_code: TIKTOK_PIXEL_CODE, // Omitimos event_source_id
     event: input.eventName,
     event_id: input.eventId,
-    timestamp: Math.floor(Date.now() / 1000),
+    timestamp: String(Math.floor(Date.now() / 1000)),
     context: {
       ...(sourceUrl ? { page: { url: sourceUrl } } : {}),
       ...(resolvedUser.clientIpAddress ? { ip: resolvedUser.clientIpAddress } : {}),
@@ -415,30 +597,68 @@ async function sendTikTokEvent(input: TrackCommerceEventInput) {
         }
         : {}),
     },
-    // ❌ ELIMINADO: access_token: TIKTOK_ACCESS_TOKEN
+  }
+  const url = "https://business-api.tiktok.com/open_api/v1.3/pixel/track/"
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Token": TIKTOK_ACCESS_TOKEN,
   }
 
-  const response = await fetch(
-    "https://business-api.tiktok.com/open_api/v1.3/pixel/track/",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Token": TIKTOK_ACCESS_TOKEN, // ✅ AGREGADO AQUÍ
-      },
-      body: JSON.stringify(payload),
-      signal: getRequestTimeoutSignal(),
-    }
+  input.logger?.info?.(
+    buildLogLine("[tracking] TikTok request prepared", {
+      ...buildLogContext(input),
+      ...buildRequestDebugLog("TikTok", url, headers, payload),
+    })
   )
 
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+    signal: getRequestTimeoutSignal(),
+  })
+
+  const responseLog = await buildResponseDebugLog(response)
+
   if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`TikTok Events API request failed (${response.status}): ${body.slice(0, 500)}`)
+    input.logger?.error?.(
+      buildLogLine("[tracking] TikTok request failed", {
+        ...buildLogContext(input),
+        ...buildRequestDebugLog("TikTok", url, headers, payload),
+        response: responseLog,
+      })
+    )
+    throw new Error(`TikTok Events API request failed (${response.status})`)
   }
+
+  if (isTikTokBusinessSuccess(responseLog.body) === false) {
+    input.logger?.error?.(
+      buildLogLine("[tracking] TikTok response reported failure", {
+        ...buildLogContext(input),
+        ...buildRequestDebugLog("TikTok", url, headers, payload),
+        response: responseLog,
+      })
+    )
+
+    const responseCode = getTikTokResponseCode(responseLog.body)
+    throw new Error(
+      `TikTok Events API business failure (${String(responseCode ?? "unknown")})`
+    )
+  }
+
+  input.logger?.info?.(
+    buildLogLine("[tracking] TikTok event sent", {
+      ...buildLogContext(input),
+      response: responseLog,
+    })
+  )
 }
 
 export async function trackCommerceEvent(input: TrackCommerceEventInput) {
   const logger = input.logger
+  logger?.info?.(
+    buildLogLine("[tracking] Dispatching commerce event", buildLogContext(input))
+  )
 
   const tasks = [
     sendMetaEvent(input),
@@ -454,8 +674,10 @@ export async function trackCommerceEvent(input: TrackCommerceEventInput) {
 
     const provider = index === 0 ? "Meta" : "TikTok"
     logger?.error?.(
-      `[tracking] ${provider} ${input.eventName} failed for event_id=${input.eventId}`,
-      result.reason
+      buildLogLine(`[tracking] ${provider} event failed`, {
+        ...buildLogContext(input),
+        error: serializeError(result.reason),
+      })
     )
   })
 }
