@@ -8,6 +8,7 @@ if (
   process.env.NODE_ENV = 'test'
 }
 
+//carga
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 import dotenv from 'dotenv'
 import path from 'path'
