@@ -1,6 +1,7 @@
 import {
   createWorkflow,
   transform,
+  when,
   WorkflowResponse
 } from "@medusajs/framework/workflows-sdk"
 import {
@@ -107,6 +108,21 @@ export const updatePackageWorkflow = createWorkflow(
       packageId: input.id,
       prices: input.prices || {}
     })
+
+    const productUpdatedEventData = transform(
+      { input, packages },
+      (data: { input: UpdatePackageWorkflowInput; packages: Array<{ product_id?: string | null }> }) => ({
+        id: data.input.prices && data.packages[0]?.product_id ? data.packages[0].product_id : "",
+      })
+    )
+
+    when(productUpdatedEventData, (data) => Boolean(data.id))
+      .then(() => {
+        emitEventStep({
+          eventName: "product.updated",
+          data: productUpdatedEventData
+        }).config({ name: "emit-package-product-updated" })
+      })
 
     const { data: finalPackage } = useQueryGraphStep({
       entity: "package",

@@ -76,11 +76,23 @@ export const POST = async (
   try {
     await packageModuleService.updatePackages([{ id, ...updateData }])
 
+    const currentPackage = await packageModuleService.retrievePackage(id)
+
     if (validatedBody.prices) {
       await packageModuleService.updateVariantPrices(id, validatedBody.prices, req.scope)
-    }
 
-    const currentPackage = await packageModuleService.retrievePackage(id)
+      const eventBus = req.scope.resolve(Modules.EVENT_BUS)
+      await eventBus.emit([
+        {
+          name: "entityPackage.updated",
+          data: { id },
+        },
+        ...(currentPackage.product_id ? [{
+          name: "product.updated",
+          data: { id: currentPackage.product_id },
+        }] : []),
+      ])
+    }
 
     if (currentPackage.product_id) {
       const productUpdateData: Record<string, unknown> = { id: currentPackage.product_id }

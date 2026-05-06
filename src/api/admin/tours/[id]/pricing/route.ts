@@ -217,6 +217,18 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
+    const eventBus = req.scope.resolve(Modules.EVENT_BUS)
+    await eventBus.emit([
+      {
+        name: "entityTour.updated",
+        data: { id },
+      },
+      ...(tour.product_id ? [{
+        name: "product.updated",
+        data: { id: tour.product_id },
+      }] : []),
+    ])
+
     res.json({
       tour: {
         id: tour.id,

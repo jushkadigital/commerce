@@ -30,7 +30,7 @@ services:
   backend-server:
     image: ubuntu:24.04
     volumes:
-      - .:/home/node/app:cached
+      - .:/workspace:cached
       - backend-server-data:/data
     working_dir: /home/node/app
     command: sleep infinity

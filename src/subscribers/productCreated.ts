@@ -7,14 +7,14 @@ export default async function handleProductSync({
   container
 }: SubscriberArgs<any>) {
   const logger = container.resolve("logger")
+  const eventName = event.name || "product.created"
 
   if (event.metadata?.source === "rabbitmq") {
-    logger.info(`Skipping product.created from RabbitMQ (already processed)`)
+    logger.info(`Skipping ${eventName} from RabbitMQ (already processed)`)
     return
   }
 
-
-  logger.info(`PRODUCT CREATED`)
+  logger.info(`${eventName.toUpperCase()}`)
   logger.info(`${JSON.stringify(event)}`)
 
   try {
@@ -70,16 +70,16 @@ export default async function handleProductSync({
     const rabbitMQEventBus = container.resolve(RABBITMQ_EVENT_BUS_MODULE) as any
 
     await rabbitMQEventBus.emit({
-      name: "product.created",
+      name: eventName,
       data: fullProductWithPrices
     })
 
-    logger.info(`Published product.created to RabbitMQ for product: ${productId}`)
+    logger.info(`Published ${eventName} to RabbitMQ for product: ${productId}`)
   } catch (error) {
-    logger.error(`Error in productCreated subscriber: ${error}`)
+    logger.error(`Error in product sync subscriber: ${error}`)
   }
 }
 
 export const config: SubscriberConfig = {
-  event: "product.created",
+  event: ["product.created", "product.updated"],
 }

@@ -91,11 +91,23 @@ export const POST = async (
   try {
     await tourModuleService.updateTours([{ id, ...updateData }])
 
+    const currentTour = await tourModuleService.retrieveTour(id)
+
     if (validatedBody.prices) {
       await tourModuleService.updateVariantPrices(id, validatedBody.prices, req.scope)
-    }
 
-    const currentTour = await tourModuleService.retrieveTour(id)
+      const eventBus = req.scope.resolve(Modules.EVENT_BUS)
+      await eventBus.emit([
+        {
+          name: "entityTour.updated",
+          data: { id },
+        },
+        ...(currentTour.product_id ? [{
+          name: "product.updated",
+          data: { id: currentTour.product_id },
+        }] : []),
+      ])
+    }
 
     if (currentTour.product_id) {
       const productUpdateData: Record<string, unknown> = { id: currentTour.product_id }

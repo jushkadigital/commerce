@@ -1,6 +1,7 @@
 import {
   createWorkflow,
   transform,
+  when,
   WorkflowResponse
 } from "@medusajs/framework/workflows-sdk"
 import {
@@ -122,6 +123,20 @@ export const updateTourWorkflow = createWorkflow(
     })
     // --- Step 4: Actualizar Precios (Usando tu lógica custom) ---
 
+    const productUpdatedEventData = transform(
+      { input, tours },
+      (data: { input: UpdateTourWorkflowInput; tours: Array<{ product_id?: string | null }> }) => ({
+        id: data.input.prices && data.tours[0]?.product_id ? data.tours[0].product_id : "",
+      })
+    )
+
+    when(productUpdatedEventData, (data) => Boolean(data.id))
+      .then(() => {
+        emitEventStep({
+          eventName: "product.updated",
+          data: productUpdatedEventData
+        }).config({ name: "emit-tour-product-updated" })
+      })
 
     emitEventStep({
       eventName: "entityTour.updated",
