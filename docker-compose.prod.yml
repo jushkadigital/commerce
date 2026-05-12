@@ -38,6 +38,26 @@ services:
     mem_reservation: 256m
     pids_limit: 200
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-change-me}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - medusa-network
+      - red-compartida
+    mem_reservation: 512m
+    pids_limit: 300
+
   backend-server:
     container_name: medusa-app-server
     image: urgosxd7/medusa-app:latest
@@ -50,6 +70,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     env_file:
       - .env
@@ -80,6 +102,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -100,6 +124,7 @@ volumes:
   postgres-data:
   backend-server-data:
   cache-backend-data:
+  rabbitmq-data:
 
 networks:
   proxiable:

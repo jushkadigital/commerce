@@ -17,67 +17,63 @@ export default async function handleProductSync({
   logger.info(`${eventName.toUpperCase()}`)
   logger.info(`${JSON.stringify(event)}`)
 
-  try {
-    const productId = event.data?.id
+  const productId = event.data?.id
 
-    if (!productId) {
-      logger.warn("Product ID not found in event data")
-      return
-    }
-
-    const productModuleService = container.resolve(Modules.PRODUCT)
-
-    const fullProduct = await productModuleService.retrieveProduct(productId, {
-      relations: ["variants", "images", "tags", "categories", "metadata"]
-    })
-
-    const variantIds = (fullProduct.variants || []).map((variant: any) => variant.id).filter(Boolean)
-    let fullProductWithPrices = fullProduct
-
-    if (variantIds.length > 0) {
-      const query = container.resolve(ContainerRegistrationKeys.QUERY)
-
-      const { data: variantsWithPriceSets } = await query.graph({
-        entity: "product_variant",
-        fields: ["id", "price_set.id", "price_set.prices.*"],
-        filters: {
-          id: variantIds,
-        },
-      })
-
-      const variantMap = new Map<string, any>()
-      for (const variant of variantsWithPriceSets || []) {
-        variantMap.set(variant.id, variant)
-      }
-
-      fullProductWithPrices = {
-        ...fullProduct,
-        variants: (fullProduct.variants || []).map((variant: any) => {
-          const variantData = variantMap.get(variant.id)
-          const prices = variantData?.price_set?.prices || []
-
-          return {
-            ...variant,
-            price_set: variantData?.price_set || null,
-            prices,
-          }
-        }),
-      }
-    }
-
-    logger.info(`Loaded full product: ${JSON.stringify(fullProductWithPrices)}`)
-
-    const rabbitMQEventBus = container.resolve(RABBITMQ_EVENT_BUS_MODULE) as any
-
-    await rabbitMQEventBus.emit({
-      name: eventName,
-      data: fullProductWithPrices
-    })
-
-    logger.info(`Published ${eventName} to RabbitMQ for product: ${productId}`)
-  } catch (error) {
-    logger.error(`Error in product sync subscriber: ${error}`)
+  if (!productId) {
+    logger.warn("Product ID not found in event data")
+    return
   }
+
+  const productModuleService = container.resolve(Modules.PRODUCT)
+
+  const fullProduct = await productModuleService.retrieveProduct(productId, {
+    relations: ["variants", "images", "tags", "categories", "metadata"]
+  })
+
+  const variantIds = (fullProduct.variants || []).map((variant: any) => variant.id).filter(Boolean)
+  let fullProductWithPrices = fullProduct
+
+  if (variantIds.length > 0) {
+    const query = container.resolve(ContainerRegistrationKeys.QUERY)
+
+    const { data: variantsWithPriceSets } = await query.graph({
+      entity: "product_variant",
+      fields: ["id", "price_set.id", "price_set.prices.*"],
+      filters: {
+        id: variantIds,
+      },
+    })
+
+    const variantMap = new Map<string, any>()
+    for (const variant of variantsWithPriceSets || []) {
+      variantMap.set(variant.id, variant)
+    }
+
+    fullProductWithPrices = {
+      ...fullProduct,
+      variants: (fullProduct.variants || []).map((variant: any) => {
+        const variantData = variantMap.get(variant.id)
+        const prices = variantData?.price_set?.prices || []
+
+        return {
+          ...variant,
+          price_set: variantData?.price_set || null,
+          prices,
+        }
+      }),
+    }
+  }
+
+  logger.info(`Loaded full product: ${JSON.stringify(fullProductWithPrices)}`)
+
+  const rabbitMQEventBus = container.resolve(RABBITMQ_EVENT_BUS_MODULE) as any
+
+  await rabbitMQEventBus.emit({
+    name: eventName,
+    data: fullProductWithPrices
+  })
+
+  logger.info(`Published ${eventName} to RabbitMQ for product: ${productId}`)
 }
 
 export const config: SubscriberConfig = {

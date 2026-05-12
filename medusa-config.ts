@@ -73,8 +73,7 @@ ensurePublishableModule.ensurePublishableApiKeyMiddleware = async (req, res, nex
   return originalEnsurePublishableApiKeyMiddleware(req, res, next)
 }
 
-// Don't let .env.development overwrite NODE_ENV when running tests.
-// Setting override: false ensures TEST_TYPE -> NODE_ENV='test' set above is preserved.
+// Don't let env files overwrite NODE_ENV when running tests.
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 const envFile = process.env.NODE_ENV === 'development' ? '/.env.development' : '/.env'
 dotenv.config({ path: process.cwd() + envFile, override: false })
@@ -89,27 +88,20 @@ const IS_TEST = process.env.NODE_ENV === 'test';
 const IS_MIGRATION = process.env.IS_MIGRATION === 'true';
 const DISABLE_REDIS = IS_BUILD || IS_TEST || IS_MIGRATION;
 
-console.log("NODE_ENV =", process.env.NODE_ENV)
-console.log("RABBITMQ", process.env.RABBITMQ_URL)
-console.log("CWD =", process.cwd())
-console.log("IS_BUILD MODE =", IS_BUILD) // Log para confirmar en consola
-console.log("IS_MIGRATION MODE =", IS_MIGRATION)
-console.log("MEDUSA_BACKEND_URL", process.env.MEDUSA_BACKEND_URL)
+function requireEnv(name: string): string {
+  const value = process.env[name]
 
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`)
+  }
 
-// ========================================================================
-// 2. CARGA DE VARIABLES DE ENTORNO
-// ========================================================================
-
-// Logs de depuración (puedes quitarlos en prod si quieres)
-console.log("KEYCLOAK_CLIENT_ID:", process.env.KEYCLOAK_CLIENT_ID)
-console.log("BACKEND_URL:", process.env.BACKEND_URL)
-console.log("MEDUSA_BACKEND_URL:", process.env.MEDUSA_BACKEND_URL)
-console.log("DATABASE_URL:", process.env.DATABASE_URL)
+  return value
+}
 
 const DATABASE_URL = process.env.DATABASE_URL
 const REDIS_URL = process.env.REDIS_URL
 const DEPLOYMENT_TYPE = process.env.DEPLOYMENT_TYPE || 'local'
+const RABBITMQ_URL = process.env.RABBITMQ_URL
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:9000'
 const STORE_CORS = process.env.STORE_CORS || BACKEND_URL
@@ -117,6 +109,10 @@ const ADMIN_CORS = process.env.ADMIN_CORS || BACKEND_URL
 const AUTH_CORS = process.env.AUTH_CORS || BACKEND_URL
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
 const COOKIE_SECRET = process.env.COOKIE_SECRET || 'supersecret'
+
+if (!DISABLE_REDIS && !RABBITMQ_URL) {
+  throw new Error('RABBITMQ_URL is required when RabbitMQ integrations are enabled')
+}
 
 const IS_ADMIN_DISABLED = process.env.IS_ADMIN_DISABLED === 'true'
 
@@ -237,8 +233,13 @@ module.exports = defineConfig({
     ...(DISABLE_REDIS ? [] : [{
       resolve: "./src/modules/event-bus-rabbitmq",
       options: {
-        url: process.env.RABBITMQ_URL || 'amqp://admin:admin123@172.17.0.1:5672',
+        url: requireEnv('RABBITMQ_URL'),
         exchange: "tourism-exchange",
+        queueName: "medusa.main",
+        queueType: 'quorum',
+        prefetch: Number(process.env.RABBITMQ_PREFETCH || 10),
+        maxRetries: Number(process.env.RABBITMQ_MAX_RETRIES || 3),
+        retryDelayMs: Number(process.env.RABBITMQ_RETRY_DELAY_MS || 15000),
         workerMode: process.env.MEDUSA_WORKER_MODE || "shared",
       },
     }]),

@@ -1,44 +1,34 @@
-import { MedusaError, Modules } from "@medusajs/framework/utils"
 import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
-// CAMBIO IMPORTANTE: Importamos el workflow de CLIENTES, no de usuarios admin
-import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows"
 import { TOUR_MODULE } from "../modules/tour"
-
+import type TourModuleService from "../modules/tour/service"
+import createTourWorkflow from "../workflows/create-tour"
 import { extractText } from "../utils/parserRichText"
-// La data que esperas recibir de RabbitMQ (Ajusta si la estructura cambia para clientes)
-type RecieveData = {
-  externalId: string
-  email: string
-  firstName: string // Asumo que mandas nombres
-  lastName: string
-  eventId: string
-  ocurredOn: string
-}
+import { buildTourCreateInput, type TourSyncEventData } from "../utils/tour-sync-event"
 
 export default async function handleToursUpdatedSync({
   event,
   container
-}: SubscriberArgs<any>) {
+}: SubscriberArgs<TourSyncEventData>) {
 
   const logger = container.resolve("logger")
 
-  // CAMBIO 3: Ejecutamos el Workflow de Cuenta de Cliente
-  // Este workflow crea el customer y automáticamente maneja ciertos enlaces
-  /**
-const gaga = await createTourWorkflow(container).run({
-  input: 
-})
-**/
-
-  logger.info(` PORQUEEE `)
-  const tourModule = container.resolve(TOUR_MODULE)
+  const tourModule = container.resolve<TourModuleService>(TOUR_MODULE)
 
   logger.info(`${JSON.stringify(event.data)} `)
-  const [gege] = await tourModule.getTourByMetadata(event.data.id + 'tour')
+  const [matchedTour] = await tourModule.getTourByMetadata(`${event.data.id}tour`)
 
-  logger.info(`${JSON.stringify(gege)} `)
-  const newTour = await tourModule.updateTours([{
-    id: gege.id,
+  if (!matchedTour) {
+    const { result } = await createTourWorkflow(container).run({
+      input: buildTourCreateInput(event.data)
+    })
+
+    logger.info(`${JSON.stringify(result)} `)
+    return
+  }
+
+  logger.info(`${JSON.stringify(matchedTour)} `)
+  const updatedTour = await tourModule.updateTours([{
+    id: matchedTour.id,
     destination: event.data.data.destination,
     description: extractText(event.data.data.description.root),
     duration_days: event.data.data.duration_days,
@@ -47,7 +37,7 @@ const gaga = await createTourWorkflow(container).run({
   }])
 
 
-  logger.info(`${JSON.stringify(gege)} `)
+  logger.info(`${JSON.stringify(updatedTour)} `)
 }
 
 export const config: SubscriberConfig = {

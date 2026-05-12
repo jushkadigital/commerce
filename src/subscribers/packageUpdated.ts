@@ -1,43 +1,33 @@
-import { MedusaError, Modules } from "@medusajs/framework/utils"
 import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
-// CAMBIO IMPORTANTE: Importamos el workflow de CLIENTES, no de usuarios admin
-import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows"
 import { PACKAGE_MODULE } from "../modules/package"
-
+import type PackageModuleService from "../modules/package/service"
+import createPackageWorkflow from "../workflows/create-package"
 import { extractText } from "../utils/parserRichText"
-// La data que esperas recibir de RabbitMQ (Ajusta si la estructura cambia para clientes)
-type RecieveData = {
-  externalId: string
-  email: string
-  firstName: string // Asumo que mandas nombres
-  lastName: string
-  eventId: string
-  ocurredOn: string
-}
+import { buildPackageCreateInput, type PackageSyncEventData } from "../utils/package-sync-event"
 
 export default async function handlePackagesUpdatedSync({
   event,
   container
-}: SubscriberArgs<any>) {
+}: SubscriberArgs<PackageSyncEventData>) {
 
   const logger = container.resolve("logger")
 
-  // CAMBIO 3: Ejecutamos el Workflow de Cuenta de Cliente
-  // Este workflow crea el customer y automáticamente maneja ciertos enlaces
-  /**
-const gaga = await createTourWorkflow(container).run({
-  input:
-})
-**/
-
-  logger.info(` PORQUEEE `)
-  const packageModule = container.resolve(PACKAGE_MODULE)
+  const packageModule = container.resolve<PackageModuleService>(PACKAGE_MODULE)
 
   logger.info(`${JSON.stringify(event.data)} `)
-  const [gege] = await packageModule.getPackageByMetadata(event.data.id + "package")
+  const [matchedPackage] = await packageModule.getPackageByMetadata(`${event.data.id}package`)
 
-  const newTour = await packageModule.updatePackages([{
-    id: gege.id,
+  if (!matchedPackage) {
+    const { result } = await createPackageWorkflow(container).run({
+      input: buildPackageCreateInput(event.data)
+    })
+
+    logger.info(`${JSON.stringify(result)} `)
+    return
+  }
+
+  const updatedPackage = await packageModule.updatePackages([{
+    id: matchedPackage.id,
     destination: event.data.data.destination,
     description: extractText(event.data.data.description.root),
     duration_days: event.data.data.duration_days,
@@ -47,7 +37,7 @@ const gaga = await createTourWorkflow(container).run({
   }])
 
 
-  logger.info(`${JSON.stringify(gege)} `)
+  logger.info(`${JSON.stringify(updatedPackage)} `)
 }
 
 export const config: SubscriberConfig = {
