@@ -57,24 +57,31 @@ export const createTourWorkflow = createWorkflow(
     })
 
     // --- Step 2: Retrieve store (Standard) ---
-    // Obtenemos el Store para asignar canales de venta por defecto
     const { data: stores } = useQueryGraphStep({
       entity: "store",
       fields: ["id", "default_sales_channel_id"],
     })
 
-    // --- Step 3: Prepare product data using transform ---
+    // --- Step 3: Generate unique slug before product creation ---
+    const { slug } = generateSlugStep({
+      entity: "tour",
+      destination: input.destination,
+      duration_days: input.duration_days,
+    })
+
+    // --- Step 4: Prepare product data using transform ---
     const productData = transform({
       input,
-      stores
+      stores,
+      slug
     }, (data) => {
       const currency = (data.input.prices.currency_code || "pen").toLowerCase()
       const usdRate = 0.27
-      // Generamos SKU basado en destino
-      const skuPrefix = data.input.destination.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      const skuPrefix = data.slug
 
       const product: CreateProductWorkflowInputDTO = {
         title: `${data.input.destination} - ${data.input.duration_days} Days`,
+        handle: data.slug,
         description: data.input.description,
         status: ProductStatus.PUBLISHED,
         thumbnail: data.input.thumbnail,
@@ -127,18 +134,12 @@ export const createTourWorkflow = createWorkflow(
       return [product]
     })
 
-    // --- Step 4: Create Medusa product ---
+    // --- Step 5: Create Medusa product ---
     const medusaProduct = createProductsWorkflow.runAsStep({
       input: { products: productData }
     })
 
-    const { slug } = generateSlugStep({
-      entity: "tour",
-      destination: input.destination,
-      duration_days: input.duration_days,
-    })
-
-    // --- Step 5: Prepare Tour Module Data ---
+    // --- Step 6: Prepare Tour Module Data ---
     const tourData = transform({ medusaProduct, input, slug }, (data) => {
       return {
         tours: [{

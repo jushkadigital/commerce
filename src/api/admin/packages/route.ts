@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import createPackageWorkflow from "../../../workflows/create-package"
-import { z } from "zod"
+import { z } from "@medusajs/framework/zod"
 
 
 export async function GET(
@@ -37,7 +37,7 @@ export const CreatePackageSchema = z.object({
   cancellation_deadline_hours: z.number().int().nonnegative().optional(),
   booking_min_days_ahead: z.number().int().nonnegative().optional(),
   thumbnail: z.string().optional(),
-  metadata: z.record(z.unknown()) // Acepta un objeto con cualquier clave y valor
+  metadata: z.record(z.string(), z.unknown()) // Acepta un objeto con cualquier clave y valor
     .nullable()          // Permite que sea null
     .optional(),
   prices: z.object({

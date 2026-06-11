@@ -1,0 +1,2 @@
+import { a as TagStoreProps, i as TagStoreOptions, n as TagStoreFunctions, o as TagStoreState, r as TagStoreItem, s as createTagStore, t as TagStore } from "../tag-store-D47X5_zA.js";
+export { TagStore, TagStoreFunctions, TagStoreItem, TagStoreOptions, TagStoreProps, TagStoreState, createTagStore };

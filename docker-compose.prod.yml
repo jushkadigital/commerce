@@ -1,30 +1,63 @@
+# ==============================================================================
+# docker-compose.prod.yml — Producción VPS
+# ==============================================================================
+
 services:
+  # ─── PostgreSQL ──────────────────────────────────────────────────────────────
   postgres:
-    image: postgres:18
+    image: postgres:16-alpine
     container_name: postgres-medusa
     restart: unless-stopped
     environment:
-      POSTGRES_USER: medusa-starter
-      POSTGRES_PASSWORD: medusa-password
-      POSTGRES_DB: medusa-starter
+      POSTGRES_USER: ${POSTGRES_USER:-medusa-starter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-medusa-starter}
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql/data
+    tmpfs:
+      - /var/run/postgresql
+      - /tmp:size=100M
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medusa-starter -d medusa-starter"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-medusa-starter} -d ${POSTGRES_DB:-medusa-starter}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
     networks:
       - medusa-network
+    security_opt:
+      - no-new-privileges:true
     shm_size: "1g"
     mem_reservation: 1g
+    mem_limit: 2g
     pids_limit: 500
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # ─── Redis ───────────────────────────────────────────────────────────────────
   redis:
-    image: redis:8
+    image: redis:7-alpine
+    container_name: redis-medusa
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes","--appendfsync", "everysec"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--appendfsync",
+        "everysec",
+        "--maxmemory",
+        "384mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
     volumes:
       - cache-backend-data:/data
     healthcheck:
@@ -35,32 +68,22 @@ services:
       start_period: 10s
     networks:
       - medusa-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
     mem_reservation: 256m
+    mem_limit: 512m
     pids_limit: 200
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
-  rabbitmq:
-    image: rabbitmq:3.13-management
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-change-me}
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-    networks:
-      - medusa-network
-      - red-compartida
-    mem_reservation: 512m
-    pids_limit: 300
-
+  # ─── Medusa Server ──────────────────────────────────────────────────────────
   backend-server:
     container_name: medusa-app-server
-    image: urgosxd7/medusa-app:latest
+    image: urgosxd7/medusa-app:latest # TODO: pin a digest SHA para deploys reproducibles
     restart: unless-stopped
     volumes:
       - backend-server-data:/data
@@ -71,8 +94,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -80,58 +101,76 @@ services:
       DISABLE_MEDUSA_ADMIN: "false"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
-      start_period: 20s
+      start_period: 60s
       retries: 5
     networks:
       - medusa-network
       - red-compartida
       - proxiable
+    security_opt:
+      - no-new-privileges:true
     mem_reservation: 1g
+    mem_limit: 2g
     pids_limit: 1000
     stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ─── Medusa Worker ──────────────────────────────────────────────────────────
   backend-worker:
     container_name: medusa-app-worker
-    image: urgosxd7/medusa-app:latest
+    image: urgosxd7/medusa-app:latest # TODO: pin a digest SHA para deploys reproducibles
     restart: unless-stopped
     volumes:
-      - backend-server-data:/data
+      - backend-server-data:/data # compartido: uploads/archivos locales
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
     env_file:
       - .env
     environment:
       MEDUSA_WORKER_MODE: worker
       DISABLE_MEDUSA_ADMIN: "true"
+    healthcheck:
+      # El worker no expone HTTP; verificamos que el proceso node está vivo
+      test: ["CMD-SHELL", "pgrep -f 'medusa start' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 45s
+      retries: 3
     networks:
       - medusa-network
       - red-compartida
+    security_opt:
+      - no-new-privileges:true
     mem_reservation: 768m
+    mem_limit: 1536m
     pids_limit: 1000
     stop_grace_period: 30s
-
-
-
-
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
 
 volumes:
   postgres-data:
   backend-server-data:
   cache-backend-data:
-  rabbitmq-data:
 
 networks:
   proxiable:
     external: true
-    name: proxiable # Asegúrate de que este nombre coincida exactamente con tu red externa
+    name: proxiable
   medusa-network:
     driver: bridge
   red-compartida:
-    external: true      # <--- ¡ESTO ES LO IMPORTANTE!
-    name: red-compartida # Asegura que busque el nombre exacto
+    external: true
+    name: red-compartida

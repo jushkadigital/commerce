@@ -1,4 +1,5 @@
 import { MedusaService, Modules } from "@medusajs/framework/utils"
+import { InferTypeOf } from "@medusajs/framework/types"
 import Tour from "./models/tour"
 import TourVariant, { PassengerType } from "./models/tour-variant"
 import TourBooking from "./models/tour-booking"
@@ -49,9 +50,10 @@ class TourModuleService extends MedusaService({
 }) {
   async getAvailableCapacity(
     tourId: string,
-    tourDate: Date
+    tourDate: Date,
+    tour?: InferTypeOf<typeof Tour>
   ): Promise<number> {
-    const tour = await this.retrieveTour(tourId)
+    const tourEntity = tour ?? await this.retrieveTour(tourId)
 
     const bookings = await this.listTourBookings({
       tour_id: tourId,
@@ -75,15 +77,16 @@ class TourModuleService extends MedusaService({
       return total + bookingPassengers
     }, 0)
 
-    return tour.max_capacity - reservedPassengers
+    return tourEntity.max_capacity - reservedPassengers
   }
 
   async validateBooking(
     tourId: string,
     tourDate: Date,
-    quantity: number
+    quantity: number,
+    tour?: InferTypeOf<typeof Tour>
   ): Promise<{ valid: boolean; reason?: string }> {
-    const tour = await this.retrieveTour(tourId)
+    const tourEntity = tour ?? await this.retrieveTour(tourId)
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -98,16 +101,16 @@ class TourModuleService extends MedusaService({
     }
 
     const minBookingDate = new Date(today)
-    minBookingDate.setDate(minBookingDate.getDate() + (tour.booking_min_days_ahead || 0))
+    minBookingDate.setDate(minBookingDate.getDate() + (tourEntity.booking_min_days_ahead || 0))
     if (requestedDateObj < minBookingDate) {
       return {
         valid: false,
-        reason: `Se deben hacer reservas al menos ${tour.booking_min_days_ahead} dias en adelante`,
+        reason: `Se deben hacer reservas al menos ${tourEntity.booking_min_days_ahead} dias en adelante`,
       }
     }
 
     const requestedDateStr = requestedDateObj.toISOString().split('T')[0]
-    const blockedDates = tour.blocked_dates || []
+    const blockedDates = tourEntity.blocked_dates || []
     if (blockedDates.includes(requestedDateStr)) {
       return {
         valid: false,
@@ -116,7 +119,7 @@ class TourModuleService extends MedusaService({
     }
 
     const dayOfWeek = requestedDateObj.getDay()
-    const blockedWeekDays = tour.blocked_week_days || []
+    const blockedWeekDays = tourEntity.blocked_week_days || []
     if (blockedWeekDays.map(Number).includes(dayOfWeek)) {
       const days = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado']
       return {
@@ -125,7 +128,7 @@ class TourModuleService extends MedusaService({
       }
     }
 
-    const availableCapacity = await this.getAvailableCapacity(tourId, tourDate)
+    const availableCapacity = await this.getAvailableCapacity(tourId, tourDate, tourEntity)
 
     if (availableCapacity < quantity) {
       return {
@@ -270,12 +273,20 @@ class TourModuleService extends MedusaService({
     }
   }
   async getTourByMetadata(value: string) {
-    const tour = await this.listTours({
-      metadata: {
-        payloadId: String(value)
-      }
+    const newFormat = await this.listTours({
+      metadata: { payloadId: String(value) }
     }, { take: 1 })
-    return tour
+    if (newFormat.length) return newFormat
+
+    const bareId = value.replace(/tour$/, "")
+    if (bareId !== value) {
+      const legacy = await this.listTours({
+        metadata: { payloadId: bareId }
+      }, { take: 1 })
+      if (legacy.length) return legacy
+    }
+
+    return []
   }
 
   async updateVariantPrices(

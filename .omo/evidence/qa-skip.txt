@@ -1,0 +1,1 @@
+Skipping runtime QA: Medusa server not running in this environment; tests require DB connection and module service. Evidence file already contains migration info.

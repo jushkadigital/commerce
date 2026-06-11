@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PackageModuleService Unit Tests - Results</title>
+  <style>
+    body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 20px; }
+    .pass { color: #4ec9b0; }
+    .header { color: #569cd6; font-size: 1.2em; font-weight: bold; }
+    .suite { color: #ce9178; margin-top: 10px; }
+    .test { margin-left: 20px; }
+    .summary { background: #2d2d2d; padding: 15px; margin-top: 20px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="header">PASS src/modules/package/__tests__/package-module.service.unit.spec.ts</div>
+  <div class="suite">PackageModuleService</div>
+  <div class="test pass">✓ getAvailableCapacity - should return full capacity when no bookings exist (4 ms)</div>
+  <div class="test pass">✓ getAvailableCapacity - should return reduced capacity when bookings exist (2 ms)</div>
+  <div class="test pass">✓ getAvailableCapacity - should return zero capacity when fully booked (6 ms)</div>
+  <div class="test pass">✓ getAvailableCapacity - should handle errors from retrievePackage (2 ms)</div>
+  <div class="test pass">✓ validateBooking - should return valid true for valid booking (9 ms)</div>
+  <div class="test pass">✓ validateBooking - should reject booking for past dates (1 ms)</div>
+  <div class="test pass">✓ validateBooking - should reject booking for unavailable dates (1 ms)</div>
+  <div class="test pass">✓ validateBooking - should reject booking when exceeding capacity (1 ms)</div>
+  <div class="test pass">✓ validateBooking - should accept booking at exact capacity limit (1 ms)</div>
+  <div class="test pass">✓ validateBooking - should validate dates correctly ignoring time</div>
+  <div class="test pass">✓ getPackagePricing - should return default pricing when no container provided (3 ms)</div>
+  <div class="test pass">✓ getPackagePricing - should return default pricing with custom currency (1 ms)</div>
+  <div class="test pass">✓ getPackagePricing - should fetch and map prices from pricing module (1 ms)</div>
+  <div class="test pass">✓ getPackagePricing - should return default pricing when no variants linked (1 ms)</div>
+  <div class="test pass">✓ getPackagePricing - should handle pricing module errors gracefully (1 ms)</div>
+  <div class="test pass">✓ getPackagePricing - should handle missing calculated prices for some variants (1 ms)</div>
+  <div class="test pass">✓ getPackagePricing - should handle variants without variant_id (1 ms)</div>
+  <div class="test pass">✓ calculateCartTotal - should calculate cart total correctly (1 ms)</div>
+  <div class="test pass">✓ calculateCartTotal - should calculate total for multiple items (1 ms)</div>
+  <div class="test pass">✓ calculateCartTotal - should handle empty cart</div>
+  <div class="test pass">✓ calculateCartTotal - should handle items without container (zero pricing) (1 ms)</div>
+  <div class="test pass">✓ updateVariantPrices - should update all variant prices successfully (1 ms)</div>
+  <div class="test pass">✓ updateVariantPrices - should skip update when no container provided</div>
+  <div class="test pass">✓ updateVariantPrices - should skip update when no variant IDs found (1 ms)</div>
+  <div class="test pass">✓ updateVariantPrices - should skip variants without price sets (1 ms)</div>
+  <div class="test pass">✓ updateVariantPrices - should handle partial price updates (1 ms)</div>
+  <div class="test pass">✓ updateVariantPrices - should use default currency when not specified (1 ms)</div>
+  <div class="test pass">✓ updateVariantPrices - should handle pricing module errors gracefully (1 ms)</div>
+  <div class="test pass">✓ updateVariantPrices - should skip variants without variant_id</div>
+  
+  <div class="summary">
+    <strong>Test Suites:</strong> 1 passed, 1 total<br>
+    <strong>Tests:</strong> 29 passed, 29 total<br>
+    <strong>Snapshots:</strong> 0 total<br>
+    <strong>Time:</strong> ~1.585 s
+  </div>
+</body>
+</html>

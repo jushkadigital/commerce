@@ -16,7 +16,6 @@
     "postgres",
     "redis"
   ],
-  // 2. Pasar la variable DISPLAY
   // Nos conectamos al contenedor como usuario 'node'
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
@@ -42,8 +41,7 @@
       "type": "bind"
     }
   ],
-  "postCreateCommand": "sudo mkdir -p /home/node/app && sudo chown -R ubuntu:ubuntu /home/node && sudo chown ubuntu:ubuntu /mnt/opencode-auth.json",
-
+  "postCreateCommand": "bash -lc 'sudo chown -R ubuntu:ubuntu /home/ubuntu/.local /home/ubuntu/.config /home/ubuntu/.cache && corepack enable pnpm && pnpm install && pnpm playwright:install && if [ -f /mnt/opencode-auth.json ]; then sudo chown ubuntu:ubuntu /mnt/opencode-auth.json; fi'",
   // Puertos que la CLI de devcontainers expondrá (si aplica en tu entorno)
   "forwardPorts": [
     9000,

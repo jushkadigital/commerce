@@ -1,0 +1,1 @@
+{"version":3,"file":"use-prevent-body-scroll.d.ts","names":["usePreventBodyScroll","HTMLElement","contentElement","contentId","enabled"],"sources":["../../../src/dialog/utils/use-prevent-body-scroll.d.ts"],"mappings":";iBAAwBA,oBAAAA,CAAqBE,cAAAA,EAAgBD,WAAW,SAASE,SAAAA,WAAoBC,OAAAA"}

@@ -1,91 +1,79 @@
-import { MedusaError, Modules } from "@medusajs/framework/utils"
 import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
-import { createUserAccountWorkflow } from "@medusajs/medusa/core-flows"
+import { provisionAdminFromKeycloak } from "../workflows/helpers/provision-admin-from-keycloak"
+import { EVENTS_MODULE } from "../modules/events"
 
-// La data que esperas recibir de RabbitMQ
-type RecieveData = {
-  externalId: string
+type ReceiveData = {
+  sub: string
   email: string
-  adminType: string
-  eventId: string
-  ocurredOn: string
+  userType: "PASSENGER" | "ADMIN"
+  role?: string
+  clientRoles?: string[]
 }
 
-export default async function handleInventoryUpdate({
+const CONSUMER_ID = "admin-subscriber"
+const STALE_LOCK_MINUTES = 5
+
+export default async function handleAdminUserCreated({
   event,
   container
-}: SubscriberArgs<RecieveData>) {
-
+}: SubscriberArgs<ReceiveData>) {
   const logger = container.resolve("logger")
-  const userModule = container.resolve(Modules.USER)
-  const authModule = container.resolve(Modules.AUTH)
+  const { sub, email, userType, role, clientRoles } = event.data
 
+  const effectiveRole = role ?? (Array.isArray(clientRoles) && clientRoles.length > 0 ? clientRoles[0] : undefined)
 
-  logger.info(`[RabbitMQ] Recibido evento: ${JSON.stringify(event)}`)
+  const eventId = `identity.user.created.v1:${sub}`
 
+  logger.info(`[identity.user.created.v1] Event received: sub=${sub} email=${email} userType=${userType} role=${effectiveRole ?? "none"}`)
 
-
-  const existingUsers = await userModule.listUsers({
-    email: event.data.email,
-  })
-
-  if (existingUsers.length > 0) {
-    throw new MedusaError("grave", "Err")
+  if (userType !== "ADMIN") {
+    logger.info(`[identity.user.created.v1] Ignoring userType=${userType} — only ADMIN is handled by this subscriber`)
+    return
   }
 
-  let authIdentity
+  if (!email) {
+    logger.error("[identity.user.created.v1] Missing email — cannot provision user")
+    return
+  }
+
+  const eventsModule = container.resolve(EVENTS_MODULE)
+  const idempotencyStore = eventsModule.getIdempotencyStore()
+
+  const claimed = await idempotencyStore.claim(eventId, CONSUMER_ID, STALE_LOCK_MINUTES)
+
+  if (!claimed) {
+    const processed = await idempotencyStore.isProcessed(eventId, CONSUMER_ID)
+    if (processed) {
+      logger.info(`[identity.user.created.v1] Event ${eventId} already processed, skipping`)
+      return
+    }
+    throw new Error(
+      `Event ${eventId} is already claimed by another consumer instance`
+    )
+  }
+
   try {
-    authIdentity = await authModule.createAuthIdentities({
-      provider_identities: [
-        {
-          provider: "keycloak-admin",
-          entity_id: event.data.email,
-          user_metadata: {
-            email: event.data.email,
-            given_name: "",
-            family_name: "",
-            keycloak_sub: event.data.externalId,
-          },
-        },
-      ],
+    const result = await provisionAdminFromKeycloak({
+      container,
+      keycloakSub: sub,
+      keycloakEmail: email,
+      role: effectiveRole,
+      extraMetadata: { synced_from_identity: true },
     })
-  } catch (authError: any) {
-    // Si ya existe, continuar sin auth identity pre-creada
-    // Se vinculará cuando el usuario haga login con Keycloak
-    console.warn("Could not pre-create auth identity:", authError.message)
-    throw new MedusaError("grave", "Error auth step")
-  }
-  const { result } = await createUserAccountWorkflow(container).run({
-    input: {
-      userData: {
-        email: event.data.email,
-        first_name: "",
-        last_name: "",
-        metadata: {
-          keycloak_sub: event.data.externalId,
-          synced_from_cms: true,
-          cms_metadata: {},
-        },
-      },
-      authIdentityId: authIdentity?.id,
-    },
-  })
-  if (authIdentity && result?.id) {
-    await authModule.updateAuthIdentities([{
-      id: authIdentity.id,
-      app_metadata: {
-        user_id: result.id // <--- ESTO ES LO QUE FALTABA
-      }
-    }])
-    logger.info(`✅ Usuario vinculado correctamente: ${result.id} <-> ${authIdentity.id}`)
-  }
 
+    logger.info(
+      `[identity.user.created.v1] Sync completed: user=${result.userId} auth=${result.authIdentityId} created=${result.wasCreated} role=${effectiveRole ?? "none"}`
+    )
 
-  logger.info(`${JSON.stringify(result)}`)
+    await idempotencyStore.complete(eventId, CONSUMER_ID)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`[identity.user.created.v1] Failed for sub=${sub}: ${message}`)
+    await idempotencyStore.fail(eventId, CONSUMER_ID, message)
+    throw error
+  }
 }
 
 export const config: SubscriberConfig = {
-  // ESTA ES LA CLAVE DE ENRUTAMIENTO (ROUTING KEY)
-  // Debe coincidir exactamente con lo que envía tu Quarkus/RabbitMQ
-  event: "admin.registered",
+  event: "identity.user.created.v1",
 }

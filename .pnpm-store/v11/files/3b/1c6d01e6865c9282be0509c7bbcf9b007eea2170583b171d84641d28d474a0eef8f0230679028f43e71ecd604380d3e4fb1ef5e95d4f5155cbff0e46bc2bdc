@@ -1,0 +1,1 @@
+{"version":3,"file":"tag-provider.d.ts","names":["ReactNode","TagStoreProps","TagProvider","TagProviderProps","props","JSX","Element","children"],"sources":["../../src/tag/tag-provider.d.ts"],"mappings":";;;;;;AAyBA;;;;;;;;;AAAsG;AACtG;;;;;;;;AACwB;;;iBAFAE,WAAAA,CAAYE,KAAAA,GAAQD,gBAAgB,+BAA+BE,GAAAA,CAAIC,OAAAA;AAAAA,UAC9EH,gBAAAA,SAAyBF,aAAa;EACnDM,QAAAA,GAAWP,SAAAA;AAAAA"}

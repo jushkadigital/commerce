@@ -1,0 +1,23 @@
+E2E TEST RESULTS: Package Purchase Flow
+========================================
+
+Date: 2026-02-07
+Status: CREATED ✅ (Ready to run)
+
+File: integration-tests/http/package-purchase-flow.spec.ts
+Lines: 691
+Test Cases: 5 describe blocks
+
+Test Coverage:
+✓ Complete purchase flow (happy path)
+✓ Capacity validation
+✓ Order and booking link verification
+✓ Error handling (invalid inputs)
+✓ Booking status flow
+
+Status: Tests require PostgreSQL to execute.
+Database connection needed: 127.0.0.1:5432
+
+To run:
+  docker run -d --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15
+  npm run test:integration:http -- package-purchase-flow.spec.ts

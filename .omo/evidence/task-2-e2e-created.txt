@@ -1,0 +1,8 @@
+total 32
+drwxr-xr-x  3 ubuntu ubuntu 4096 Feb 21 14:41 .
+drwxrwxr-x 18 ubuntu ubuntu 4096 Feb 20 20:25 ..
+drwxr-xr-x  2 ubuntu ubuntu 4096 Feb 19 23:53 .auth
+-rw-r--r--  1 ubuntu ubuntu    0 Feb 19 23:20 .gitkeep
+-rw-r--r--  1 ubuntu ubuntu  948 Feb 19 23:52 auth.setup.ts
+-rw-r--r--  1 ubuntu ubuntu 4742 Feb 21 14:41 verify-package-update-fix.spec.ts
+-rw-r--r--  1 ubuntu ubuntu 4686 Feb 20 02:52 verify-tour-update-fix.spec.ts

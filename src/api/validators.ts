@@ -1,4 +1,4 @@
-import { z, ZodEffects, ZodNullable, ZodObject, ZodOptional } from "zod"
+import { z } from "@medusajs/framework/zod"
 
 export const createSelectParams = () => {
   return z.object({

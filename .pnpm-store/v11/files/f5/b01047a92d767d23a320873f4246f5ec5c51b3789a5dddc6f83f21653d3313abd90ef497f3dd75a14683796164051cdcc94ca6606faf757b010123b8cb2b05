@@ -1,0 +1,1 @@
+{"version":3,"file":"prepend-hidden-dismiss.d.ts","names":["prependHiddenDismiss","HTMLElement","container","onClick"],"sources":["../../../src/dialog/utils/prepend-hidden-dismiss.d.ts"],"mappings":";iBAAwBA,oBAAAA,CAAqBE,SAAAA,EAAWD,WAAW,EAAEE,OAAAA"}

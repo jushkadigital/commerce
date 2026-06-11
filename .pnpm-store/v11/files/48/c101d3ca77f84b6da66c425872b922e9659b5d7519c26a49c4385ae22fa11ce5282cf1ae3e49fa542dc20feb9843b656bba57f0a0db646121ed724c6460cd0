@@ -1,0 +1,96 @@
+import { AuthenticationInput, AuthenticationResponse, AuthIdentityProviderService, AuthTypes, Context, DAL, FindConfig, ICacheService, InferEntityType, InternalModuleDeclaration, Logger, ModuleJoinerConfig, ModulesSdkTypes } from "@medusajs/framework/types";
+import { AuthVerificationToken, AuthIdentity, AuthMfaFactor, AuthMfaRecoveryCode, ProviderIdentity } from "../models";
+import { AuthModuleOptions } from "../types";
+import AuthProviderService from "./auth-provider";
+import AuthMfaProviderService from "./mfa-provider";
+type InjectedDependencies = {
+    baseRepository: DAL.RepositoryService;
+    authIdentityService: ModulesSdkTypes.IMedusaInternalService<any>;
+    authVerificationTokenService: ModulesSdkTypes.IMedusaInternalService<any>;
+    authMfaFactorService: ModulesSdkTypes.IMedusaInternalService<any>;
+    authMfaRecoveryCodeService: ModulesSdkTypes.IMedusaInternalService<any>;
+    providerIdentityService: ModulesSdkTypes.IMedusaInternalService<any>;
+    authProviderService: AuthProviderService;
+    authMfaProviderService: AuthMfaProviderService;
+    logger?: Logger;
+    cache?: ICacheService;
+};
+declare const AuthModuleService_base: import("@medusajs/framework/utils").MedusaServiceReturnType<{
+    AuthIdentity: {
+        dto: AuthTypes.AuthIdentityDTO;
+    };
+    ProviderIdentity: {
+        dto: AuthTypes.ProviderIdentityDTO;
+    };
+}>;
+export default class AuthModuleService extends AuthModuleService_base implements AuthTypes.IAuthModuleService {
+    protected readonly moduleDeclaration?: InternalModuleDeclaration | undefined;
+    protected baseRepository_: DAL.RepositoryService;
+    protected authIdentityService_: ModulesSdkTypes.IMedusaInternalService<InferEntityType<typeof AuthIdentity>>;
+    protected authVerificationTokenService_: ModulesSdkTypes.IMedusaInternalService<InferEntityType<typeof AuthVerificationToken>>;
+    protected authMfaFactorService_: ModulesSdkTypes.IMedusaInternalService<InferEntityType<typeof AuthMfaFactor>>;
+    protected authMfaRecoveryCodeService_: ModulesSdkTypes.IMedusaInternalService<InferEntityType<typeof AuthMfaRecoveryCode>>;
+    protected providerIdentityService_: ModulesSdkTypes.IMedusaInternalService<InferEntityType<typeof ProviderIdentity>>;
+    protected readonly authProviderService_: AuthProviderService;
+    protected readonly authMfaProviderService_: AuthMfaProviderService;
+    protected readonly cache_: ICacheService | undefined;
+    protected readonly moduleOptions_: AuthModuleOptions;
+    constructor({ authIdentityService, authVerificationTokenService, authMfaFactorService, authMfaRecoveryCodeService, providerIdentityService, authProviderService, authMfaProviderService, baseRepository, cache, }: InjectedDependencies, moduleOptions?: AuthModuleOptions, moduleDeclaration?: InternalModuleDeclaration | undefined);
+    __joinerConfig(): ModuleJoinerConfig;
+    createAuthIdentities(data: AuthTypes.CreateAuthIdentityDTO[], sharedContext?: Context): Promise<AuthTypes.AuthIdentityDTO[]>;
+    createAuthIdentities(data: AuthTypes.CreateAuthIdentityDTO, sharedContext?: Context): Promise<AuthTypes.AuthIdentityDTO>;
+    updateAuthIdentities(data: AuthTypes.UpdateAuthIdentityDTO[], sharedContext?: Context): Promise<AuthTypes.AuthIdentityDTO[]>;
+    updateAuthIdentities(data: AuthTypes.UpdateAuthIdentityDTO, sharedContext?: Context): Promise<AuthTypes.AuthIdentityDTO>;
+    register(provider: string, authenticationData: AuthenticationInput): Promise<AuthenticationResponse>;
+    createProviderIdentities(data: AuthTypes.CreateProviderIdentityDTO[], sharedContext?: Context): Promise<AuthTypes.ProviderIdentityDTO[]>;
+    createProviderIdentities(data: AuthTypes.CreateProviderIdentityDTO, sharedContext?: Context): Promise<AuthTypes.ProviderIdentityDTO>;
+    updateProviderIdentities(data: AuthTypes.UpdateProviderIdentityDTO[], sharedContext?: Context): Promise<AuthTypes.ProviderIdentityDTO[]>;
+    updateProviderIdentities(data: AuthTypes.UpdateProviderIdentityDTO, sharedContext?: Context): Promise<AuthTypes.ProviderIdentityDTO>;
+    updateProvider(provider: string, data: Record<string, unknown>): Promise<AuthenticationResponse>;
+    authenticate(provider: string, authenticationData: AuthenticationInput): Promise<AuthenticationResponse>;
+    validateCallback(provider: string, authenticationData: AuthenticationInput): Promise<AuthenticationResponse>;
+    startAuthMfa(data: AuthTypes.AuthMfaStartDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaStartResponse>;
+    protected startAuthMfa_(data: AuthTypes.AuthMfaStartDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaStartResponse>;
+    verifyAuthMfa(data: AuthTypes.AuthMfaVerifyDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaDTO>;
+    protected verifyAuthMfa_(data: AuthTypes.AuthMfaVerifyDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaDTO>;
+    createAuthMfaChallenge(data: AuthTypes.CreateAuthMfaChallengeDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaChallengeDTO>;
+    protected createAuthMfaChallenge_(data: AuthTypes.CreateAuthMfaChallengeDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaChallengeDTO>;
+    verifyAuthMfaChallenge(data: AuthTypes.VerifyAuthMfaChallengeDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaChallengeDTO>;
+    protected verifyAuthMfaChallenge_(data: AuthTypes.VerifyAuthMfaChallengeDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaChallengeDTO>;
+    disableAuthMfa(data: AuthTypes.DisableAuthMfaDTO, sharedContext?: Context): Promise<AuthTypes.AuthMfaDTO>;
+    retrieveAuthMfa(selector: string | AuthTypes.AuthMfaSelector, config?: FindConfig<AuthTypes.AuthMfaDTO>, sharedContext?: Context): Promise<AuthTypes.AuthMfaDTO>;
+    listAuthMfa(filters?: AuthTypes.FilterableAuthMfaProps, config?: FindConfig<AuthTypes.AuthMfaDTO>, sharedContext?: Context): Promise<AuthTypes.AuthMfaDTO[]>;
+    generateAuthMfaRecoveryCodes(data: AuthTypes.GenerateAuthMfaRecoveryCodesDTO, sharedContext?: Context): Promise<AuthTypes.GenerateAuthMfaRecoveryCodesResponse>;
+    protected generateAuthMfaRecoveryCodes_(data: AuthTypes.GenerateAuthMfaRecoveryCodesDTO, sharedContext?: Context): Promise<AuthTypes.GenerateAuthMfaRecoveryCodesResponse>;
+    useAuthMfaRecoveryCode(data: AuthTypes.UseAuthMfaRecoveryCodeDTO, sharedContext?: Context): Promise<void>;
+    protected useAuthMfaRecoveryCode_(data: AuthTypes.UseAuthMfaRecoveryCodeDTO, sharedContext?: Context): Promise<void>;
+    createAuthVerificationToken(data: AuthTypes.CreateAuthVerificationTokenDTO, sharedContext?: Context): Promise<AuthTypes.CreateAuthVerificationTokenResponse>;
+    protected createAuthVerificationToken_(data: AuthTypes.CreateAuthVerificationTokenDTO, sharedContext?: Context): Promise<AuthTypes.CreateAuthVerificationTokenResponse>;
+    requestAuthVerification(data: AuthTypes.RequestAuthVerificationDTO, sharedContext?: Context): Promise<AuthTypes.RequestAuthVerificationResponse>;
+    protected requestAuthVerification_(data: AuthTypes.RequestAuthVerificationDTO, sharedContext?: Context): Promise<AuthTypes.RequestAuthVerificationResponse>;
+    confirmAuthVerification(data: AuthTypes.ConfirmAuthVerificationDTO, sharedContext?: Context): Promise<AuthTypes.ConfirmAuthVerificationResponse>;
+    protected confirmAuthVerification_(data: AuthTypes.ConfirmAuthVerificationDTO, sharedContext?: Context): Promise<AuthTypes.ConfirmAuthVerificationResponse>;
+    protected applyVerificationRequirement_(response: AuthenticationResponse, context: Pick<AuthTypes.CreateAuthMfaChallengeDTO, "actor_type" | "auth_provider">): Promise<AuthenticationResponse>;
+    protected applyMfaRequirement_(response: AuthenticationResponse, context: Pick<AuthTypes.CreateAuthMfaChallengeDTO, "actor_type" | "auth_provider">): Promise<AuthenticationResponse>;
+    protected getAvailableMfaChallengeMethods_(authIdentityId: string, sharedContext?: Context): Promise<AuthTypes.AuthMfaChallengeMethod[]>;
+    protected serializeMfaFactor_(factor: InferEntityType<typeof AuthMfaFactor>): Promise<AuthTypes.AuthMfaDTO>;
+    protected assertMfaChallengeCanBeVerified_(challenge: AuthTypes.AuthMfaChallengeDTO, method: AuthTypes.AuthMfaChallengeMethod): void;
+    protected retrieveVerificationProviderIdentity_(provider: string, entityId: string, sharedContext?: Context): Promise<AuthTypes.ProviderIdentityDTO>;
+    protected invalidateAuthVerificationTokens_(providerIdentityId: string, sharedContext?: Context): Promise<void>;
+    protected serializeVerificationToken_(token: InferEntityType<typeof AuthVerificationToken>): Promise<AuthTypes.AuthVerificationTokenDTO>;
+    protected generateVerificationToken_(): string;
+    protected hashVerificationToken_(token: string): string;
+    protected getVerificationTokenTtlMs_(ttlSeconds?: number): number;
+    protected getMfaChallengeConfig_(): {
+        ttlSeconds: number;
+        maxAttempts: number;
+    };
+    protected getMfaDisablePolicy_(): "challenge" | "session";
+    protected retrieveMfaChallenge_(id: string): Promise<AuthTypes.AuthMfaChallengeDTO>;
+    protected setMfaChallenge_(challenge: AuthTypes.AuthMfaChallengeDTO, ttlSeconds?: number): Promise<void>;
+    protected getMfaChallengeCacheKey_(id: string): string;
+    protected getCache_(): ICacheService;
+    getAuthIdentityProviderService(provider: string): AuthIdentityProviderService;
+}
+export {};
+//# sourceMappingURL=auth-module.d.ts.map

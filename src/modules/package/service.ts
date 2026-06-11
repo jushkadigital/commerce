@@ -1,4 +1,5 @@
 import { MedusaService, Modules } from "@medusajs/framework/utils"
+import { InferTypeOf } from "@medusajs/framework/types"
 import Package from "./models/package"
 import PackageVariant, { PassengerType } from "./models/package-variant"
 import PackageBooking from "./models/package-booking"
@@ -49,9 +50,10 @@ class PackageModuleService extends MedusaService({
 }) {
   async getAvailableCapacity(
     packageId: string,
-    packageDate: Date
+    packageDate: Date,
+    pkg?: InferTypeOf<typeof Package>
   ): Promise<number> {
-    const pkg = await this.retrievePackage(packageId)
+    const packageEntity = pkg ?? await this.retrievePackage(packageId)
 
     // Normalize date to start and end of day for proper date-only matching
     const startOfDay = new Date(packageDate)
@@ -59,13 +61,18 @@ class PackageModuleService extends MedusaService({
     const endOfDay = new Date(packageDate)
     endOfDay.setUTCHours(23, 59, 59, 999)
 
-    const allBookings = await this.listPackageBookings({
+    // Primary: filter by date at DB level for efficiency
+    let bookings = await this.listPackageBookings({
       package_id: packageId,
+      package_date: {
+        $gte: startOfDay.toISOString(),
+        $lte: endOfDay.toISOString(),
+      },
       status: ["confirmed", "pending"],
-    })
+    }) as any[]
 
-    // Filter bookings manually by date range since MikroORM date queries can be unreliable
-    const bookings = allBookings.filter(booking => {
+    // Fallback: ensure exact date matching in case MikroORM date queries are unreliable
+    bookings = bookings.filter((booking: any) => {
       const bookingDate = new Date(booking.package_date)
       return bookingDate >= startOfDay && bookingDate <= endOfDay
     })
@@ -88,25 +95,34 @@ class PackageModuleService extends MedusaService({
       return total + bookingPassengers
     }, 0)
 
-    const availableCapacity = pkg.max_capacity - reservedPassengers
+    const availableCapacity = packageEntity.max_capacity - reservedPassengers
 
     return availableCapacity
   }
   async getPackageByMetadata(value: string) {
-    const packageMod = await this.listPackages({
-      metadata: {
-        payloadId: String(value)
-      }
+    const newFormat = await this.listPackages({
+      metadata: { payloadId: String(value) }
     }, { take: 1 })
-    return packageMod
+    if (newFormat.length) return newFormat
+
+    const bareId = value.replace(/package$/, "")
+    if (bareId !== value) {
+      const legacy = await this.listPackages({
+        metadata: { payloadId: bareId }
+      }, { take: 1 })
+      if (legacy.length) return legacy
+    }
+
+    return []
   }
 
   async validateBooking(
     packageId: string,
     packageDate: Date,
-    quantity: number
+    quantity: number,
+    pkg?: InferTypeOf<typeof Package>
   ): Promise<{ valid: boolean; reason?: string }> {
-    const pkg = await this.retrievePackage(packageId)
+    const packageEntity = pkg ?? await this.retrievePackage(packageId)
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -121,17 +137,17 @@ class PackageModuleService extends MedusaService({
     }
 
     const minBookingDate = new Date(today)
-    minBookingDate.setDate(minBookingDate.getDate() + (pkg.booking_min_days_ahead || 0))
+    minBookingDate.setDate(minBookingDate.getDate() + (packageEntity.booking_min_days_ahead || 0))
     if (requestedDateObj < minBookingDate) {
       return {
         valid: false,
-        reason: `Se deben hacer reservas al menos ${pkg.booking_min_days_ahead} dias en adelante`,
+        reason: `Se deben hacer reservas al menos ${packageEntity.booking_min_days_ahead} dias en adelante`,
       }
     }
 
     // Validate blocked_dates
     const requestedDateStr = requestedDateObj.toISOString().split('T')[0]
-    const blockedDates = pkg.blocked_dates || []
+    const blockedDates = packageEntity.blocked_dates || []
     if (blockedDates.includes(requestedDateStr)) {
       return {
         valid: false,
@@ -141,7 +157,7 @@ class PackageModuleService extends MedusaService({
 
     // Validate blocked_week_days
     const dayOfWeek = requestedDateObj.getDay()
-    const blockedWeekDays = pkg.blocked_week_days || []
+    const blockedWeekDays = packageEntity.blocked_week_days || []
     if (blockedWeekDays.map(Number).includes(dayOfWeek)) {
       const days = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado']
       return {
@@ -150,7 +166,7 @@ class PackageModuleService extends MedusaService({
       }
     }
 
-    const availableCapacity = await this.getAvailableCapacity(packageId, packageDate)
+    const availableCapacity = await this.getAvailableCapacity(packageId, packageDate, packageEntity)
 
     if (availableCapacity < quantity) {
       return {

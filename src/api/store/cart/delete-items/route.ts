@@ -1,43 +1,18 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import type { MedusaContainer } from "@medusajs/framework/types"
-import {
-  ContainerRegistrationKeys,
-  MedusaError,
-  Modules,
-  remoteQueryObjectFromString,
-} from "@medusajs/framework/utils"
+import { MedusaError, Modules } from "@medusajs/framework/utils"
 import { deleteLineItemsWorkflowId } from "@medusajs/core-flows"
+import { refetchAddToCartResult } from "../refetch-cart"
 
-/**
- * Helper to refetch cart with all calculated fields via remote query
- */
-const refetchCart = async (
-  id: string,
-  scope: MedusaContainer,
-  fields: string[]
-) => {
-  const remoteQuery = scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
-  const queryObject = remoteQueryObjectFromString({
-    entryPoint: "cart",
-    variables: { filters: { id } },
-    fields,
-  })
-
-  const [cart] = await remoteQuery(queryObject)
-
-  if (!cart) {
-    throw new MedusaError(
-      MedusaError.Types.NOT_FOUND,
-      `Cart with id '${id}' not found`
-    )
-  }
-
-  return cart
+const throwInvalidData = (message: string, code?: string): never => {
+  throw new MedusaError(MedusaError.Types.INVALID_DATA, message, code)
 }
 
 /**
  * Delete multiple line items from cart
  * POST /store/cart/delete-items
+ *
+ * Used for tour/package items that represent multiple variants.
+ * Deleting one "booking" removes all associated line items at once.
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
@@ -47,25 +22,24 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     const cart_id = body.cart_id
-    const itemsToDelete = body.items
+    const items = body.items
 
     if (!cart_id) {
-      return res.status(400).json({
-        message: "Missing required field: cart_id",
-      })
+      throwInvalidData("Missing required field: cart_id")
     }
 
-    if (!Array.isArray(itemsToDelete) || itemsToDelete.length === 0) {
-      return res.status(400).json({
-        message: "Missing required field: items (array of line item IDs)",
-      })
+    if (!Array.isArray(items) || items.length === 0) {
+      throwInvalidData("Missing required field: items (array of line item IDs)")
     }
+
+    const ensuredCartId = cart_id as string
+    const itemsToDelete = items as string[]
 
     const cartModule = req.scope.resolve(Modules.CART)
     const workflowEngine = req.scope.resolve(Modules.WORKFLOW_ENGINE)
 
     // Verify cart exists and retrieve current items to ensure ownership
-    const cart = await cartModule.retrieveCart(cart_id, {
+    const cart = await cartModule.retrieveCart(ensuredCartId, {
       relations: ["items"],
     })
 
@@ -75,37 +49,38 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     )
 
     if (validItemIdsToDelete.length === 0) {
-      return res.status(400).json({
-        message: "No valid line items found in cart to delete",
-      })
+      throwInvalidData("No valid line items found in cart to delete")
     }
 
-    // Execute the workflow to delete items and refresh the cart (recalculating totals)
+    // Execute the native workflow — it handles:
+    // 1. Cart locking
+    // 2. Soft delete of line items
+    // 3. refreshCartItemsWorkflow (prices, promotions, taxes, shipping, payment)
+    // 4. cart.updated event emission
     await workflowEngine.run(deleteLineItemsWorkflowId, {
       input: {
-        cart_id,
+        cart_id: ensuredCartId,
         ids: validItemIdsToDelete,
       },
     })
 
-    // Retrieve updated cart with all calculated fields via remote query
-    const updatedCart = await refetchCart(
-      cart_id,
-      req.scope,
-      ["*", "items.*", "region.*", "shipping_address.*", "billing_address.*"]
-    )
+    // Retrieve updated cart with consistent field set
+    const updatedCart = await refetchAddToCartResult(ensuredCartId, req.scope)
 
     res.json({
       cart: updatedCart,
       deleted_items: validItemIdsToDelete,
-      message: "Successfully deleted line items",
     })
   } catch (error) {
     console.error("Error deleting line items from cart:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    res.status(500).json({
-      message: "Failed to delete line items from cart",
-      error: errorMessage,
-    })
+
+    if (MedusaError.isMedusaError(error)) {
+      throw error
+    }
+
+    throw new MedusaError(
+      MedusaError.Types.UNEXPECTED_STATE,
+      "Failed to delete line items from cart"
+    )
   }
 }

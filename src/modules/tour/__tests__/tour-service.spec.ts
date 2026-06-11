@@ -28,11 +28,14 @@ moduleIntegrationTestRunner<TourModuleService>({
 
       const generateProductId = () => `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
+      const generateSlug = () => `slug_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
       describe("CRUD Operations with New Fields", () => {
         it("should create tour with all new fields", async () => {
           const blockedDate = "2026-12-25"
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Machu Picchu",
             description: "Ancient Incan city",
             duration_days: 1,
@@ -59,6 +62,7 @@ moduleIntegrationTestRunner<TourModuleService>({
           const blockedDate = "2026-01-01"
           const created = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Cusco City Tour",
             description: "City exploration",
             duration_days: 1,
@@ -82,6 +86,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should update tour with new fields", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Sacred Valley",
             description: "Valley tour",
             duration_days: 1,
@@ -114,6 +119,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should list tours with new fields", async () => {
           await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Tour 1",
             description: "First tour",
             duration_days: 1,
@@ -123,6 +129,7 @@ moduleIntegrationTestRunner<TourModuleService>({
 
           await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Tour 2",
             description: "Second tour",
             duration_days: 2,
@@ -144,6 +151,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should delete tour and clean up", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Temporary Tour",
             description: "Will be deleted",
             duration_days: 1,
@@ -161,6 +169,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should apply default values for new fields when not specified", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Test Default Values",
             description: "Testing defaults",
             duration_days: 1,
@@ -177,6 +186,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should apply default boolean value for is_special", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Test Boolean Default",
             duration_days: 1,
             max_capacity: 5,
@@ -189,6 +199,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should apply default array values", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Test Array Defaults",
             duration_days: 1,
             max_capacity: 5,
@@ -203,6 +214,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should apply default numeric values", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Test Numeric Defaults",
             duration_days: 1,
             max_capacity: 5,
@@ -219,6 +231,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should validate booking at exactly 2 days ahead (minimum for tours)", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Booking Window Test",
             description: "Testing 2-day minimum",
             duration_days: 1,
@@ -238,6 +251,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should validate booking more than 2 days ahead", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Future Booking Test",
             description: "Testing future booking",
             duration_days: 1,
@@ -260,6 +274,7 @@ moduleIntegrationTestRunner<TourModuleService>({
 
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Past Date Test",
             description: "Testing past dates",
             duration_days: 1,
@@ -273,16 +288,18 @@ moduleIntegrationTestRunner<TourModuleService>({
           )
 
           expect(validation.valid).toBe(false)
-          expect(validation.reason).toContain("past")
+          expect(validation.reason).toContain("pasadas")
         })
 
         it("should accept booking for today", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Today Booking Test",
             description: "Testing same-day booking",
             duration_days: 1,
             max_capacity: 10,
+            booking_min_days_ahead: 0
           }])
 
           const validation = await service.validateBooking(
@@ -297,6 +314,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should respect custom booking_min_days_ahead value", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Custom Window Test",
             description: "Testing custom 5-day minimum",
             duration_days: 1,
@@ -319,6 +337,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should calculate full available capacity when no bookings", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Capacity Test - Empty",
             description: "Testing empty capacity",
             duration_days: 1,
@@ -336,6 +355,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should calculate available capacity with confirmed bookings", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Capacity Test - With Bookings",
             description: "Testing capacity with bookings",
             duration_days: 1,
@@ -347,13 +367,15 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_001", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_002", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -368,6 +390,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should calculate available capacity with pending bookings", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Capacity Test - Pending",
             description: "Testing capacity with pending",
             duration_days: 1,
@@ -379,13 +402,15 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "pending"
+              status: "pending",
+              line_items: { items: [{ variant_id: "variant_003", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "pending"
+              status: "pending",
+              line_items: { items: [{ variant_id: "variant_004", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -400,6 +425,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should not count cancelled bookings in capacity", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Capacity Test - Cancelled",
             description: "Testing capacity excludes cancelled",
             duration_days: 1,
@@ -411,19 +437,22 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_005", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "cancelled"
+              status: "cancelled",
+              line_items: { items: [{ variant_id: "variant_006", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_3",
               tour_date: nextWeek,
-              status: "pending"
+              status: "pending",
+              line_items: { items: [{ variant_id: "variant_007", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -438,6 +467,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should reject booking exceeding available capacity", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Capacity Limit Test",
             description: "Testing capacity limits",
             duration_days: 1,
@@ -449,19 +479,22 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_008", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_009", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_3",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_010", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -472,12 +505,13 @@ moduleIntegrationTestRunner<TourModuleService>({
           )
 
           expect(validation.valid).toBe(false)
-          expect(validation.reason).toMatch(/(Only|available|not available)/)
+          expect(validation.reason).toMatch(/(Solo|disponibles|no esta disponible)/)
         })
 
         it("should accept booking for exactly remaining capacity", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Exact Capacity Test",
             description: "Testing exact capacity",
             duration_days: 1,
@@ -489,13 +523,15 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_011", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_012", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -511,6 +547,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should return zero capacity when fully booked", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Full Capacity Test",
             description: "Testing full capacity",
             duration_days: 1,
@@ -522,19 +559,22 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_013", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_014", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_3",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_015", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -549,6 +589,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should return negative capacity when overbooked", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Overbooked Test",
             description: "Testing overbooking scenario",
             duration_days: 1,
@@ -560,19 +601,22 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_016", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_017", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_3",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_018", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -587,6 +631,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should calculate capacity per date independently", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Multi Date Capacity Test",
             description: "Testing capacity per date",
             duration_days: 1,
@@ -598,13 +643,15 @@ moduleIntegrationTestRunner<TourModuleService>({
               tour: tour[0].id,
               order_id: "order_1",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_019", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             },
             {
               tour: tour[0].id,
               order_id: "order_2",
               tour_date: nextWeek,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_020", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] }
             }
           ])
 
@@ -626,6 +673,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should create tour with blocked dates", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Blocked Dates Test",
             description: "Testing blocked dates",
             duration_days: 1,
@@ -642,6 +690,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should update blocked dates", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Update Blocked Dates Test",
             description: "Testing blocked dates update",
             duration_days: 1,
@@ -661,6 +710,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should clear blocked dates", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Clear Blocked Dates Test",
             description: "Testing clearing blocked dates",
             duration_days: 1,
@@ -680,6 +730,7 @@ moduleIntegrationTestRunner<TourModuleService>({
           const blockedDates = ["2026-06-15", "2026-07-04", "2026-11-28"]
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Persist Blocked Dates Test",
             description: "Testing blocked dates persistence",
             duration_days: 1,
@@ -700,6 +751,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should create tour with blocked week days", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Blocked Week Days Test",
             description: "Testing blocked week days",
             duration_days: 1,
@@ -715,6 +767,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should create tour blocking only Sundays", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Sunday Blocked Test",
             description: "Testing Sunday only blocked",
             duration_days: 1,
@@ -730,6 +783,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should update blocked week days", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Update Blocked Week Days Test",
             description: "Testing blocked week days update",
             duration_days: 1,
@@ -749,6 +803,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should persist blocked dates and blocked week days when updated as strings", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "String Availability Update Tour",
             description: "Testing string-based availability update",
             duration_days: 1,
@@ -774,6 +829,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should clear blocked week days", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Clear Blocked Week Days Test",
             description: "Testing clearing blocked week days",
             duration_days: 1,
@@ -792,6 +848,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should persist blocked week days after retrieval", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Persist Blocked Week Days Test",
             description: "Testing blocked week days persistence",
             duration_days: 1,
@@ -810,6 +867,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should handle all days blocked", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "All Days Blocked Test",
             description: "Testing all days blocked",
             duration_days: 1,
@@ -825,6 +883,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should create special tour", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Special Tour Test",
             description: "Testing special flag true",
             duration_days: 1,
@@ -838,6 +897,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should create regular tour", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Regular Tour Test",
             description: "Testing special flag false",
             duration_days: 1,
@@ -851,6 +911,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should toggle special flag", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Toggle Special Test",
             description: "Testing special flag toggle",
             duration_days: 1,
@@ -876,6 +937,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should filter tours by is_special flag", async () => {
           await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Special Tour Filter",
             description: "Special tour for filtering",
             duration_days: 1,
@@ -885,6 +947,7 @@ moduleIntegrationTestRunner<TourModuleService>({
 
           await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Regular Tour Filter",
             description: "Regular tour for filtering",
             duration_days: 1,
@@ -911,6 +974,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should create tour with custom cancellation deadline", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Cancellation Deadline Test",
             description: "Testing cancellation deadline",
             duration_days: 1,
@@ -924,6 +988,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should update cancellation deadline hours", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Update Cancellation Deadline Test",
             description: "Testing cancellation deadline update",
             duration_days: 1,
@@ -942,6 +1007,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should persist cancellation deadline after retrieval", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Persist Cancellation Deadline Test",
             description: "Testing cancellation deadline persistence",
             duration_days: 1,
@@ -959,6 +1025,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should create booking linked to tour", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Booking Integration Test",
             description: "Testing booking creation",
             duration_days: 1,
@@ -981,6 +1048,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should retrieve tour with bookings relation", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Tour With Bookings Test",
             description: "Testing tour with bookings",
             duration_days: 1,
@@ -1013,6 +1081,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should enforce capacity through validateBooking with existing bookings", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Capacity Enforcement Test",
             description: "Testing capacity enforcement",
             duration_days: 1,
@@ -1020,10 +1089,10 @@ moduleIntegrationTestRunner<TourModuleService>({
           }])
 
           await service.createTourBookings([
-            { tour: tour[0].id, order_id: "o1", tour_date: nextWeek, status: "confirmed" },
-            { tour: tour[0].id, order_id: "o2", tour_date: nextWeek, status: "confirmed" },
-            { tour: tour[0].id, order_id: "o3", tour_date: nextWeek, status: "confirmed" },
-            { tour: tour[0].id, order_id: "o4", tour_date: nextWeek, status: "confirmed" }
+            { tour: tour[0].id, order_id: "o1", tour_date: nextWeek, status: "confirmed", line_items: { items: [{ variant_id: "variant_021", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] } },
+            { tour: tour[0].id, order_id: "o2", tour_date: nextWeek, status: "confirmed", line_items: { items: [{ variant_id: "variant_022", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] } },
+            { tour: tour[0].id, order_id: "o3", tour_date: nextWeek, status: "confirmed", line_items: { items: [{ variant_id: "variant_023", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] } },
+            { tour: tour[0].id, order_id: "o4", tour_date: nextWeek, status: "confirmed", line_items: { items: [{ variant_id: "variant_024", metadata: { passengers: { adults: 1, children: 0, infants: 0 } } }] } }
           ])
 
           const validation = await service.validateBooking(
@@ -1048,6 +1117,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should handle tour with all new fields populated", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Complete Tour Test",
             description: "Tour with all new fields",
             duration_days: 2,
@@ -1076,6 +1146,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should handle multiple tours with different configurations", async () => {
           const specialTour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Special Holiday Tour",
             duration_days: 1,
             max_capacity: 20,
@@ -1088,6 +1159,7 @@ moduleIntegrationTestRunner<TourModuleService>({
 
           const regularTour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Regular Daily Tour",
             duration_days: 1,
             max_capacity: 10,
@@ -1117,6 +1189,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should handle edge case: zero capacity tour", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Zero Capacity Tour",
             description: "Tour with zero capacity",
             duration_days: 1,
@@ -1142,6 +1215,7 @@ moduleIntegrationTestRunner<TourModuleService>({
         it("should handle edge case: very large capacity", async () => {
           const tour = await service.createTours([{
             product_id: generateProductId(),
+            slug: generateSlug(),
             destination: "Large Capacity Tour",
             description: "Tour with large capacity",
             duration_days: 1,

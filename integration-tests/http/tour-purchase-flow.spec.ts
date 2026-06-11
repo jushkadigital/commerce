@@ -50,7 +50,7 @@ medusaIntegrationTestRunner({
       let region: any
       let salesChannel: any
       let productVariants: any[] = []
-      const testDate = "2026-04-15"
+      const testDate = "2027-04-15"
       const tourCapacity = 10
 
       beforeAll(async () => {
@@ -1176,7 +1176,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("not available")
+          expect(errors[0].error.message).toContain("disponible")
 
           await tourModuleService.updateTours({
             id: tour.id,
@@ -1204,7 +1204,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("not available")
+          expect(errors[0].error.message).toContain("disponibles")
 
           await tourModuleService.updateTours({
             id: tour.id,
@@ -1238,7 +1238,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("spots available")
+          expect(errors[0].error.message).toContain("disponibles")
         })
 
         it("should reject booking when min days ahead not met", async () => {
@@ -1258,7 +1258,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("days in advance")
+          expect(errors[0].error.message).toContain("dias en adelante")
 
           await tourModuleService.updateTours({
             id: tour.id,
@@ -1321,7 +1321,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("past dates")
+          expect(errors[0].error.message).toContain("fechas pasadas")
         })
       })
 
@@ -1426,7 +1426,7 @@ medusaIntegrationTestRunner({
           )
 
           expect(validation.valid).toBe(false)
-          expect(validation.reason).toContain("past")
+          expect(validation.reason).toContain("fechas pasadas")
         })
       })
 

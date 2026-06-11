@@ -1,100 +1,100 @@
-// Detect test runs early and set NODE_ENV before dotenv or loadEnv runs
-// The npm test scripts set TEST_TYPE (e.g. integration:http, integration:modules, unit)
+// ========================================================================
+// 0. NODE_ENV NORMALIZATION
+// ========================================================================
+// System env (e.g. Docker) may set NODE_ENV=production while the actual context
+// is development. We detect the real mode from signals that can't be faked:
+//   - TEST_TYPE → test mode
+//   - npm_lifecycle_event → dev/build/migrate commands
+//   - .env.production missing but .env.development exists → likely dev
+
+import fs from 'fs'
+import dotenv from 'dotenv'
+import { expand } from 'dotenv-expand'
+import path from 'path'
+import { defineConfig, Modules } from '@medusajs/framework/utils'
+import { isIzipayProviderConfigured, resolveIzipayConfig } from './src/utils/izipay-config'
+
+const envDir = process.cwd()
+
 if (
   process.env.TEST_TYPE === 'integration:http' ||
   process.env.TEST_TYPE === 'integration:modules' ||
   process.env.TEST_TYPE === 'unit'
 ) {
   process.env.NODE_ENV = 'test'
-}
-
-//carga
-import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
-import dotenv from 'dotenv'
-import path from 'path'
-import { isIzipayProviderConfigured, resolveIzipayConfig } from './src/utils/izipay-config'
-
-type MinimalRequestForPublishableKey = {
-  method?: string
-  originalUrl?: string
-  baseUrl?: string
-  path?: string
-}
-
-type PublishableKeyNext = (error?: unknown) => void
-
-type EnsurePublishableApiKeyMiddleware = (
-  req: MinimalRequestForPublishableKey,
-  res: unknown,
-  next: PublishableKeyNext
-) => Promise<void> | void
-
-type EnsurePublishableModule = {
-  ensurePublishableApiKeyMiddleware: EnsurePublishableApiKeyMiddleware
-}
-
-function isStoreAuthKeycloakRequest(req: MinimalRequestForPublishableKey) {
-  const method = typeof req.method === 'string' ? req.method.toUpperCase() : ''
-  const originalUrl = typeof req.originalUrl === 'string' ? req.originalUrl : ''
-  const baseUrl = typeof req.baseUrl === 'string' ? req.baseUrl : ''
-  const path = typeof req.path === 'string' ? req.path : ''
-  const combinedPath = `${baseUrl}${path}`
-
-  if (method !== 'POST' && method !== 'OPTIONS') {
-    return false
+} else if (process.env.NODE_ENV === 'production') {
+  const lifecycle = process.env.npm_lifecycle_event || ''
+  const isDevCommand = ['dev', 'develop', 'db:generate', 'db:migrate', 'db:setup', 'db:create', 'db:rollback', 'db:run-scripts', 'db:sync-links'].includes(lifecycle)
+  const envProdExists = fs.existsSync(path.join(envDir, '.env.production'))
+  const envDevExists = fs.existsSync(path.join(envDir, '.env.development'))
+  if (isDevCommand || (!envProdExists && envDevExists)) {
+    process.env.NODE_ENV = 'development'
   }
+}
+
+const NODE_ENV = process.env.NODE_ENV || 'development'
+
+// ========================================================================
+// 1. ENVIRONMENT FILE LOADING
+// ========================================================================
+// Two-pass loading:
+//   1. Environment-specific file (.env.development / .env.production / .env.test)
+//      with override=true — the env file IS the source of truth for that environment.
+//   2. Base .env as fallback with override=false — fills missing values only.
+const envSpecificFile = path.join(envDir, `.env.${NODE_ENV}`)
+const envBaseFile = path.join(envDir, '.env')
+
+try { expand(dotenv.config({ path: envSpecificFile, override: true })) } catch { /* optional */ }
+try { expand(dotenv.config({ path: envBaseFile, override: false })) } catch { /* optional */ }
+
+// ========================================================================
+// 2. MIDDLEWARE: SKIP PUBLISHABLE KEY FOR KEYCLOAK AUTH ENDPOINTS
+// ========================================================================
+// Keycloak auth POST requests don't carry a publishable API key.
+// Monkey-patch Medusa's middleware to skip those paths.
+
+type MinimalRequest = { method?: string; originalUrl?: string; baseUrl?: string; path?: string }
+type NextFn = (error?: unknown) => void
+type MiddlewareFn = (req: MinimalRequest, res: unknown, next: NextFn) => Promise<void> | void
+
+function isKeycloakAuthRequest(req: MinimalRequest): boolean {
+  const method = typeof req.method === 'string' ? req.method.toUpperCase() : ''
+  if (method !== 'POST' && method !== 'OPTIONS') return false
+
+  const originalUrl = req.originalUrl || ''
+  const combinedPath = `${req.baseUrl || ''}${req.path || ''}`
 
   return (
     originalUrl.startsWith('/store/auth/keycloak') ||
     combinedPath === '/store/auth/keycloak' ||
-    path === '/auth/keycloak'
+    req.path === '/auth/keycloak'
   )
 }
 
-const frameworkEntryPath = require.resolve('@medusajs/framework')
-const frameworkDistDir = path.dirname(frameworkEntryPath)
-const ensurePublishablePath = path.join(
-  frameworkDistDir,
-  'http',
-  'middlewares',
-  'ensure-publishable-api-key.js'
-)
+const ensurePublishableModule = require(require.resolve(
+  path.join(path.dirname(require.resolve('@medusajs/framework')), 'http', 'middlewares', 'ensure-publishable-api-key.js')
+)) as { ensurePublishableApiKeyMiddleware: MiddlewareFn }
 
-const ensurePublishableModule = require(ensurePublishablePath) as EnsurePublishableModule
-
-const originalEnsurePublishableApiKeyMiddleware =
-  ensurePublishableModule.ensurePublishableApiKeyMiddleware
-
+const originalMiddleware = ensurePublishableModule.ensurePublishableApiKeyMiddleware
 ensurePublishableModule.ensurePublishableApiKeyMiddleware = async (req, res, next) => {
-  if (isStoreAuthKeycloakRequest(req)) {
-    return next()
-  }
-
-  return originalEnsurePublishableApiKeyMiddleware(req, res, next)
+  if (isKeycloakAuthRequest(req)) return next()
+  return originalMiddleware(req, res, next)
 }
 
-// Don't let env files overwrite NODE_ENV when running tests.
-loadEnv(process.env.NODE_ENV || 'development', process.cwd())
-const envFile = process.env.NODE_ENV === 'development' ? '/.env.development' : '/.env'
-dotenv.config({ path: process.cwd() + envFile, override: false })
 // ========================================================================
-// 1. DETECCIÓN DE MODO BUILD (CRÍTICO PARA DOCKER)
+// 3. MODE DETECTION FLAGS
 // ========================================================================
-// Si estamos compilando, esta variable será true.
-// Esto nos permitirá apagar conexiones a DB/Redis/RabbitMQ durante el build.
-const IS_BUILD = process.env.IS_BUILD === 'true' || process.env.npm_lifecycle_event === 'build';
-const IS_TEST = process.env.NODE_ENV === 'test';
-// Detect migration/maintenance mode to avoid unnecessary connections
-const IS_MIGRATION = process.env.IS_MIGRATION === 'true';
-const DISABLE_REDIS = IS_BUILD || IS_TEST || IS_MIGRATION;
+const IS_BUILD = process.env.IS_BUILD === 'true' || process.env.npm_lifecycle_event === 'build'
+const IS_TEST = NODE_ENV === 'test'
+const IS_MIGRATION = process.env.IS_MIGRATION === 'true'
+const DISABLE_REDIS = IS_BUILD || IS_TEST || IS_MIGRATION
 
+// ========================================================================
+// 4. ENVIRONMENT VARIABLES
+// ========================================================================
 function requireEnv(name: string): string {
   const value = process.env[name]
-
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`)
-  }
-
+  if (!value) throw new Error(`Missing required environment variable: ${name}`)
   return value
 }
 
@@ -114,15 +114,10 @@ if (!DISABLE_REDIS && !RABBITMQ_URL) {
   throw new Error('RABBITMQ_URL is required when RabbitMQ integrations are enabled')
 }
 
-const IS_ADMIN_DISABLED = process.env.IS_ADMIN_DISABLED === 'true'
-
-// Redis URLs
 const CACHE_REDIS_URL = process.env.CACHE_REDIS_URL
-const EVENTS_REDIS_URL = process.env.EVENTS_REDIS_URL
 const WE_REDIS_URL = process.env.WE_REDIS_URL
 const LOCKING_REDIS_URL = process.env.LOCKING_REDIS_URL
 
-// MinIO / S3 Vars
 const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT
 const MINIO_ACCESS_KEY_ID = process.env.MINIO_ACCESS_KEY_ID
 const MINIO_SECRET_ACCESS_KEY = process.env.MINIO_SECRET_ACCESS_KEY
@@ -137,23 +132,15 @@ const S3_REGION = process.env.S3_REGION
 const S3_BUCKET = process.env.S3_BUCKET
 const S3_FILE_URL = process.env.S3_FILE_URL
 
-// Email providers
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL
 
-// Payment Providers
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 
-// Izipay Configuration
-const IZIPAY_CONFIG = resolveIzipayConfig(process.env.NODE_ENV)
-const IZIPAY_IS_CONFIGURED = isIzipayProviderConfigured(process.env.NODE_ENV)
+const IZIPAY_CONFIG = resolveIzipayConfig(NODE_ENV)
+const IZIPAY_IS_CONFIGURED = isIzipayProviderConfigured(NODE_ENV)
 
-// Search
-const MEILISEARCH_HOST = process.env.MEILISEARCH_HOST
-const MEILISEARCH_API_KEY = process.env.MEILISEARCH_API_KEY
-
-// Keycloak SSO Configuration
 const KEYCLOAK_URL = process.env.KEYCLOAK_URL
 const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM
 const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID
@@ -162,126 +149,98 @@ const KEYCLOAK_CALLBACK_URL = process.env.KEYCLOAK_CALLBACK_URL || `${BACKEND_UR
 const KEYCLOAK_STORE_CLIENT_ID = process.env.KEYCLOAK_STORE_CLIENT_ID
 const KEYCLOAK_STORE_CLIENT_SECRET = process.env.KEYCLOAK_STORE_CLIENT_SECRET
 
-
 // ========================================================================
-// 3. EXPORTACIÓN DE LA CONFIGURACIÓN
+// 5. CONFIGURATION EXPORT
 // ========================================================================
-
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: DATABASE_URL,
     ...(DEPLOYMENT_TYPE === 'local' ? {
-      databaseDriverOptions: {
-        ssl: false,
-        sslmode: 'disable',
-      },
+      databaseDriverOptions: { ssl: false, sslmode: 'disable' },
     } : {}),
-    // FIX: Si es build, anulamos Redis global para evitar conexiones del core
     redisUrl: DISABLE_REDIS ? undefined : REDIS_URL,
-    workerMode: process.env.MEDUSA_WORKER_MODE as undefined || "shared",
+    workerMode: (process.env.MEDUSA_WORKER_MODE as 'server' | 'worker' | 'shared' | undefined) || 'shared',
     http: {
       storeCors: STORE_CORS,
       adminCors: ADMIN_CORS,
       authCors: AUTH_CORS,
       jwtSecret: JWT_SECRET,
       cookieSecret: COOKIE_SECRET,
-      // Configure auth methods per actor type
       ...(KEYCLOAK_URL && KEYCLOAK_CLIENT_ID ? {
         authMethodsPerActor: {
-          user: ["emailpass", "keycloak-admin"],
-          customer: ["emailpass", "keycloak-store"],
+          user: ['emailpass', 'keycloak-admin'],
+          customer: ['emailpass', 'keycloak-store'],
         },
       } : {}),
-    }
+    },
   },
   admin: {
     backendUrl: BACKEND_URL,
-    disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
+    disable: process.env.DISABLE_MEDUSA_ADMIN === 'true',
   },
   modules: [
-    // --------------------------------------------------------------------
-    // CACHE MODULE (REDIS vs IN-MEMORY)
-    // --------------------------------------------------------------------
     {
       key: Modules.CACHING,
-      // LOGICA: Si es Build -> In-Memory. Si no -> Redis (si hay URL) o In-Memory (default)
       resolve: DISABLE_REDIS
         ? '@medusajs/medusa/cache-inmemory'
-        : (CACHE_REDIS_URL ? '@medusajs/medusa/cache-redis' : '@medusajs/medusa/cache-inmemory'),
-      options: {
-        // Si usamos cache-inmemory, esta opción se ignora, así que es seguro dejarla
-        redisUrl: CACHE_REDIS_URL,
-      },
+        : CACHE_REDIS_URL
+          ? '@medusajs/medusa/cache-redis'
+          : '@medusajs/medusa/cache-inmemory',
+      options: { redisUrl: CACHE_REDIS_URL },
     },
-
-    // --------------------------------------------------------------------
-    // EVENT BUS (REDIS vs LOCAL - DEFAULT MEDUSA IMPLEMENTATION)
-    // --------------------------------------------------------------------
     {
       key: Modules.EVENT_BUS,
       resolve: DISABLE_REDIS
-        ? "@medusajs/medusa/event-bus-local"
-        : "@medusajs/medusa/event-bus-redis",
+        ? '@medusajs/medusa/event-bus-local'
+        : './src/modules/event-bus-rabbitmq',
       options: {
-        redisUrl: process.env.EVENTS_REDIS_URL,
+        ...(DISABLE_REDIS ? {} : { rabbitmqUrl: requireEnv('RABBITMQ_URL'), queuePrefix: 'medusa', prefetch: 100, maxRetries: 3, retryDelayMs: 30000 }),
       },
     },
-
-    // --------------------------------------------------------------------
-    // RABBITMQ MODULE (CUSTOM STANDALONE SERVICE)
-    // --------------------------------------------------------------------
     ...(DISABLE_REDIS ? [] : [{
-      resolve: "./src/modules/event-bus-rabbitmq",
+      resolve: './src/modules/events',
       options: {
-        url: requireEnv('RABBITMQ_URL'),
-        exchange: "tourism-exchange",
-        queueName: "medusa.main",
-        queueType: 'quorum',
-        prefetch: Number(process.env.RABBITMQ_PREFETCH || 10),
-        maxRetries: Number(process.env.RABBITMQ_MAX_RETRIES || 3),
-        retryDelayMs: Number(process.env.RABBITMQ_RETRY_DELAY_MS || 15000),
-        workerMode: process.env.MEDUSA_WORKER_MODE || "shared",
+        rabbitmqUrl: requireEnv('RABBITMQ_URL'),
+        exchanges: {
+          integration: 'tourism.integration',
+          notification: 'tourism.notification',
+          inbound: 'tourism.inbound',
+          identity: 'identity.events',
+        },
+        consumers: [
+          { name: 'product', routingKeys: ['integration.product.#'], prefetch: 10, maxRetries: 3, retryDelayMs: 30000 },
+          { name: 'booking', routingKeys: ['integration.booking.#'], prefetch: 5, maxRetries: 3, retryDelayMs: 30000 },
+          { name: 'order', routingKeys: ['integration.order.#'], prefetch: 10, maxRetries: 3, retryDelayMs: 30000 },
+          { name: 'tour', routingKeys: ['integration.tour.#'], prefetch: 5, maxRetries: 3, retryDelayMs: 30000 },
+          { name: 'package', routingKeys: ['integration.package.#'], prefetch: 5, maxRetries: 3, retryDelayMs: 30000 },
+          { name: 'email', routingKeys: ['notification.#'], prefetch: 20, maxRetries: 3, retryDelayMs: 60000 },
+          { name: 'inbound', routingKeys: ['inbound.#'], prefetch: 10, maxRetries: 3, retryDelayMs: 15000 },
+          { name: 'identity', routingKeys: ['identity.user.#'], prefetch: 5, maxRetries: 3, retryDelayMs: 30000 },
+        ],
+        workerMode: process.env.MEDUSA_WORKER_MODE || 'shared',
       },
     }]),
-
-    // --------------------------------------------------------------------
-    // WORKFLOW ENGINE (REDIS vs IN-MEMORY)
-    // --------------------------------------------------------------------
     {
       key: Modules.WORKFLOW_ENGINE,
       resolve: DISABLE_REDIS
         ? '@medusajs/medusa/workflow-engine-inmemory'
-        : (WE_REDIS_URL ? '@medusajs/medusa/workflow-engine-redis' : '@medusajs/medusa/workflow-engine-inmemory'),
-      options: {
-        redis: {
-          url: WE_REDIS_URL,
-        },
-      },
+        : WE_REDIS_URL
+          ? '@medusajs/medusa/workflow-engine-redis'
+          : '@medusajs/medusa/workflow-engine-inmemory',
+      options: { redis: { url: WE_REDIS_URL } },
     },
-
-    // --------------------------------------------------------------------
-    // LOCKING (REDIS vs IN-MEMORY)
-    // --------------------------------------------------------------------
     ...(LOCKING_REDIS_URL && !DISABLE_REDIS ? [{
       key: Modules.LOCKING,
       resolve: '@medusajs/medusa/locking',
       options: {
-        providers: [
-          {
-            resolve: '@medusajs/medusa/locking-redis',
-            id: 'locking-redis',
-            is_default: true,
-            options: {
-              redisUrl: LOCKING_REDIS_URL,
-            },
-          },
-        ],
+        providers: [{
+          resolve: '@medusajs/medusa/locking-redis',
+          id: 'locking-redis',
+          is_default: true,
+          options: { redisUrl: LOCKING_REDIS_URL },
+        }],
       },
     }] : []),
-
-    // --------------------------------------------------------------------
-    // FILE MODULE (MINIO / S3 / LOCAL)
-    // --------------------------------------------------------------------
     {
       resolve: '@medusajs/medusa/file',
       options: {
@@ -296,9 +255,7 @@ module.exports = defineConfig({
               region: MINIO_REGION,
               bucket: MINIO_BUCKET,
               endpoint: MINIO_ENDPOINT,
-              additional_client_config: {
-                forcePathStyle: true,
-              },
+              additional_client_config: { forcePathStyle: true },
             },
           }] : []),
           ...(S3_ENDPOINT && S3_ACCESS_KEY_ID && S3_SECRET_ACCESS_KEY ? [{
@@ -311,63 +268,41 @@ module.exports = defineConfig({
               region: S3_REGION,
               bucket: S3_BUCKET,
               endpoint: S3_ENDPOINT,
-              additional_client_config: {
-                forcePathStyle: true,
-              },
+              additional_client_config: { forcePathStyle: true },
             },
           }] : []),
-          // Fallback a local si no hay S3/MinIO
           ...(!MINIO_ENDPOINT && !S3_ENDPOINT ? [{
             resolve: '@medusajs/file-local',
             id: 'local',
             options: {
               upload_dir: 'static',
-              backend_url: `${BACKEND_URL}/static`
-            }
-          }] : [])
+              backend_url: `${BACKEND_URL}/static`,
+            },
+          }] : []),
         ],
       },
     },
-
-    // --------------------------------------------------------------------
-    // NOTIFICATIONS
-    // --------------------------------------------------------------------
     ...(SENDGRID_API_KEY && SENDGRID_FROM_EMAIL ? [{
       key: Modules.NOTIFICATION,
       resolve: '@medusajs/notification',
       options: {
-        providers: [
-          ...(SENDGRID_API_KEY && SENDGRID_FROM_EMAIL ? [{
-            resolve: '@medusajs/notification-sendgrid',
-            id: 'sendgrid',
-            options: {
-              channels: ['email'],
-              api_key: SENDGRID_API_KEY,
-              from: SENDGRID_FROM_EMAIL,
-            }
-          }] : []),
-        ]
-      }
+        providers: [{
+          resolve: '@medusajs/notification-sendgrid',
+          id: 'sendgrid',
+          options: { channels: ['email'], api_key: SENDGRID_API_KEY, from: SENDGRID_FROM_EMAIL },
+        }],
+      },
     }] : []),
-
-    // --------------------------------------------------------------------
-    // PAYMENTS
-    // --------------------------------------------------------------------
     ...((STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET) || IZIPAY_IS_CONFIGURED ? [{
       key: Modules.PAYMENT,
       resolve: '@medusajs/payment',
       options: {
         providers: [
-          // Stripe provider
           ...(STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET ? [{
             resolve: '@medusajs/payment-stripe',
             id: 'stripe',
-            options: {
-              apiKey: STRIPE_API_KEY,
-              webhookSecret: STRIPE_WEBHOOK_SECRET,
-            },
+            options: { apiKey: STRIPE_API_KEY, webhookSecret: STRIPE_WEBHOOK_SECRET },
           }] : []),
-          // Izipay provider
           ...(IZIPAY_IS_CONFIGURED ? [{
             resolve: './src/modules/izipay-payment',
             id: 'izipay',
@@ -382,65 +317,42 @@ module.exports = defineConfig({
         ],
       },
     }] : []),
-
-    // --------------------------------------------------------------------
-    // CUSTOM MODULES
-    // --------------------------------------------------------------------
+    { resolve: './src/modules/tour' },
+    { resolve: './src/modules/package' },
+    { resolve: './src/modules/order-notification' },
+    { resolve: './src/modules/izipay' },
     {
-      resolve: './src/modules/tour',
-    },
-    {
-      resolve: './src/modules/package',
-    },
-    {
-      resolve: './src/modules/order-notification',
-    },
-    {
-      resolve: './src/modules/izipay',
-    },
-
-    // --------------------------------------------------------------------
-    // AUTH MODULE
-    // --------------------------------------------------------------------
-    {
-      resolve: "@medusajs/medusa/auth",
+      resolve: '@medusajs/medusa/auth',
       options: {
         providers: [
-          // Default emailpass provider
-          {
-            resolve: "@medusajs/medusa/auth-emailpass",
-            id: "emailpass",
-          },
-          // Keycloak Admin
-          {
-            resolve: "./src/modules/keycloak-auth",
-            id: "keycloak-admin",
+          { resolve: '@medusajs/medusa/auth-emailpass', id: 'emailpass' },
+          ...(KEYCLOAK_URL && KEYCLOAK_CLIENT_ID ? [{
+            resolve: './src/modules/keycloak-auth',
+            id: 'keycloak-admin',
             options: {
               keycloakUrl: KEYCLOAK_URL,
               realm: KEYCLOAK_REALM,
               clientId: KEYCLOAK_CLIENT_ID,
               clientSecret: KEYCLOAK_CLIENT_SECRET,
               callbackUrl: `${BACKEND_URL}/auth/user/keycloak-admin/callback`,
-              scope: "openid profile email",
+              scope: 'openid profile email',
             },
-          },
-          // Keycloak Store
-          {
-            resolve: "./src/modules/keycloak-auth-store",
-            id: "keycloak-store",
+          }] : []),
+          ...(KEYCLOAK_URL && KEYCLOAK_STORE_CLIENT_ID ? [{
+            resolve: './src/modules/keycloak-auth-store',
+            id: 'keycloak-store',
             options: {
               keycloakUrl: KEYCLOAK_URL,
               realm: KEYCLOAK_REALM,
               clientId: KEYCLOAK_STORE_CLIENT_ID,
               clientSecret: KEYCLOAK_STORE_CLIENT_SECRET,
               callbackUrl: `${BACKEND_URL}/auth/customer/keycloak-store/callback`,
-              scope: "openid profile email",
+              scope: 'openid profile email',
             },
-          }
+          }] : []),
         ],
       },
     },
   ],
-  plugins: [
-  ],
+  plugins: [],
 })

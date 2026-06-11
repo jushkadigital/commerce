@@ -7,6 +7,8 @@ import { getBookingStatusFromPaymentStatus } from "../utils/booking-payment-stat
 import { resend } from "../utils/email"
 import { getOrderNotificationEmails } from "../utils/order-notification-emails"
 import { trackCommerceEvent, type TrackingItem } from "../utils/conversion-tracking"
+import { EVENTS_MODULE } from "../modules/events"
+import type EventModuleService from "../modules/events/service"
 
 type TravelBookingNotificationEmailFn =
   typeof import("../emails/travel-booking-notification.js").TravelBookingNotificationEmail
@@ -234,6 +236,63 @@ export default async function handleOrderPlaced({
       logger.info(
         `[order.placed] Created ${createdBookings.length} tour booking(s) for order ${orderId}: ${createdBookings.map((b: any) => b.id).join(", ")}`
       )
+    }
+
+    // Publish enriched order.placed event to EDA module
+    try {
+      const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
+
+      // 1. Publish integration.order.placed
+      await eventModuleService.publishEvent({
+        type: "integration",
+        aggregateType: "order",
+        action: "placed",
+        version: 1,
+        payload: {
+          id: order.id,
+          status: String((order as { payment_status?: unknown }).payment_status ?? "pending"),
+          email: order.email ?? order.customer?.email ?? "",
+          displayId: Number(order.display_id ?? 0),
+          currencyCode: String(order.currency_code ?? "USD"),
+          total: Number(order.total ?? 0),
+          items: (order.items || []).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            metadata: item.metadata,
+          })),
+          metadata: order.metadata ?? null,
+        },
+        causationId: `medusa:order.placed:${orderId}`,
+      })
+      logger.info(`Published integration.order.placed.v1 for order: ${orderId}`)
+
+      // 2. Publish notification.booking.confirmation for each created booking
+      for (const booking of createdBookings) {
+        await eventModuleService.publishEvent({
+          type: "notification",
+          aggregateType: "booking",
+          action: "confirmation",
+          version: 1,
+          payload: {
+            id: booking.id,
+            orderId: orderId,
+            entityId: booking.tour_id ?? "",
+            entityType: "tour" as const,
+            tourDate: booking.tour_date ? new Date(booking.tour_date).toISOString() : undefined,
+            lineItems: booking.line_items ?? null,
+            status: booking.status ?? "pending",
+            metadata: booking.metadata ?? null,
+          },
+          causationId: `medusa:order.placed:${orderId}`,
+        })
+      }
+      if (createdBookings.length > 0) {
+        logger.info(`Published notification.booking.confirmation.v1 for ${createdBookings.length} booking(s)`)
+      }
+    } catch (edaError) {
+      logger.warn(`Failed to publish order.placed EDA events: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
     }
 
     const notificationRecipients = await getOrderNotificationEmails(container)

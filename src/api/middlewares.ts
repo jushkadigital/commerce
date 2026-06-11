@@ -13,7 +13,7 @@ import { validateAndTransformBody, validateAndTransformQuery } from "@medusajs/f
 import { createFindParams } from "@medusajs/medusa/api/utils/validators"
 import { createSelectParams } from "./validators"
 import { GetTourAvailabilityParamsSchema } from "./admin/tours/[id]/availability/validators"
-import { z } from "zod"
+import { z } from "@medusajs/framework/zod"
 import { CreatePackageSchema } from "./admin/packages/route"
 import { CreateOrderNotificationEmailSchema } from "./admin/order-notification-emails/route"
 import { customMiddlewares } from "./custom/izipay/callback/middlewares"

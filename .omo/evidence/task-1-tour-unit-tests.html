@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            color: #7ee787;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .pass {
+            color: #7ee787;
+        }
+        .coverage {
+            color: #79c0ff;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #30363d;
+            background: #161b22;
+        }
+        .separator {
+            color: #8b949e;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">✓ TourModuleService Unit Tests - All Passed (34/34)</div>
+    
+    <div>
+<strong>TourModuleService</strong>
+    </div>
+    
+    <div class="pass">  getAvailableCapacity</div>
+    <div class="pass">    ✓ calculates available capacity correctly</div>
+    <div class="pass">    ✓ returns full capacity when no bookings</div>
+    <div class="pass">    ✓ returns zero when capacity is full</div>
+    <div class="pass">    ✓ returns negative when overbooked</div>
+    <div class="pass">    ✓ throws error when tour not found</div>
+    
+    <div class="pass">  validateBooking</div>
+    <div class="pass">    ✓ validates booking when date is available and capacity exists</div>
+    <div class="pass">    ✓ rejects booking for past dates</div>
+    <div class="pass">    ✓ rejects booking for unavailable dates</div>
+    <div class="pass">    ✓ rejects booking exceeding available capacity</div>
+    <div class="pass">    ✓ accepts booking for exactly remaining capacity</div>
+    <div class="pass">    ✓ throws error when tour retrieval fails</div>
+    
+    <div class="pass">  getTourPricing</div>
+    <div class="pass">    ✓ returns pricing with zeros when no container provided</div>
+    <div class="pass">    ✓ returns pricing with specified currency</div>
+    <div class="pass">    ✓ fetches and maps pricing from Pricing Module</div>
+    <div class="pass">    ✓ handles missing variants gracefully</div>
+    <div class="pass">    ✓ handles variants without variant_id</div>
+    <div class="pass">    ✓ handles pricing module errors gracefully</div>
+    <div class="pass">    ✓ only maps prices for found variants</div>
+    <div class="pass">    ✓ handles null calculated_amount</div>
+    
+    <div class="pass">  calculateCartTotal</div>
+    <div class="pass">    ✓ calculates cart total correctly with single item</div>
+    <div class="pass">    ✓ calculates cart total correctly with multiple items</div>
+    <div class="pass">    ✓ handles empty cart</div>
+    <div class="pass">    ✓ uses default currency when container not provided</div>
+    <div class="pass">    ✓ handles zero quantity passengers</div>
+    <div class="pass">    ✓ includes item details in result</div>
+    
+    <div class="pass">  updateVariantPrices</div>
+    <div class="pass">    ✓ skips update when no container provided</div>
+    <div class="pass">    ✓ skips update when no variants found</div>
+    <div class="pass">    ✓ updates prices for all passenger types</div>
+    <div class="pass">    ✓ uses PEN as default currency</div>
+    <div class="pass">    ✓ skips variants without price set</div>
+    <div class="pass">    ✓ skips variants without variant_id</div>
+    <div class="pass">    ✓ continues with next variant if update fails</div>
+    <div class="pass">    ✓ handles empty query result</div>
+    <div class="pass">    ✓ handles query result with undefined data</div>
+    
+    <div class="coverage">
+Coverage Report:<br>
+--------------------|---------|----------|---------|---------|<br>
+File                | % Stmts | % Branch | % Funcs | % Lines |<br>
+--------------------|---------|----------|---------|---------|<br>
+service.ts          |  100%   |   87.17% |  100%   |  100%   |<br>
+--------------------|---------|----------|---------|---------|<br>
+<br>
+Test Suites: 1 passed, 1 total<br>
+Tests:       34 passed, 34 total
+    </div>
+</body>
+</html>

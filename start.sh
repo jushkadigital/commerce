@@ -8,6 +8,8 @@ RUN_SETUP_STORE="${RUN_SETUP_STORE:-true}"
 
 echo "Starting Medusa with mode: ${WORKER_MODE}"
 
+cd "${BUILD_FOLDER}" || exit 1
+
 if [ "$WORKER_MODE" = "server" ]; then
   if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "Running migrations..."
@@ -17,7 +19,6 @@ if [ "$WORKER_MODE" = "server" ]; then
 
   if [ "$RUN_SETUP_STORE" = "true" ]; then
     echo "Running setup-store script..."
-    # setup-store solo usa la DB y el container, no necesita Redis ni RabbitMQ
     IS_MIGRATION=true npx medusa exec src/scripts/setup-store.ts
     echo "setup-store completed."
   fi
@@ -28,11 +29,10 @@ if [ "$WORKER_MODE" = "server" ]; then
       exit 1
     fi
     CREATE_EXIT_CODE=0
-    # Create user only needs DB, so we can skip Redis/RabbitMQ
     CREATE_OUTPUT=$(IS_MIGRATION=true npx medusa user -e "$MEDUSA_ADMIN_EMAIL" -p "$MEDUSA_ADMIN_PASSWORD" 2>&1) || CREATE_EXIT_CODE=$?
     echo "$CREATE_OUTPUT"
     if [[ $CREATE_EXIT_CODE -ne 0 ]]; then
-      if [[ $CREATE_OUTPUT != *"User"*"already exists"* ]]; then
+      if [[ "$CREATE_OUTPUT" != *"User"*"already exists"* ]]; then
         exit $CREATE_EXIT_CODE
       else
         echo "Admin user already exists."
@@ -43,5 +43,4 @@ if [ "$WORKER_MODE" = "server" ]; then
   fi
 fi
 
-cd "${BUILD_FOLDER}" || exit 1
 exec npx medusa start

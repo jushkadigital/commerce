@@ -2,7 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import TourModuleService from "../../../../modules/tour/service"
 import { TOUR_MODULE } from "../../../../modules/tour"
-import { z } from "zod"
+import { z } from "@medusajs/framework/zod"
 
 export async function GET(
   req: MedusaRequest,

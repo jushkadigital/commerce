@@ -4,6 +4,7 @@ import {
   type SpanExporter,
 } from "@opentelemetry/sdk-trace-base"
 import { ExportResultCode } from "@opentelemetry/core"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 
 const MIN_SPAN_DURATION_MS = 1000
 
@@ -48,14 +49,21 @@ class SlowSpanSummaryExporter implements SpanExporter {
 }
 
 export function register() {
+  const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+  const serviceName = process.env.OTEL_SERVICE_NAME || "medusa-server"
+
+  const exporter: SpanExporter = otlpEndpoint
+    ? new OTLPTraceExporter({
+        url: `${otlpEndpoint}/v1/traces`,
+      })
+    : new SlowSpanSummaryExporter(MIN_SPAN_DURATION_MS)
+
   registerOtel({
-    serviceName: "medusa-server",
-    exporter: new SlowSpanSummaryExporter(MIN_SPAN_DURATION_MS),
+    serviceName,
+    exporter,
     instrument: {
       http: true,
       workflows: true,
-      query: true,
-      db: true,
     },
   })
 }

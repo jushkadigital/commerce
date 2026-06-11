@@ -1,49 +1,45 @@
-ARG NODE_VERSION=22.14
+# syntax=docker/dockerfile:1.7
+
+ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-bookworm-slim AS base
 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable pnpm
+
 # ==============================================================================
-# ETAPA DEPS: Instala dependencias (incluyendo nativas)
+# ETAPA DEPS: Instala dependencias con cache persistente del store
 # ==============================================================================
 FROM base AS deps
-WORKDIR /opt/medusa/deps
-ARG NODE_ENV=development
-ENV NODE_ENV=$NODE_ENV
+WORKDIR /opt/medusa
 
-# FIX 1: Instalamos herramientas de compilación para Sharp/Python
-# Medusa lo necesita casi obligatoriamente para instalarse bien.
-RUN apt-get update && apt-get install -y \
-  python3 \
-  build-essential \
-  && rm -rf /var/lib/apt/lists/*
+RUN rm -f /etc/apt/apt.conf.d/docker-clean \
+    && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
-# Install dependencies
-COPY package*.json yarn.lock* pnpm-lock.yaml* .yarn* ./
-RUN \
-  if [ -f yarn.lock ]; then corepack enable yarn && yarn install --immutable; \
-  elif [ -f package-lock.json ]; then npm ci --legacy-peer-deps; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install ; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    build-essential
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY patches/ ./patches/
+
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # ==============================================================================
-# ETAPA BUILDER: Compila el código (Con el truco IS_BUILD)
+# ETAPA BUILDER: Hereda deps (sin COPY de 722MB), compila + prune
 # ==============================================================================
-FROM base AS builder
-WORKDIR /opt/medusa/build
-ARG NODE_ENV=production
-ENV NODE_ENV=$NODE_ENV
+FROM deps AS builder
 
-# Build the application
-COPY --from=deps /opt/medusa/deps .
 COPY . .
 
-# 1. Le decimos a Docker que espere este argumento durante el build
 ARG VITE_MEDUSA_BACKEND_URL
 ENV VITE_MEDUSA_BACKEND_URL=$VITE_MEDUSA_BACKEND_URL
-# FIX 2: EL ENGAÑO (MOCKING)
-# Definimos las variables para que medusa-config.ts use "in-memory"
-# y no intente conectarse a Redis/DB reales durante el build.
 ENV IS_BUILD=true
+ENV CI=true
+ENV NODE_ENV=production
 ENV DATABASE_URL=postgres://dummy:dummy@localhost:5432/dummy
 ENV REDIS_URL=redis://localhost:6379
 ENV CACHE_REDIS_URL=redis://localhost:6379
@@ -55,33 +51,35 @@ ENV COOKIE_SECRET=dummy
 ENV SESSION_SECRET=dummy
 ENV MEDUSA_BACKEND_URL=https://commerce.patarutera.pe
 
-# Ahora el build correrá sin errores de conexión
-RUN \
-  if [ -f yarn.lock ]; then corepack enable yarn && yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build --legacy-peer-deps; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  fi
+RUN pnpm run build
+
+# Prune en builder (tiene RAM), no en runner
+RUN pnpm prune --prod
 
 # ==============================================================================
-# ETAPA RUNNER: Imagen final limpia
+# ETAPA RUNNER: Imagen final mínima — solo copia lo necesario
 # ==============================================================================
 FROM node:${NODE_VERSION}-bookworm-slim AS runner
 
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y tini=0.19.0-1+b3 \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && apt-get install --no-install-recommends -y \
+    tini \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ARG PORT=9000
+ENV PORT=$PORT
+ENV NODE_ENV=production
 
 USER node
 WORKDIR /opt/medusa
 
-# Copiamos todo el directorio compilado (incluye node_modules, .medusa, y config)
-COPY --from=builder --chown=node:node /opt/medusa/build .
-
-ARG PORT=9000
-ARG NODE_ENV=production
-ENV PORT=$PORT
-ENV NODE_ENV=$NODE_ENV
+# Copia selectiva: node_modules ya pruned (~150MB vs 722MB),
+# .medusa/server (build output), y start.sh
+COPY --from=builder --chown=node:node /opt/medusa/node_modules node_modules
+COPY --from=builder --chown=node:node /opt/medusa/.medusa/server .medusa/server
+COPY --from=builder --chown=node:node /opt/medusa/start.sh start.sh
 
 EXPOSE $PORT
 

@@ -1,0 +1,8 @@
+import type { AuthTypes } from "@medusajs/framework/types";
+export declare const requestVerificationWorkflowId = "request-verification-workflow";
+export declare const requestVerificationWorkflow: import("@medusajs/framework/workflows-sdk").ReturnWorkflow<AuthTypes.RequestAuthVerificationDTO, AuthTypes.AuthVerification & {
+    auth_identity_id: string;
+    provider_identity_id: string;
+    metadata?: Record<string, unknown> | null;
+}, []>;
+//# sourceMappingURL=request-verification.d.ts.map

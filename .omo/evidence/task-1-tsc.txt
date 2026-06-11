@@ -1,0 +1,4 @@
+src/modules/package/__tests__/package-service.spec.ts(677,6): error TS1005: ',' expected.
+src/modules/package/__tests__/package-service.spec.ts(680,3): error TS1128: Declaration or statement expected.
+src/modules/package/__tests__/package-service.spec.ts(681,1): error TS1128: Declaration or statement expected.
+src/modules/package/__tests__/package-service.spec.ts(681,2): error TS1128: Declaration or statement expected.

@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
-import { z } from "zod"
+import { z } from "@medusajs/framework/zod"
 import { ORDER_NOTIFICATION_MODULE } from "../../../modules/order-notification"
 
 type OrderNotificationRecipientRecord = {

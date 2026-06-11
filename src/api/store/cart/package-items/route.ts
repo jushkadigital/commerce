@@ -5,7 +5,7 @@ import { generateEntityId } from "@medusajs/utils"
 import { PACKAGE_MODULE } from "../../../../modules/package"
 import PackageModuleService from "../../../../modules/package/service"
 import { PassengerType } from "../../../../modules/package/models/package-variant"
-import { refetchPromotionAwareCart } from "../refetch-cart"
+import { refetchAddToCartResult } from "../refetch-cart"
 import { trackCommerceEvent, type TrackingItem } from "../../../../utils/conversion-tracking"
 
 type RequestWithAuthContext = MedusaRequest & {
@@ -242,16 +242,20 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const ensuredPackageId = package_id!
     const ensuredPackageDate = package_date!
 
-    // 1. Validate package exists and get package info
-    const pkg = await packageModuleService.retrievePackage(ensuredPackageId, {
-      relations: ["variants"],
-    })
+    // 1. Retrieve package and cart in parallel
+    const [pkg, cart] = await Promise.all([
+      packageModuleService.retrievePackage(ensuredPackageId, {
+        relations: ["variants"],
+      }),
+      cartModule.retrieveCart(ensuredCartId),
+    ])
 
-    // 2. Validate package availability
+    // 2. Validate package availability (pass pre-fetched package)
     const validation = await packageModuleService.validateBooking(
       ensuredPackageId,
       new Date(ensuredPackageDate),
-      totalPassengers
+      totalPassengers,
+      pkg
     )
 
     if (!validation.valid) {
@@ -294,7 +298,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       variantIdsNeeded.push(infantVariant.variant_id)
     }
 
-    const cart = await cartModule.retrieveCart(ensuredCartId)
     const pricingContext = {
       ...((req as any).pricingContext || {}),
       currency_code: (cart.currency_code || "usd").toLowerCase(),
@@ -332,59 +335,48 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const unresolvedVariantIds = variantIdsNeeded.filter((variantId) => !priceMap.has(variantId))
 
     if (unresolvedVariantIds.length > 0) {
-      try {
-        const { data: variantsWithPrices } = await query.graph({
+      const [priceSetResult, calculatedPriceResult] = await Promise.all([
+        query.graph({
           entity: "product_variant",
           fields: ["id", "price_set.prices.*"],
           filters: {
             id: unresolvedVariantIds,
           },
-        })
-
-        for (const variantData of variantsWithPrices || []) {
-          const prices = variantData?.price_set?.prices || []
-          const matchingPrice = prices.find(
-            (price: any) => price?.currency_code?.toLowerCase() === pricingContext.currency_code
-          )
-
-          if (!matchingPrice) {
-            continue
-          }
-
-          const amount = Number(matchingPrice.amount)
-          if (Number.isFinite(amount) && amount >= 0) {
-            priceMap.set(variantData.id, amount)
-          }
-        }
-      } catch (variantPriceError) {
-        console.warn("Could not resolve variant prices from price sets", variantPriceError)
-      }
-    }
-
-    const unresolvedAfterPriceSetIds = variantIdsNeeded.filter((variantId) => !priceMap.has(variantId))
-
-    if (unresolvedAfterPriceSetIds.length > 0) {
-      try {
-        const { data: variantsWithCalculatedPrice } = await query.graph({
+        }).catch(() => ({ data: [] })),
+        query.graph({
           entity: "product_variant",
           fields: ["id", "calculated_price.*"],
           filters: {
-            id: unresolvedAfterPriceSetIds,
+            id: unresolvedVariantIds,
           },
           context: {
             calculated_price: QueryContext(pricingContext),
           },
-        })
+        }).catch(() => ({ data: [] })),
+      ])
 
-        for (const variantData of variantsWithCalculatedPrice || []) {
-          const variantAny = variantData as any
-          const amount = Number(variantAny?.calculated_price?.calculated_amount)
-          if (Number.isFinite(amount) && amount >= 0) {
-            priceMap.set(variantAny.id, amount)
-          }
+      for (const variantData of priceSetResult.data || []) {
+        const prices = variantData?.price_set?.prices || []
+        const matchingPrice = prices.find(
+          (price: any) => price?.currency_code?.toLowerCase() === pricingContext.currency_code
+        )
+
+        if (!matchingPrice) {
+          continue
         }
-      } catch (calculatedPriceError) {
-        console.warn("Could not resolve variant calculated prices", calculatedPriceError)
+
+        const amount = Number(matchingPrice.amount)
+        if (Number.isFinite(amount) && amount >= 0) {
+          priceMap.set(variantData.id, amount)
+        }
+      }
+
+      for (const variantData of calculatedPriceResult.data || []) {
+        const variantAny = variantData as any
+        const amount = Number(variantAny?.calculated_price?.calculated_amount)
+        if (Number.isFinite(amount) && amount >= 0) {
+          priceMap.set(variantAny.id, amount)
+        }
       }
     }
 
@@ -396,63 +388,18 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       )
     }
 
-    // 6. Build pricing breakdown and calculate total
-    const pricingBreakdown: Array<{
-      type: string
-      quantity: number
-      unit_price: number
-    }> = []
-    let totalPrice = 0
+    const groupId = generateEntityId(undefined, "pkg")
+    const logger = req.scope.resolve("logger")
 
     const getUnitPrice = (variantId: string) => {
       const resolved = priceMap.get(variantId)
       if (resolved === undefined) {
         throw new Error(`Missing price for variant ${variantId}`)
       }
-
       return resolved
     }
 
-    if (adults > 0) {
-      const adultVariant = variantMap.get(PassengerType.ADULT)!
-      const unitPrice = getUnitPrice(adultVariant.variant_id)
-      const lineTotal = unitPrice * adults
-      totalPrice += lineTotal
-      pricingBreakdown.push({
-        type: "ADULT",
-        quantity: adults,
-        unit_price: unitPrice,
-      })
-    }
-
-    if (children > 0) {
-      const childVariant = variantMap.get(PassengerType.CHILD)!
-      const unitPrice = getUnitPrice(childVariant.variant_id)
-      const lineTotal = unitPrice * children
-      totalPrice += lineTotal
-      pricingBreakdown.push({
-        type: "CHILD",
-        quantity: children,
-        unit_price: unitPrice,
-      })
-    }
-
-    if (infants > 0) {
-      const infantVariant = variantMap.get(PassengerType.INFANT)!
-      const unitPrice = getUnitPrice(infantVariant.variant_id)
-      const lineTotal = unitPrice * infants
-      totalPrice += lineTotal
-      pricingBreakdown.push({
-        type: "INFANT",
-        quantity: infants,
-        unit_price: unitPrice,
-      })
-    }
-
-    const groupId = generateEntityId(undefined, "pkg")
-    const logger = req.scope.resolve("logger")
-
-
+    // Build variantBreakdown first, then derive pricingBreakdown from it (no duplicate computation)
     const variantBreakdown: Array<{
       type: "ADULT" | "CHILD" | "INFANT"
       variant_id: string
@@ -497,6 +444,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
+    const pricingBreakdown = variantBreakdown.map((entry) => ({
+      type: entry.type,
+      quantity: entry.quantity,
+      unit_price: entry.unit_price,
+    }))
+
+    let totalPrice = variantBreakdown.reduce((sum, entry) => sum + entry.line_total, 0)
+
     const itemsToAdd: any[] = variantBreakdown.map((entry) => {
       const passengers = {
         adults: entry.type === "ADULT" ? entry.quantity : 0,
@@ -539,8 +494,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     await cartModule.addLineItems(ensuredCartId, itemsToAdd)
 
-    // 6. Retrieve updated cart
-    const updatedCart = await refetchPromotionAwareCart(ensuredCartId, req.scope)
+    // 6. Retrieve updated cart with reduced field set
+    const updatedCart = await refetchAddToCartResult(ensuredCartId, req.scope)
 
     const trackingItems: TrackingItem[] = variantBreakdown.map((entry) => ({
       contentId: entry.variant_id,
@@ -551,7 +506,21 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       price: entry.unit_price,
     }))
 
-    await trackCommerceEvent({
+    res.json({
+      cart: updatedCart,
+      summary: {
+        package_id: pkg.id,
+        destination: pkg.destination,
+        package_date: ensuredPackageDate,
+        adults,
+        children,
+        infants,
+        total_passengers: totalPassengers,
+      },
+    })
+
+    // Fire-and-forget tracking (non-blocking, after response sent)
+    trackCommerceEvent({
       eventName: "AddToCart",
       eventId: `add_to_cart:${groupId}`,
       trigger: "store.cart.package-items.post",
@@ -568,19 +537,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         externalId: requestWithAuth.auth_context?.actor_id,
       },
       logger,
-    })
-
-    res.json({
-      cart: updatedCart,
-      summary: {
-        package_id: pkg.id,
-        destination: pkg.destination,
-        package_date: ensuredPackageDate,
-        adults,
-        children,
-        infants,
-        total_passengers: totalPassengers,
-      },
+    }).catch((err) => {
+      logger?.error?.("[tracking] AddToCart event failed (non-blocking)", err)
     })
   } catch (error) {
     console.error("Error adding package items to cart:", error)

@@ -1,0 +1,28 @@
+E2E TEST RESULTS: Tour Purchase Flow
+=====================================
+
+Date: 2026-02-07
+Status: CREATED ✅ (Ready to run)
+
+File: integration-tests/http/tour-purchase-flow.spec.ts
+Lines: 766
+Test Cases: 12
+
+Test Coverage:
+✓ Complete purchase flow (happy path)
+✓ Multiple passenger types
+✓ Multiple purchases same user
+✓ Pricing verification
+✓ Capacity exceeded errors
+✓ Fully booked errors
+✓ Unavailable date errors
+✓ Capacity edge cases
+✓ Order and booking verification
+✓ Data consistency checks
+
+Status: Tests require PostgreSQL to execute.
+Database connection needed: 127.0.0.1:5432
+
+To run:
+  docker run -d --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15
+  npm run test:integration:http -- tour-purchase-flow.spec.ts

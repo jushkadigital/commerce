@@ -4,7 +4,7 @@ import { Modules } from "@medusajs/framework/utils"
 import TourModuleService from "../../../modules/tour/service"
 import { TOUR_MODULE } from "../../../modules/tour"
 import createTourWorkflow from "../../../workflows/create-tour"
-import { z } from "zod"
+import { z } from "@medusajs/framework/zod"
 
 
 export async function GET(
@@ -41,7 +41,7 @@ export const CreateTourSchema = z.object({
   blocked_week_days: z.array(z.string()).optional(),
   cancellation_deadline_hours: z.number().int().nonnegative().optional(),
   booking_min_days_ahead: z.number().int().nonnegative().optional(),
-  metadata: z.record(z.unknown()) // Acepta un objeto con cualquier clave y valor
+  metadata: z.record(z.string(), z.unknown()) // Acepta un objeto con cualquier clave y valor
     .nullable()          // Permite que sea null
     .optional(),
   prices: z.object({

@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import * as jwt from "jsonwebtoken"
+import { provisionCustomerFromKeycloak } from "../../../../workflows/helpers/provision-customer-from-keycloak"
 
 const MEDUSA_JWT_COOKIE_NAME = "_medusa_jwt"
 const MEDUSA_JWT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7
@@ -395,131 +396,92 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       entity_id: keycloakSub,
     })
 
-    if (!providerIdentity) {
-      logger.warn(
-        buildLogLine("[store.auth.keycloak] provider identity not found", {
-          route: "/store/auth/keycloak",
-          status: 404,
-          emitted_medusa_jwt: false,
-          keycloak_sub: keycloakSub,
-          keycloak_email: keycloakEmail,
+    // JIT Provisioning: create AuthIdentity + Customer on demand
+    // when the subscriber hasn't processed the RabbitMQ event yet,
+    // so the front gets a valid Medusa token on the first attempt.
+    let customerId: string
+    let authIdentityId: string
+
+    if (!providerIdentity || !providerIdentity.auth_identity_id) {
+      if (!keycloakEmail) {
+        return res.status(400).json({
+          message: "Cannot JIT provision customer: email missing from Keycloak token",
+          code: "MISSING_EMAIL_FOR_JIT",
+          sub: keycloakSub,
         })
-      )
-
-      return res.status(404).json({
-        message: "Usuario no encontrado. El subscriber aún no ha sincronizado este usuario.",
-        code: "NOT_SYNCED_YET",
-        suggestion: "Por favor espere unos segundos y reintente.",
-        sub: keycloakSub,
-        email: keycloakEmail,
-      })
-    }
-
-    if (!providerIdentity.auth_identity_id) {
-      logger.warn(
-        buildLogLine("[store.auth.keycloak] provider identity missing auth_identity_id", {
-          route: "/store/auth/keycloak",
-          status: 404,
-          emitted_medusa_jwt: false,
-          keycloak_sub: keycloakSub,
-        })
-      )
-
-      return res.status(404).json({
-        message: "Usuario no encontrado. El subscriber aún no ha sincronizado este usuario.",
-        code: "NOT_SYNCED_YET",
-        suggestion: "Por favor espere unos segundos y reintente.",
-        sub: keycloakSub,
-        email: keycloakEmail,
-      })
-    }
-
-    const authIdentity = await authModule.retrieveAuthIdentity(
-      providerIdentity.auth_identity_id
-    )
-
-    let customerId = authIdentity.app_metadata?.customer_id as string
-
-    if (!customerId) {
-      logger.warn(
-        buildLogLine(
-          "[store.auth.keycloak] customer_id missing in app_metadata, using email fallback",
-          {
-            keycloak_sub: keycloakSub,
-          }
-        )
-      )
-
-      const authIdentityRecord = authIdentity as {
-        user_metadata?: Record<string, unknown>
       }
-
-      const fallbackEmail =
-        keycloakEmail || getPayloadValue(authIdentityRecord.user_metadata ?? {}, "email")
 
       logger.info(
-        buildLogLine("[store.auth.keycloak] searching customer by fallback email", {
-          has_email: Boolean(fallbackEmail),
+        buildLogLine("[store.auth.keycloak] provider identity not found, starting JIT provisioning", {
+          route: "/store/auth/keycloak",
+          keycloak_sub: keycloakSub,
+          keycloak_email: keycloakEmail,
+          reason: !providerIdentity ? "provider_identity_missing" : "auth_identity_missing",
         })
       )
 
-      if (!fallbackEmail) {
-        logger.warn(
-          buildLogLine("[store.auth.keycloak] fallback email unavailable", {
-            route: "/store/auth/keycloak",
-            status: 404,
-            emitted_medusa_jwt: false,
-            keycloak_sub: keycloakSub,
-          })
-        )
+      const jitResult = await provisionCustomerFromKeycloak({
+        container: req.scope,
+        keycloakSub,
+        keycloakEmail,
+        firstName: getPayloadValue(payload, "given_name"),
+        lastName: getPayloadValue(payload, "family_name"),
+      })
 
-        return res.status(404).json({
-          message: "Cliente no encontrado. El subscriber aún no ha creado la cuenta.",
-          code: "CUSTOMER_NOT_CREATED_YET",
-          suggestion: "Por favor espere unos segundos y reintente.",
-          email: null,
+      customerId = jitResult.customerId
+      authIdentityId = jitResult.authIdentityId
+
+      logger.info(
+        buildLogLine("[store.auth.keycloak] JIT provisioning completed", {
+          route: "/store/auth/keycloak",
+          mode: "keycloak_exchange_jit",
+          customer_id: customerId,
+          auth_identity_id: authIdentityId,
+          was_created: jitResult.wasCreated,
         })
-      }
+      )
+    } else {
+      const authIdentity = await authModule.retrieveAuthIdentity(
+        providerIdentity.auth_identity_id
+      )
+      authIdentityId = authIdentity.id
 
-      const [customer] = await customerModule.listCustomers({ email: fallbackEmail })
+      const appMetadataCustomerId = authIdentity.app_metadata?.customer_id as string | undefined
+      customerId = appMetadataCustomerId ?? ""
 
-      if (customer) {
-        customerId = customer.id
-
-        await authModule.updateAuthIdentities([{
-          id: authIdentity.id,
-          app_metadata: {
-            ...authIdentity.app_metadata,
-            customer_id: customerId,
-          },
-        }])
+      if (!customerId) {
+        if (!keycloakEmail) {
+          return res.status(400).json({
+            message: "Cannot JIT provision customer: email missing from Keycloak token",
+            code: "MISSING_EMAIL_FOR_JIT",
+            sub: keycloakSub,
+          })
+        }
 
         logger.info(
-          buildLogLine(
-            "[store.auth.keycloak] linked auth identity to customer via email fallback",
-            {
-              customer_id: customerId,
-              keycloak_sub: keycloakSub,
-            }
-          )
-        )
-      } else {
-        logger.warn(
-          buildLogLine("[store.auth.keycloak] fallback customer not found", {
+          buildLogLine("[store.auth.keycloak] customer_id missing in app_metadata, JIT fallback", {
             route: "/store/auth/keycloak",
-            status: 404,
-            emitted_medusa_jwt: false,
             keycloak_sub: keycloakSub,
-            keycloak_email: fallbackEmail,
           })
         )
 
-        return res.status(404).json({
-          message: "Cliente no encontrado. El subscriber aún no ha creado la cuenta.",
-          code: "CUSTOMER_NOT_CREATED_YET",
-          suggestion: "Por favor espere unos segundos y reintente.",
-          email: fallbackEmail,
+        const jitResult = await provisionCustomerFromKeycloak({
+          container: req.scope,
+          keycloakSub,
+          keycloakEmail,
+          firstName: getPayloadValue(payload, "given_name"),
+          lastName: getPayloadValue(payload, "family_name"),
         })
+
+        customerId = jitResult.customerId
+        authIdentityId = jitResult.authIdentityId
+
+        logger.info(
+          buildLogLine("[store.auth.keycloak] JIT fallback: customer linked to existing auth identity", {
+            customer_id: customerId,
+            auth_identity_id: authIdentityId,
+          })
+        )
       }
     }
 
@@ -543,8 +505,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       {
         actor_id: customerId,
         actor_type: "customer",
-        auth_identity_id: authIdentity.id,
-        app_metadata: authIdentity.app_metadata,
+        auth_identity_id: authIdentityId,
       },
       jwtSecret,
       { expiresIn: "7d" }

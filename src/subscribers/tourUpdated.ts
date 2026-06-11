@@ -2,8 +2,9 @@ import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
 import { TOUR_MODULE } from "../modules/tour"
 import type TourModuleService from "../modules/tour/service"
 import createTourWorkflow from "../workflows/create-tour"
-import { extractText } from "../utils/parserRichText"
 import { buildTourCreateInput, type TourSyncEventData } from "../utils/tour-sync-event"
+import { EVENTS_MODULE } from "../modules/events"
+import type EventModuleService from "../modules/events/service"
 
 export default async function handleToursUpdatedSync({
   event,
@@ -14,33 +15,77 @@ export default async function handleToursUpdatedSync({
 
   const tourModule = container.resolve<TourModuleService>(TOUR_MODULE)
 
-  logger.info(`${JSON.stringify(event.data)} `)
+  logger.info(`[integration.tour.updated.v1] Event received: id=${event.data.id} slug=${event.data.slug} destination=${event.data.data.destination}`)
+
   const [matchedTour] = await tourModule.getTourByMetadata(`${event.data.id}tour`)
 
   if (!matchedTour) {
+    logger.info(`[integration.tour.updated.v1] Tour not found for id=${event.data.id}, creating instead`)
+
     const { result } = await createTourWorkflow(container).run({
       input: buildTourCreateInput(event.data)
     })
 
-    logger.info(`${JSON.stringify(result)} `)
+    logger.info(`[integration.tour.updated.v1] Tour created: tour=${result.tour.id} product=${result.tour.product_id}`)
+
+    try {
+      const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
+      const tour = result.tour
+      await eventModuleService.publishEvent({
+        type: "integration",
+        aggregateType: "tour",
+        action: "updated",
+        version: 1,
+        payload: {
+          id: tour.id,
+          productId: tour.product_id,
+          slug: tour.slug,
+          destination: tour.destination,
+          durationDays: tour.duration_days,
+          difficulty: event.data.data.difficulty,
+        },
+        causationId: `medusa:tour.updated:${event.data.id}`,
+      })
+      logger.info(`Published integration.tour.updated.v1 EDA event for new tour: ${tour.id}`)
+    } catch (edaError) {
+      logger.warn(`Failed to publish tour.updated EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
+    }
+
     return
   }
 
-  logger.info(`${JSON.stringify(matchedTour)} `)
   const updatedTour = await tourModule.updateTours([{
     id: matchedTour.id,
     destination: event.data.data.destination,
-    description: extractText(event.data.data.description.root),
     duration_days: event.data.data.duration_days,
-    max_capacity: event.data.data.max_capacity,
-    thumbnail: event.data.data.thumbnail
   }])
 
+  logger.info(`[integration.tour.updated.v1] Tour updated: ${matchedTour.id}`)
 
-  logger.info(`${JSON.stringify(updatedTour)} `)
+  try {
+    const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
+    const tour = updatedTour[0] ?? updatedTour
+    await eventModuleService.publishEvent({
+      type: "integration",
+      aggregateType: "tour",
+      action: "updated",
+      version: 1,
+      payload: {
+        id: tour.id,
+        productId: tour.product_id,
+        slug: tour.slug,
+        destination: tour.destination,
+        durationDays: tour.duration_days,
+        difficulty: event.data.data.difficulty,
+      },
+      causationId: `medusa:tour.updated:${event.data.id}`,
+    })
+    logger.info(`Published integration.tour.updated.v1 EDA event for tour: ${tour.id}`)
+  } catch (edaError) {
+    logger.warn(`Failed to publish tour.updated EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
+  }
 }
 
 export const config: SubscriberConfig = {
-  // Asegúrate que esta sea la routing key correcta que envía tu Quarkus
-  event: "tour.updated",
+  event: "integration.tour.updated.v1",
 }

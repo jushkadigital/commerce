@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "@medusajs/framework/zod"
 
 export const GetTourAvailabilityParamsSchema = z.object({
   start_date: z.string().refine(

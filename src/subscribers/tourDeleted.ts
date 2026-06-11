@@ -2,6 +2,8 @@ import { Modules } from "@medusajs/framework/utils"
 import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
 import { TOUR_MODULE } from "../modules/tour"
 import type TourModuleService from "../modules/tour/service"
+import { EVENTS_MODULE } from "../modules/events"
+import type EventModuleService from "../modules/events/service"
 
 type TourDeletedEvent = {
   id?: string
@@ -14,7 +16,7 @@ export default async function handleTourDeletedSync({
 }: SubscriberArgs<TourDeletedEvent>) {
   const logger = container.resolve("logger")
 
-  logger.info(`TOUR DELETED EVENT RECEIVED: ${JSON.stringify(event.data)}`)
+  logger.info(`[integration.tour.deleted.v1] Event received: id=${event.data?.id || event.data?.payloadId}`)
 
   try {
     const tourModule = container.resolve<TourModuleService>(TOUR_MODULE)
@@ -68,12 +70,30 @@ export default async function handleTourDeletedSync({
     }
 
     logger.info(`Successfully deleted tour: ${tour.id}`)
+
+    // Publish enriched event to EDA module
+    try {
+      const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
+      await eventModuleService.publishEvent({
+        type: "integration",
+        aggregateType: "tour",
+        action: "deleted",
+        version: 1,
+        payload: {
+          id: tour.id,
+          productId: tour.product_id,
+        },
+        causationId: `medusa:tour.deleted:${externalId}`,
+      })
+      logger.info(`Published integration.tour.deleted.v1 for tour: ${tour.id}`)
+    } catch (edaError) {
+      logger.warn(`Failed to publish tour.deleted EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
+    }
   } catch (error) {
     logger.error(`Error in tourDeleted subscriber: ${error}`)
   }
 }
 
 export const config: SubscriberConfig = {
-  // Asegúrate que esta sea la routing key correcta que envía tu Quarkus
-  event: "tour.deleted",
+  event: "integration.tour.deleted.v1",
 }

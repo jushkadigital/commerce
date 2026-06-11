@@ -4,10 +4,12 @@ import {
 } from "@medusajs/framework/http"
 import {
   ContainerRegistrationKeys,
+  MedusaError,
   ProductStatus,
   QueryContext,
 } from "@medusajs/framework/utils"
 import { wrapVariantsWithInventoryQuantityForSalesChannel } from "@medusajs/medusa/api/utils/middlewares/index"
+import { wrapProductsWithTaxPrices } from "@medusajs/medusa/api/store/products/helpers"
 import { trackCommerceEvent, type TrackingItem } from "../../../../../utils/conversion-tracking"
 
 const baseExternalProductFields = [
@@ -30,6 +32,7 @@ const baseExternalProductFields = [
   "variants.manage_inventory",
   "variants.allow_backorder",
   "variants.thumbnail",
+  "sales_channels.id",
   "tour.id",
   "tour.slug",
   "tour.destination",
@@ -45,10 +48,6 @@ const baseExternalProductFields = [
   "package.thumbnail",
   "package.is_special",
 ]
-
-type ProductSalesChannelLink = {
-  id?: string
-}
 
 type ProductVariantWithPrice = {
   id?: string
@@ -69,6 +68,7 @@ type ExternalProductRecord = {
   title?: string
   external_id?: string
   variants?: ProductVariantWithPrice[]
+  sales_channels?: Array<{ id?: string }>
   tour?: {
     id?: string
     destination?: string
@@ -77,6 +77,13 @@ type ExternalProductRecord = {
     id?: string
     destination?: string
   }
+}
+
+const throwNotFound = (message?: string): never => {
+  throw new MedusaError(
+    MedusaError.Types.NOT_FOUND,
+    message || "Product by external not found"
+  )
 }
 
 const EXTERNAL_PRODUCT_CACHE_CONTROL =
@@ -135,10 +142,10 @@ export async function GET(
   const salesChannelIds = req.publishable_key_context?.sales_channel_ids ?? []
 
   if (!salesChannelIds.length) {
-    return res.status(400).json({
-      message:
-        "Publishable key needs to have a sales channel configured",
-    })
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "Publishable key needs to have a sales channel configured"
+    )
   }
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
@@ -178,31 +185,25 @@ export async function GET(
   const product = products[0]
 
   if (!product) {
-    return res.status(404).json({ message: "Product by external not found" })
+    throwNotFound()
   }
 
-  const productId = (product as ExternalProductRecord).id
+  const productRecord = product as ExternalProductRecord
 
-  if (!productId) {
-    return res.status(404).json({ message: "Product by external not found" })
+  if (!productRecord.id) {
+    throwNotFound()
   }
 
-  const { data: productSalesChannels } = await query.graph({
-    entity: "product_sales_channel",
-    fields: ["id"],
-    filters: {
-      product_id: productId,
-      sales_channel_id: salesChannelIds,
-    },
-  }, {
-    cache: {
-      enable: true,
-    },
-    locale: req.locale,
-  })
+  // Verify product belongs to an allowed sales channel (replaces 2nd DB query)
+  const productChannelIds = (productRecord.sales_channels || []).map(
+    (sc) => sc.id
+  )
+  const belongsToAllowedChannel = productChannelIds.some(
+    (id) => id && salesChannelIds.includes(id)
+  )
 
-  if ((productSalesChannels as ProductSalesChannelLink[]).length === 0) {
-    return res.status(404).json({ message: "Product by external not found" })
+  if (!belongsToAllowedChannel) {
+    throwNotFound()
   }
 
   if (includeInventoryQuantity) {
@@ -224,6 +225,11 @@ export async function GET(
     )
   }
 
+  // Wrap variants with tax-inclusive pricing (matches native Medusa product endpoint)
+  if (includeCalculatedPrice) {
+    await wrapProductsWithTaxPrices(req, [product as any])
+  }
+
   const hasAuthHeaders =
     typeof req.headers.authorization === "string" ||
     typeof req.headers.cookie === "string"
@@ -235,8 +241,6 @@ export async function GET(
     res.setHeader("Cache-Control", EXTERNAL_PRODUCT_CACHE_CONTROL)
     appendVaryHeaders(res, CACHE_VARY_HEADERS)
   }
-
-  const productRecord = product as ExternalProductRecord
 
   const contentCategory = productRecord.tour?.id
     ? "tour"
@@ -266,8 +270,11 @@ export async function GET(
       ]
     : []
 
+  res.json({ product })
+
+  // Fire-and-forget tracking (non-blocking, after response sent)
   if (trackingItems.length > 0) {
-    await trackCommerceEvent({
+    trackCommerceEvent({
       eventName: "ViewContent",
       eventId: `view_content:${externalId}:${Date.now()}`,
       trigger: "store.products.external.get",
@@ -278,8 +285,8 @@ export async function GET(
         externalId: requestWithAuth.auth_context?.actor_id,
       },
       logger,
+    }).catch((err) => {
+      logger?.error?.("[tracking] ViewContent event failed (non-blocking)", err)
     })
   }
-
-  res.json({ product })
 }

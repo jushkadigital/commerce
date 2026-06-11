@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import TourModuleService from "../../../../../modules/tour/service"
 import { TOUR_MODULE } from "../../../../../modules/tour"
-import { z } from "zod"
+import { z } from "@medusajs/framework/zod"
 import { updateTourNoPriceWorkflow } from "../../../../../workflows/update-tour-no-prices"
 
 // Esquema de validación para los datos que vienen del Modal

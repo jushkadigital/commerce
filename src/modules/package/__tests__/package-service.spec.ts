@@ -19,6 +19,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_001",
+            slug: "slug-prod-test-001",
             destination: "Machu Picchu",
             duration_days: 3,
             max_capacity: 10,
@@ -46,6 +47,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_002",
+            slug: "slug-prod-test-002",
             destination: "Test Package",
             duration_days: 2,
             max_capacity: 5,
@@ -79,6 +81,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const created = await service.createPackages({
             product_id: "prod_test_003",
+            slug: "slug-prod-test-003",
             destination: "Retrieval Test",
             duration_days: 4,
             max_capacity: 15,
@@ -103,6 +106,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           await service.createPackages({
             product_id: "prod_test_004",
+            slug: "slug-prod-test-004",
             destination: "Special Package",
             duration_days: 2,
             max_capacity: 8,
@@ -111,6 +115,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
 
           await service.createPackages({
             product_id: "prod_test_005",
+            slug: "slug-prod-test-005",
             destination: "Regular Package",
             duration_days: 3,
             max_capacity: 10,
@@ -133,6 +138,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_006",
+            slug: "slug-prod-test-006",
             destination: "Defaults Test",
             duration_days: 2,
             max_capacity: 5,
@@ -150,6 +156,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_007",
+            slug: "slug-prod-test-007",
             destination: "Months Default Test",
             duration_days: 2,
             max_capacity: 5,
@@ -166,6 +173,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_008",
+            slug: "slug-prod-test-008",
             destination: "Booking Window Test",
             duration_days: 2,
             max_capacity: 10,
@@ -182,15 +190,17 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_009",
+            slug: "slug-prod-test-009",
             destination: "Unavailable Date Test",
             duration_days: 2,
             max_capacity: 10,
+            blocked_dates: ["2026-12-20"]
           })
 
           const result = await service.validateBooking(pkg.id, unavailableDate, 2)
 
           expect(result.valid).toBe(false)
-          expect(result.reason).toBe("Package is not available on the requested date")
+          expect(result.reason).toBe("Esta fecha no esta disponible para reservar")
         })
 
         it("should reject booking for past dates", async () => {
@@ -200,6 +210,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_010",
+            slug: "slug-prod-test-010",
             destination: "Past Date Test",
             duration_days: 2,
             max_capacity: 10,
@@ -208,7 +219,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           const result = await service.validateBooking(pkg.id, pastDate, 2)
 
           expect(result.valid).toBe(false)
-          expect(result.reason).toBe("Cannot book packages for past dates")
+          expect(result.reason).toBe("No puedes reservar para fechas pasadas")
         })
 
         it("should validate dates correctly when exact match", async () => {
@@ -216,6 +227,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_011",
+            slug: "slug-prod-test-011",
             destination: "Time Component Test",
             duration_days: 2,
             max_capacity: 10,
@@ -232,6 +244,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_012",
+            slug: "slug-prod-test-012",
             destination: "Months Field Verification",
             duration_days: 2,
             max_capacity: 10,
@@ -253,6 +266,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_013",
+            slug: "slug-prod-test-013",
             destination: "Capacity Test",
             duration_days: 2,
             max_capacity: 10,
@@ -269,6 +283,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_014",
+            slug: "slug-prod-test-014",
             destination: "Capacity Validation Test",
             duration_days: 2,
             max_capacity: 10,
@@ -285,6 +300,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_015",
+            slug: "slug-prod-test-015",
             destination: "Over Capacity Test",
             duration_days: 2,
             max_capacity: 5,
@@ -295,26 +311,29 @@ moduleIntegrationTestRunner<PackageModuleService>({
               package: pkg.id,
               order_id: "order_1",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_001", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_2",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_002", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_3",
               package_date: availableDate,
-              status: "pending"
+              status: "pending",
+              line_items: { items: [{ variant_id: "variant_003", passengers: { adults: 1, children: 0, infants: 0 } }] }
             }
           ])
 
           const result = await service.validateBooking(pkg.id, availableDate, 4)
 
           expect(result.valid).toBe(false)
-          expect(result.reason).toBe("Only 2 spots available")
+          expect(result.reason).toBe("Solo 2 espacios disponibles")
         })
 
         it("should accept booking at exact capacity limit", async () => {
@@ -323,6 +342,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_016",
+            slug: "slug-prod-test-016",
             destination: "Exact Capacity Test",
             duration_days: 2,
             max_capacity: 5,
@@ -360,6 +380,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_017",
+            slug: "slug-prod-test-017",
             destination: "Available Capacity Calculation",
             duration_days: 2,
             max_capacity: 10,
@@ -370,25 +391,29 @@ moduleIntegrationTestRunner<PackageModuleService>({
               package: pkg.id,
               order_id: "order_1",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_004", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_2",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_005", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_3",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_006", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_4",
               package_date: availableDate,
-              status: "pending"
+              status: "pending",
+              line_items: { items: [{ variant_id: "variant_007", passengers: { adults: 1, children: 0, infants: 0 } }] }
             }
           ])
 
@@ -403,6 +428,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_018",
+            slug: "slug-prod-test-018",
             destination: "Cancelled Bookings Test",
             duration_days: 2,
             max_capacity: 10,
@@ -413,25 +439,29 @@ moduleIntegrationTestRunner<PackageModuleService>({
               package: pkg.id,
               order_id: "order_1",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_008", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_2",
               package_date: availableDate,
-              status: "pending"
+              status: "pending",
+              line_items: { items: [{ variant_id: "variant_009", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_3",
               package_date: availableDate,
-              status: "cancelled"
+              status: "cancelled",
+              line_items: { items: [{ variant_id: "variant_010", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_4",
               package_date: availableDate,
-              status: "completed"
+              status: "completed",
+              line_items: { items: [{ variant_id: "variant_011", passengers: { adults: 1, children: 0, infants: 0 } }] }
             }
           ])
 
@@ -446,6 +476,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_019",
+            slug: "slug-prod-test-019",
             destination: "Fully Booked Test",
             duration_days: 2,
             max_capacity: 3,
@@ -456,19 +487,22 @@ moduleIntegrationTestRunner<PackageModuleService>({
               package: pkg.id,
               order_id: "order_1",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_012", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_2",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_013", passengers: { adults: 1, children: 0, infants: 0 } }] }
             },
             {
               package: pkg.id,
               order_id: "order_3",
               package_date: availableDate,
-              status: "confirmed"
+              status: "confirmed",
+              line_items: { items: [{ variant_id: "variant_014", passengers: { adults: 1, children: 0, infants: 0 } }] }
             }
           ])
 
@@ -478,7 +512,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
 
           const result = await service.validateBooking(pkg.id, availableDate, 1)
           expect(result.valid).toBe(false)
-          expect(result.reason).toBe("Only 0 spots available")
+          expect(result.reason).toBe("Solo 0 espacios disponibles")
         })
       })
       
@@ -488,6 +522,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_020",
+            slug: "slug-prod-test-020",
             destination: "Blocked Dates Test",
             duration_days: 2,
             max_capacity: 10,
@@ -507,6 +542,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_021",
+            slug: "slug-prod-test-021",
             destination: "Blocked Week Days Test",
             duration_days: 2,
             max_capacity: 10,
@@ -525,6 +561,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_022",
+            slug: "slug-prod-test-022",
             destination: "Empty Blocked Test",
             duration_days: 2,
             max_capacity: 10,
@@ -543,6 +580,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_023",
+            slug: "slug-prod-test-023",
             destination: "Update Blocked Test",
             duration_days: 2,
             max_capacity: 10,
@@ -570,6 +608,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const specialPkg = await service.createPackages({
             product_id: "prod_test_024",
+            slug: "slug-prod-test-024",
             destination: "Special Package",
             duration_days: 2,
             max_capacity: 10,
@@ -578,6 +617,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
 
           const regularPkg = await service.createPackages({
             product_id: "prod_test_025",
+            slug: "slug-prod-test-025",
             destination: "Regular Package",
             duration_days: 2,
             max_capacity: 10,
@@ -600,6 +640,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg12h = await service.createPackages({
             product_id: "prod_test_026",
+            slug: "slug-prod-test-026",
             destination: "12h Cancellation",
             duration_days: 2,
             max_capacity: 10,
@@ -608,6 +649,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
 
           const pkg24h = await service.createPackages({
             product_id: "prod_test_027",
+            slug: "slug-prod-test-027",
             destination: "24h Cancellation",
             duration_days: 2,
             max_capacity: 10,
@@ -616,6 +658,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
 
           const pkg48h = await service.createPackages({
             product_id: "prod_test_028",
+            slug: "slug-prod-test-028",
             destination: "48h Cancellation",
             duration_days: 2,
             max_capacity: 10,
@@ -634,6 +677,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg = await service.createPackages({
             product_id: "prod_test_029",
+            slug: "slug-prod-test-029",
             destination: "Months vs Days Verification",
             duration_days: 2,
             max_capacity: 10,
@@ -649,6 +693,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
           
           const pkg1Month = await service.createPackages({
             product_id: "prod_test_030",
+            slug: "slug-prod-test-030",
             destination: "1 Month Ahead",
             duration_days: 2,
             max_capacity: 10,
@@ -657,6 +702,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
 
           const pkg6Months = await service.createPackages({
             product_id: "prod_test_031",
+            slug: "slug-prod-test-031",
             destination: "6 Months Ahead",
             duration_days: 2,
             max_capacity: 10,
@@ -665,6 +711,7 @@ moduleIntegrationTestRunner<PackageModuleService>({
 
           const pkg12Months = await service.createPackages({
             product_id: "prod_test_032",
+            slug: "slug-prod-test-032",
             destination: "12 Months Ahead",
             duration_days: 2,
             max_capacity: 10,

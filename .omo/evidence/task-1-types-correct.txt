@@ -1,0 +1,56 @@
+# Task 1: Verificación de tipos correctos
+
+## Verificación de tipos y defaults:
+
+```
+is_special: model.boolean().default(false)
+✅ Tipo: boolean
+✅ Default: false
+
+blocked_dates: model.array().default([])
+✅ Tipo: array (string[] para fechas ISO YYYY-MM-DD)
+✅ Default: []
+
+blocked_week_days: model.array().default([])
+✅ Tipo: array (number[] para días 0=Dom, 6=Sab)
+✅ Default: []
+
+cancellation_deadline_hours: model.number().default(12)
+✅ Tipo: number
+✅ Default: 12
+
+booking_min_days_ahead: model.number().default(2)
+✅ Tipo: number
+✅ Default: 2
+```
+
+## Estructura final del modelo Tour:
+
+```typescript
+export const Tour = model.define("tour", {
+  id: model.id().primaryKey(),
+  product_id: model.text().unique(),
+  destination: model.text(),
+  description: model.text().nullable(),
+  duration_days: model.number(),
+  max_capacity: model.number(),
+  thumbnail: model.text().nullable(),
+  available_dates: model.array(),
+  type: model.enum(["tour", "package"]).default("tour"),
+  // NUEVOS CAMPOS AGREGADOS:
+  is_special: model.boolean().default(false),
+  blocked_dates: model.array().default([]),
+  blocked_week_days: model.array().default([]),
+  cancellation_deadline_hours: model.number().default(12),
+  booking_min_days_ahead: model.number().default(2),
+  // RELACIONES:
+  variants: model.hasMany(() => TourVariant, { mappedBy: "tour" }),
+  service_variants: model.hasMany(() => TourServiceVariant, { mappedBy: "tour" }),
+  bookings: model.hasMany(() => TourBooking, { mappedBy: "tour" }),
+})
+```
+
+## Ubicación de campos:
+✅ Después de `type` (línea 15)
+✅ Antes de `variants` (línea 21)
+✅ Indentación consistente (2 espacios)

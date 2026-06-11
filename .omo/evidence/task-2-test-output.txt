@@ -1,0 +1,62 @@
+
+Running 2 tests using 1 worker
+
+[1A[2K[1/2] [setup] › e2e/auth.setup.ts:4:7 › authentication › setup
+[1A[2K[2/2] [chromium] › e2e/verify-tour-update-fix.spec.ts:4:7 › Tour update via dashboard UI › navigates to tours list, opens first tour edit modal, and updates fields
+[1A[2K[chromium] › e2e/verify-tour-update-fix.spec.ts:4:7 › Tour update via dashboard UI › navigates to tours list, opens first tour edit modal, and updates fields
+Loaded tours page
+
+[1A[2KOpened action menu for first tour
+
+[1A[2KClicked Edit to open modal
+
+[1A[2KOriginal is_special: [33mfalse[39m
+
+[1A[2KOriginal max_capacity: 15
+
+[1A[2KOriginal booking_min_days_ahead: 7
+
+[1A[2KAfter toggle, is_special state: checked
+
+[1A[2KSet max_capacity to 15
+
+[1A[2KSet booking_min_days_ahead to 7
+
+[1A[2KNavigated to pricing step
+
+[1A[2KClicked Save Changes, waiting for response...
+
+[1A[2KPOST payload: {
+  "id": "01KHPTQ29Q10RM75Z540DT3R07",
+  "destination": "oeueueuueqjjjj",
+  "description": "o e e e eee",
+  "duration_days": 1,
+  "max_capacity": 15,
+  "is_special": true,
+  "booking_min_days_ahead": 7,
+  "blocked_dates": [],
+  "prices": {
+    "adult": 0,
+    "child": 0,
+    "infant": 0,
+    "currency_code": "pen"
+  }
+}
+
+[1A[2KSave response status: [33m200[39m
+
+[1A[2KModal closed after save
+
+[1A[2KPage reloaded after save
+
+[1A[2KReopened edit modal to verify persistence
+
+[1A[2K✓ is_special toggled correctly to checked
+
+[1A[2K✓ max_capacity persisted as 15
+
+[1A[2K✓ booking_min_days_ahead persisted as 7
+
+[1A[2K✅ Tour update test completed successfully
+
+[1A[2K  2 passed (16.3s)

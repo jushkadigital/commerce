@@ -1,0 +1,69 @@
+
+> medusa-starter-default@0.0.1 build
+> medusa build || true
+
+NODE_ENV = development
+NODE_ENV = development
+CWD = /home/node/app
+IS_BUILD MODE = true
+KEYCLOAK_CLIENT_ID: 5f2947dd-a3e7-4759-9f0b-4bd32e7898b8
+BACKEND_URL: http://localhost:9000
+MEDUSA_BACKEND_URL: http://localhost:9000
+DATABASE_URL: postgres://medusa-starter:medusa-password@localhost:5432/medusa-starter
+[32minfo[39m:    redisUrl not found. A fake redis instance will be used.
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa/server" folder
+[32minfo[39m:    Compiling frontend source...
+[96msrc/api/admin/packages/route.ts[0m:[93m56[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType '{ destination: string; duration_days: number; max_capacity: number; prices: { adult: number; child: number; infant: number; currency_code?: string | undefined; }; metadata?: Record<string, unknown> | null | undefined; description?: string | undefined; thumbnail?: string | undefined; }' is not assignable to type 'CreatePackageWorkflowInput'.
+  Types of property 'metadata' are incompatible.
+    Type 'Record<string, unknown> | null | undefined' is not assignable to type 'Record<string, any> | undefined'.
+      Type 'null' is not assignable to type 'Record<string, any> | undefined'.
+
+[7m56[0m     input: req.validatedBody,
+[7m  [0m [91m    ~~~~~[0m
+[96msrc/api/admin/tours/route.ts[0m:[93m56[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType '{ destination: string; duration_days: number; max_capacity: number; prices: { adult: number; child: number; infant: number; currency_code?: string | undefined; }; metadata?: Record<string, unknown> | null | undefined; description?: string | undefined; thumbnail?: string | undefined; }' is not assignable to type 'CreateTourWorkflowInput'.
+  Types of property 'metadata' are incompatible.
+    Type 'Record<string, unknown> | null | undefined' is not assignable to type 'Record<string, any> | undefined'.
+      Type 'null' is not assignable to type 'Record<string, any> | undefined'.
+
+[7m56[0m     input: req.validatedBody,
+[7m  [0m [91m    ~~~~~[0m
+[96msrc/api/auth/user/[provider]/callback/route.ts[0m:[93m14[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType 'ParsedQs' is not assignable to type 'Record<string, string>'.
+  'string' index signatures are incompatible.
+    Type 'string | ParsedQs | (string | ParsedQs)[] | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+[7m14[0m       query: req.query,
+[7m  [0m [91m      ~~~~~[0m
+
+  [96mnode_modules/@medusajs/types/dist/auth/common/provider.d.ts[0m:[93m51[0m:[93m5[0m
+    [7m51[0m     query?: Record<string, string>;
+    [7m  [0m [96m    ~~~~~[0m
+    The expected type comes from property 'query' which is declared here on type 'AuthenticationInput'
+[96msrc/api/sso/[provider]/callback/route.ts[0m:[93m23[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType 'ParsedQs' is not assignable to type 'Record<string, string>'.
+  'string' index signatures are incompatible.
+    Type 'string | ParsedQs | (string | ParsedQs)[] | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+[7m23[0m         query: req.query,
+[7m  [0m [91m        ~~~~~[0m
+
+  [96mnode_modules/@medusajs/types/dist/auth/common/provider.d.ts[0m:[93m51[0m:[93m5[0m
+    [7m51[0m     query?: Record<string, string>;
+    [7m  [0m [96m    ~~~~~[0m
+    The expected type comes from property 'query' which is declared here on type 'AuthenticationInput'
+[96msrc/workflows/steps/validate-tour-booking.ts[0m:[93m40[0m:[93m24[0m - [91merror[0m[90m TS18047: [0m'item' is possibly 'null'.
+
+[7m40[0m       const metadata = item.metadata as {
+[7m  [0m [91m                       ~~~~[0m
+[96msrc/workflows/update-package.ts[0m:[93m53[0m:[93m7[0m - [91merror[0m[90m TS2590: [0mExpression produces a union type that is too complex to represent.
+
+[7m53[0m       (data) => {
+[7m  [0m [91m      ~~~~~~~~~~~[0m
+
+[33mwarn[39m:    Backend build completed with errors (23.91s)
+[32minfo[39m:    Frontend build completed successfully (68.93s)

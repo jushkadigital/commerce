@@ -1,6 +1,7 @@
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
-import { RABBITMQ_EVENT_BUS_MODULE } from "../modules/event-bus-rabbitmq"
+import { EVENTS_MODULE } from "../modules/events"
+import type EventModuleService from "../modules/events/service"
 
 export default async function handleProductSync({
   event,
@@ -14,10 +15,9 @@ export default async function handleProductSync({
     return
   }
 
-  logger.info(`${eventName.toUpperCase()}`)
-  logger.info(`${JSON.stringify(event)}`)
-
   const productId = event.data?.id
+
+  logger.info(`${eventName.toUpperCase()} id=${productId}`)
 
   if (!productId) {
     logger.warn("Product ID not found in event data")
@@ -64,16 +64,22 @@ export default async function handleProductSync({
     }
   }
 
-  logger.info(`Loaded full product: ${JSON.stringify(fullProductWithPrices)}`)
+  logger.info(`Loaded full product: id=${fullProductWithPrices.id} title=${fullProductWithPrices.title} variants=${(fullProductWithPrices.variants || []).length}`)
 
-  const rabbitMQEventBus = container.resolve(RABBITMQ_EVENT_BUS_MODULE) as any
+  const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
 
-  await rabbitMQEventBus.emit({
-    name: eventName,
-    data: fullProductWithPrices
+  const action = eventName === "product.updated" ? "updated" : "synced"
+
+  await eventModuleService.publishEvent({
+    type: "integration",
+    aggregateType: "product",
+    action,
+    version: 1,
+    payload: fullProductWithPrices,
+    causationId: `medusa:${eventName}:${productId}`,
   })
 
-  logger.info(`Published ${eventName} to RabbitMQ for product: ${productId}`)
+  logger.info(`Published ${eventName} to EDA module for product: ${productId}`)
 }
 
 export const config: SubscriberConfig = {

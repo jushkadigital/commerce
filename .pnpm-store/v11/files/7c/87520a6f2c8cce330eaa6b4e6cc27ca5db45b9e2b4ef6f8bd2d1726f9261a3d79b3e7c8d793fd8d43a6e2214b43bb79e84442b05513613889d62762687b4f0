@@ -1,0 +1,1 @@
+{"version":3,"file":"tab-provider.d.ts","names":["ReactNode","TabStoreProps","TabProvider","TabProviderProps","props","JSX","Element","children"],"sources":["../../src/tab/tab-provider.d.ts"],"mappings":";;;;;;AAiBA;;;;;;;;;AAAsG;AACtG;;;iBADwBE,WAAAA,CAAYE,KAAAA,GAAQD,gBAAgB,+BAA+BE,GAAAA,CAAIC,OAAAA;AAAAA,UAC9EH,gBAAAA,SAAyBF,aAAa;EACnDM,QAAAA,GAAWP,SAAAA;AAAAA"}

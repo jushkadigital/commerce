@@ -1,43 +1,38 @@
-ARG NODE_VERSION=22.14
+# syntax=docker/dockerfile:1.7
+
+ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-bookworm-slim
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable pnpm
 
 ENV NODE_ENV=production
 WORKDIR /opt/medusa
 
-# Utilidades necesarias
-RUN apt-get update \
-  && apt-get install --no-install-recommends -y \
-  tini \
-  curl \
-  ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+RUN rm -f /etc/apt/apt.conf.d/docker-clean \
+    && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
-# Copiamos manifests para instalar deps
-COPY package*.json yarn.lock* pnpm-lock.yaml* ./
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update \
+    && apt-get install --no-install-recommends -y \
+    tini \
+    curl \
+    ca-certificates
 
-# Instalamos SOLO dependencias de producción
-RUN \
-  if [ -f yarn.lock ]; then \
-  corepack enable yarn && yarn install --production --frozen-lockfile || yarn install --production; \
-  elif [ -f package-lock.json ]; then \
-  npm ci --legacy-peer-deps; \
-  elif [ -f pnpm-lock.yaml ]; then \
-  corepack enable pnpm && pnpm install --prod; \
-  else \
-  echo "Lockfile not found." && exit 1; \
-  fi
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY patches/ ./patches/
 
-# Copiamos el build de Medusa ya generado
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --prod --frozen-lockfile
+
 COPY .medusa ./.medusa
-
 COPY . .
-
-# Copiamos scripts/runtime
 COPY start.sh ./start.sh
 RUN chmod +x ./start.sh
 
 RUN chown -R node:node /opt/medusa
-# Seguridad
 USER node
 
 ARG PORT=9000
@@ -46,4 +41,3 @@ EXPOSE $PORT
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["./start.sh"]
-

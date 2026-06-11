@@ -13,7 +13,6 @@ services:
       test: ["CMD", "pg_isready", "-U", "medusa-starter"]
       interval: 10s
       timeout: 5s
-      retries: 5
 
   redis:
     image: redis:8
@@ -29,15 +28,18 @@ services:
 
   backend-server:
     image: ubuntu:24.04
+    init: true
     volumes:
       - .:/workspace:cached
-      - backend-server-data:/data
-    working_dir: /home/node/app
+      - opencode-data:/home/ubuntu/.local/share/opencode
+      # OpenCode config persistence (opencode.jsonc, oh-my-openagent.json, plugins)
+      - opencode-config:/home/ubuntu/.config/opencode
+      # OpenCode cache (models, bins - avoids re-downloading ~2MB each time)
+      - opencode-cache:/home/ubuntu/.cache/opencode
+    working_dir: /workspace
     command: sleep infinity
     ports:
       - 9000:9000
-
-    network_mode: host
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,12 +53,18 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 5
-    environment:
-      - DISPLAY=${DISPLAY}  # Pasamos la variable DISPLAY del host
+    networks:
+      - default
+      - observability-net
 
 volumes:
   postgres-data:
-  backend-server-data:
   cache-backend-data:
-  meilisearch-data:
+  opencode-data:
+  opencode-config:
+  opencode-cache:
 
+networks:
+  observability-net:
+    external: true
+    name: observability-net

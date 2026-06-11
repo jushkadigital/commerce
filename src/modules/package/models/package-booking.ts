@@ -12,7 +12,10 @@ export const PackageBooking = model.define("package_booking", {
 }).indexes([
   {
     on: ["order_id"],
-  }
+  },
+  {
+    on: ["package_id", "package_date", "status"],
+  },
 ])
 
 export default PackageBooking

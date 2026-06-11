@@ -1,0 +1,24 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.listTransformQueryConfig = exports.retrieveTransformQueryConfig = exports.defaultAdminTranslationFields = exports.Entities = void 0;
+var Entities;
+(function (Entities) {
+    Entities["translation"] = "translation";
+    Entities["translation_setting"] = "translation_setting";
+})(Entities || (exports.Entities = Entities = {}));
+exports.defaultAdminTranslationFields = [
+    "id",
+    "reference_id",
+    "reference",
+    "locale_code",
+    "translations",
+];
+exports.retrieveTransformQueryConfig = {
+    defaults: exports.defaultAdminTranslationFields,
+    isList: false,
+};
+exports.listTransformQueryConfig = {
+    ...exports.retrieveTransformQueryConfig,
+    isList: true,
+};
+//# sourceMappingURL=query-config.js.map

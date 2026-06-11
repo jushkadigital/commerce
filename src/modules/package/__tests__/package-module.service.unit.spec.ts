@@ -62,11 +62,11 @@ jest.mock("../service", () => {
       const requestedDateObj = new Date(packageDate)
       requestedDateObj.setHours(0, 0, 0, 0)
       if (requestedDateObj < today) {
-        return { valid: false, reason: "Cannot book packages for past dates" }
+        return { valid: false, reason: "No puedes reservar para fechas pasadas" }
       }
       const requestedDate = new Date(packageDate).toISOString().split("T")[0]
       if (!availableDates.includes(requestedDate)) {
-        return { valid: false, reason: "Package is not available on the requested date" }
+        return { valid: false, reason: "Esta fecha no esta disponible para reservar" }
       }
       const bookings = await mockListPackageBookings({
         package_id: packageId,
@@ -75,7 +75,7 @@ jest.mock("../service", () => {
       })
       const availableCapacity = pkg.max_capacity - bookings.length
       if (availableCapacity < quantity) {
-        return { valid: false, reason: `Only ${availableCapacity} spots available` }
+        return { valid: false, reason: `Solo ${availableCapacity} espacios disponibles` }
       }
       return { valid: true }
     }),
@@ -569,7 +569,7 @@ describe("PackageModuleService", () => {
       const result = await service.validateBooking("pkg_123", pastDate, 1)
 
       expect(result.valid).toBe(false)
-      expect(result.reason).toBe("Cannot book packages for past dates")
+      expect(result.reason).toBe("No puedes reservar para fechas pasadas")
     })
 
     it("should reject booking for unavailable dates", async () => {
@@ -579,7 +579,7 @@ describe("PackageModuleService", () => {
       const result = await service.validateBooking("pkg_123", unavailableDate, 1)
 
       expect(result.valid).toBe(false)
-      expect(result.reason).toBe("Package is not available on the requested date")
+      expect(result.reason).toBe("Esta fecha no esta disponible para reservar")
     })
 
     it("should reject booking when exceeding capacity", async () => {
@@ -710,7 +710,7 @@ describe("PackageModuleService", () => {
       const result = await service.validateBooking("pkg_123", availableBookingDate, 5)
 
       expect(result.valid).toBe(false)
-      expect(result.reason).toBe("Only 2 spots available")
+      expect(result.reason).toBe("Solo 2 espacios disponibles")
     })
 
     it("should accept booking at exact capacity limit", async () => {

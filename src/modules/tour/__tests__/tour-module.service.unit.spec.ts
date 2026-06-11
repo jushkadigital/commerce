@@ -403,7 +403,7 @@ describe("TourModuleService", () => {
       const result = await tourModuleService.validateBooking(tourId, pastDate, quantity)
 
       expect(result.valid).toBe(false)
-      expect(result.reason).toContain("past")
+      expect(result.reason).toContain("pasadas")
     })
 
     it("rejects booking for unavailable dates", async () => {
@@ -420,7 +420,7 @@ describe("TourModuleService", () => {
       const result = await tourModuleService.validateBooking(tourId, unavailableDate, quantity)
 
       expect(result.valid).toBe(false)
-      expect(result.reason).toContain("not available")
+      expect(result.reason).toContain("disponible")
     })
 
     it("rejects booking exceeding available capacity", async () => {
@@ -559,8 +559,8 @@ describe("TourModuleService", () => {
       const result = await tourModuleService.validateBooking(tourId, tourDate, quantity)
 
       expect(result.valid).toBe(false)
-      expect(result.reason).toContain("Only")
-      expect(result.reason).toContain("available")
+      expect(result.reason).toContain("Solo")
+      expect(result.reason).toContain("disponibles")
     })
 
     it("accepts booking for exactly remaining capacity", async () => {

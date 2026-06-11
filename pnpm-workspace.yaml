@@ -1,0 +1,9 @@
+allowBuilds:
+  '@medusajs/telemetry': true
+  '@swc/core': true
+  esbuild: true
+  msgpackr-extract: true
+  protobufjs: true
+patchedDependencies:
+  '@medusajs/test-utils': patches/@medusajs__test-utils.patch
+shamefullyHoist: true

@@ -1,0 +1,38 @@
+TASK 2: Fix Package getAvailableCapacity() Logic
+================================================
+
+FILE MODIFIED: src/modules/package/service.ts (lines 50-79)
+
+CHANGES MADE:
+- Replaced `pkg.max_capacity - bookings.length` with proper passenger counting
+- Applied EXACT SAME logic as Task 1 (TourModuleService)
+- Changed variable names: tour → pkg, tourDate → packageDate
+
+IMPLEMENTATION DETAILS:
+- Sums adults + children from booking.line_items.items[].metadata.passengers
+- Infants are EXCLUDED from capacity calculation
+- Defensive handling: null/undefined line_items → 0 passengers
+- Type casting with `as` for flexible line_items structure
+- Uses Number() coercion with || 0 fallback for safety
+
+BUILD VERIFICATION:
+✅ Build completed successfully
+✅ No NEW TypeScript errors introduced
+✅ Pre-existing errors remain (same as Task 1):
+   - src/api/admin/packages/route.ts:56:5 (metadata type)
+   - src/api/admin/tours/route.ts:56:5 (metadata type)
+   - src/api/auth/user/[provider]/callback/route.ts:14:7 (query type)
+   - src/api/sso/[provider]/callback/route.ts:23:9 (query type)
+   - src/workflows/steps/validate-tour-booking.ts:40:24 (null check)
+   - src/workflows/update-package.ts:53:7 (complex union)
+
+CONSISTENCY WITH TASK 1:
+✅ Logic is identical to TourModuleService.getAvailableCapacity()
+✅ Same defensive patterns applied
+✅ Same passenger counting approach
+✅ Same type casting strategy
+
+EVIDENCE:
+- Implementation verified by code inspection
+- Build completed without NEW errors
+- Logic mirrors Task 1 implementation exactly

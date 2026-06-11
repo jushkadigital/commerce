@@ -1,0 +1,63 @@
+
+> medusa-starter-default@0.0.1 build
+> medusa build || true
+
+NODE_ENV = development
+NODE_ENV = development
+CWD = /home/node/app
+IS_BUILD MODE = true
+KEYCLOAK_CLIENT_ID: 5f2947dd-a3e7-4759-9f0b-4bd32e7898b8
+BACKEND_URL: http://localhost:9000
+MEDUSA_BACKEND_URL: undefined
+DATABASE_URL: postgres://medusa-starter:medusa-password@localhost:5432/medusa-starter
+[32minfo[39m:    redisUrl not found. A fake redis instance will be used.
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from /home/node/app/node_modules/@medusajs/draft-order/.medusa/server/src/links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa/server" folder
+[32minfo[39m:    Compiling frontend source...
+[96msrc/api/auth/user/[provider]/callback/route.ts[0m:[93m14[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType 'ParsedQs' is not assignable to type 'Record<string, string>'.
+  'string' index signatures are incompatible.
+    Type 'string | ParsedQs | (string | ParsedQs)[] | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+[7m14[0m       query: req.query,
+[7m  [0m [91m      ~~~~~[0m
+
+  [96mnode_modules/@medusajs/types/dist/auth/common/provider.d.ts[0m:[93m51[0m:[93m5[0m
+    [7m51[0m     query?: Record<string, string>;
+    [7m  [0m [96m    ~~~~~[0m
+    The expected type comes from property 'query' which is declared here on type 'AuthenticationInput'
+[96msrc/api/sso/[provider]/callback/route.ts[0m:[93m23[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType 'ParsedQs' is not assignable to type 'Record<string, string>'.
+  'string' index signatures are incompatible.
+    Type 'string | ParsedQs | (string | ParsedQs)[] | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+[7m23[0m         query: req.query,
+[7m  [0m [91m        ~~~~~[0m
+
+  [96mnode_modules/@medusajs/types/dist/auth/common/provider.d.ts[0m:[93m51[0m:[93m5[0m
+    [7m51[0m     query?: Record<string, string>;
+    [7m  [0m [96m    ~~~~~[0m
+    The expected type comes from property 'query' which is declared here on type 'AuthenticationInput'
+[96msrc/modules/event-bus-rabbitmq/service.ts[0m:[93m51[0m:[93m46[0m - [91merror[0m[90m TS2339: [0mProperty 'createChannel' does not exist on type 'Connection'.
+
+[7m51[0m       this.channel_ = await this.connection_.createChannel()
+[7m  [0m [91m                                             ~~~~~~~~~~~~~[0m
+[96msrc/modules/event-bus-rabbitmq/service.ts[0m:[93m188[0m:[93m46[0m - [91merror[0m[90m TS2339: [0mProperty 'eventName' does not exist on type 'Message<unknown>'.
+
+[7m188[0m       (e) => !options.eventNames?.includes(e.eventName)
+[7m   [0m [91m                                             ~~~~~~~~~[0m
+[96msrc/modules/event-bus-rabbitmq/service.ts[0m:[93m212[0m:[93m45[0m - [91merror[0m[90m TS2339: [0mProperty 'eventName' does not exist on type 'Message<unknown>'.
+
+[7m212[0m       this.channel_.publish(exchange, event.eventName, buffer)
+[7m   [0m [91m                                            ~~~~~~~~~[0m
+[96msrc/workflows/update-package.ts[0m:[93m55[0m:[93m7[0m - [91merror[0m[90m TS2590: [0mExpression produces a union type that is too complex to represent.
+
+[7m55[0m       (data) => {
+[7m  [0m [91m      ~~~~~~~~~~~[0m
+
+[33mwarn[39m:    Backend build completed with errors (16.78s)
+[32minfo[39m:    Frontend build completed successfully (47.75s)

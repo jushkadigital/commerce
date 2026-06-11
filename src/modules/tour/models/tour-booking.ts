@@ -13,7 +13,10 @@ export const TourBooking = model.define("tour_booking", {
 }).indexes([
   {
     on: ["order_id"],
-  }
+  },
+  {
+    on: ["tour_id", "tour_date", "status"],
+  },
 ])
 
 export default TourBooking

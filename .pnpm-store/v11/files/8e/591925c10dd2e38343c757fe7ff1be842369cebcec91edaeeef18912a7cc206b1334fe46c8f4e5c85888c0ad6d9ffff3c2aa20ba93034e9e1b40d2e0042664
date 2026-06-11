@@ -1,0 +1,4 @@
+import type { AuthTypes } from "@medusajs/framework/types";
+export declare const requestVerificationStepId = "request-verification";
+export declare const requestVerificationStep: import("@medusajs/framework/workflows-sdk").StepFunction<AuthTypes.RequestAuthVerificationDTO, AuthTypes.RequestAuthVerificationResponse>;
+//# sourceMappingURL=request-verification.d.ts.map

@@ -1,0 +1,47 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = build;
+const build_tools_1 = require("@medusajs/framework/build-tools");
+const utils_1 = require("@medusajs/framework/utils");
+const loaders_1 = require("../loaders");
+const generate_types_1 = require("./utils/generate-types");
+async function build({ directory, adminOnly, }) {
+    const container = await (0, loaders_1.initializeContainer)(directory, {
+        skipDbConnection: true,
+        throwOnValidationError: false,
+    });
+    const logger = container.resolve(utils_1.ContainerRegistrationKeys.LOGGER);
+    try {
+        await (0, generate_types_1.generateTypes)({
+            directory,
+            container,
+            logger,
+        });
+    }
+    catch (error) {
+        logger.error("Error generating types", error);
+        process.exit(1);
+    }
+    logger.info("Starting build...");
+    const compiler = new build_tools_1.Compiler(directory, logger);
+    const tsConfig = await compiler.loadTSConfigFile();
+    if (!tsConfig) {
+        logger.error("Unable to compile application");
+        process.exit(1);
+    }
+    const promises = [];
+    if (!adminOnly) {
+        promises.push(compiler.buildAppBackend(tsConfig));
+    }
+    const bundler = await import("@medusajs/admin-bundler");
+    promises.push(compiler.buildAppFrontend(adminOnly, tsConfig, bundler));
+    const responses = await Promise.all(promises);
+    const buildSucceeded = responses.every((response) => response === true);
+    if (buildSucceeded) {
+        process.exit(0);
+    }
+    else {
+        process.exit(1);
+    }
+}
+//# sourceMappingURL=build.js.map

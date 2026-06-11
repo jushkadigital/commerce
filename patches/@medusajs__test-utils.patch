@@ -1,0 +1,16 @@
+diff --git a/dist/medusa-test-runner-utils/config.js b/dist/medusa-test-runner-utils/config.js
+index 53f5f876a9f13782bb56309be566c9ec224482dc..036f892a12a1d60744958902a1288811657a4c29 100644
+--- a/dist/medusa-test-runner-utils/config.js
++++ b/dist/medusa-test-runner-utils/config.js
+@@ -18,8 +18,10 @@ async function configLoaderOverride(entryDirectory, override) {
+     configModule.projectConfig.databaseDriverOptions;
+     configModule.projectConfig.databaseUrl = override.clientUrl;
+     configModule.projectConfig.databaseLogging = !!override.debug;
++    const dbSsl = process.env.DB_SSL;
++    const disableSsl = dbSsl === "false" || dbSsl === "0" || dbSsl === "disabled";
+     configModule.projectConfig.databaseDriverOptions =
+-        override.clientUrl.includes("localhost")
++        override.clientUrl.includes("localhost") || disableSsl
+             ? {}
+             : {
+                 connection: {

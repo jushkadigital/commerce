@@ -1,0 +1,24 @@
+# Task 1: Agregar campos de configuración al modelo Tour
+
+## Campos agregados (líneas 16-20 de tour.ts):
+
+```
+16:  is_special: model.boolean().default(false),
+17:  blocked_dates: model.array().default([]),
+18:  blocked_week_days: model.array().default([]),
+19:  cancellation_deadline_hours: model.number().default(12),
+20:  booking_min_days_ahead: model.number().default(2),
+```
+
+## Verificación de campos encontrados:
+✅ is_special: model.boolean().default(false),
+✅ blocked_dates: model.array().default([]),
+✅ blocked_week_days: model.array().default([]),
+✅ cancellation_deadline_hours: model.number().default(12),
+✅ booking_min_days_ahead: model.number().default(2),
+
+## Estado del build:
+- Build ejecutado: npm run build
+- Errores presentes: Son pre-existentes en otros archivos (auth routes, RabbitMQ service, update-package workflow)
+- Errores relacionados con tour model: NINGUNO
+- Estado: ✅ ÉXITO (campos agregados correctamente)

@@ -1,0 +1,32 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.requestVerificationWorkflow = exports.requestVerificationWorkflowId = void 0;
+const utils_1 = require("@medusajs/framework/utils");
+const workflows_sdk_1 = require("@medusajs/framework/workflows-sdk");
+const common_1 = require("../../common");
+const steps_1 = require("../steps");
+exports.requestVerificationWorkflowId = "request-verification-workflow";
+exports.requestVerificationWorkflow = (0, workflows_sdk_1.createWorkflow)(exports.requestVerificationWorkflowId, (input) => {
+    const result = (0, steps_1.requestVerificationStep)(input);
+    const eventData = (0, workflows_sdk_1.transform)({ input, result }, ({ input, result }) => {
+        return {
+            entity_id: result.verification.entity_id,
+            actor_type: input.actor_type ?? null,
+            provider: input.provider,
+            auth_identity_id: result.verification.auth_identity_id,
+            provider_identity_id: result.verification.provider_identity_id,
+            token: result.token,
+            expires_at: result.verification.expires_at,
+            metadata: result.verification.metadata ?? {},
+        };
+    });
+    (0, common_1.emitEventStep)({
+        eventName: utils_1.AuthWorkflowEvents.VERIFICATION_REQUESTED,
+        data: eventData,
+    });
+    const verification = (0, workflows_sdk_1.transform)({ result }, ({ result }) => {
+        return result.verification;
+    });
+    return new workflows_sdk_1.WorkflowResponse(verification);
+});
+//# sourceMappingURL=request-verification.js.map
