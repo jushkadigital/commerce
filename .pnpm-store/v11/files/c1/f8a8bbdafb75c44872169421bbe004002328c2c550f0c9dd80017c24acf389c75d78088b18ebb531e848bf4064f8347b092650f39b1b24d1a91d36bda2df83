@@ -1,1 +1,0 @@
-{"version":3,"file":"use-previous-mouse-down-ref.d.ts","names":["usePreviousMouseDownRef","Window","EventTarget","enabled","scope","RefObject"],"sources":["../../../src/dialog/utils/use-previous-mouse-down-ref.d.ts"],"mappings":";iBAAwBA,uBAAAA,CAAwBG,OAAAA,YAAmBC,KAAAA,GAAQH,MAAAA,mBAAyBI,SAAAA,CAAUH,WAAW"}

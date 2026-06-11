@@ -1,1 +1,0 @@
-{"root":["../src/index.ts","../src/loaders/connection.ts","../src/loaders/hash.ts","../src/services/redis-cache.ts","../src/services/__tests__/redis-cache.spec.ts","../src/types/index.ts"],"version":"5.9.3"}

@@ -1,1 +1,0 @@
-{"version":3,"file":"use-nested-dialogs.d.ts","names":["WrapElement","DialogStore","useNestedDialogs","store","wrapElement","nestedDialogs"],"sources":["../../../src/dialog/utils/use-nested-dialogs.d.ts"],"mappings":";;;;iBAEwBE,gBAAAA,CAAiBC,KAAAA,EAAOF,WAAAA;EAC5CG,WAAAA,EAAaJ,WAAAA;EACbK,aAAAA,EAAeJ,WAAAA;AAAAA"}

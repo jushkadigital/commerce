@@ -1,1 +1,0 @@
-{"version":3,"file":"radio-provider.d.ts","names":["ReactNode","RadioStoreProps","RadioProvider","RadioProviderProps","props","JSX","Element","children"],"sources":["../../src/radio/radio-provider.d.ts"],"mappings":";;;;;;AAgBA;;;;;;;;;AAA0G;AAC1G;;iBADwBE,aAAAA,CAAcE,KAAAA,GAAQD,kBAAkB,+BAA+BE,GAAAA,CAAIC,OAAAA;AAAAA,UAClFH,kBAAAA,SAA2BF,eAAe;EACvDM,QAAAA,GAAWP,SAAAA;AAAAA"}

@@ -1,2 +1,0 @@
-import { a as useDialog, i as createDialogComponent, n as DialogOptions, r as DialogProps, t as Dialog } from "../dialog-D23r2ZWj.js";
-export { Dialog, DialogOptions, DialogProps, createDialogComponent, useDialog };

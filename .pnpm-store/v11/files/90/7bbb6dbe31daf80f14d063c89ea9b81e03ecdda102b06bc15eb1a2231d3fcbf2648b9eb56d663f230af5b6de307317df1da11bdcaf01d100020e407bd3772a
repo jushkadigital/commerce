@@ -1,1 +1,0 @@
-{"version":3,"file":"dialog-provider.d.ts","names":["ReactNode","DialogStoreProps","DialogProvider","DialogProviderProps","props","JSX","Element","children"],"sources":["../../src/dialog/dialog-provider.d.ts"],"mappings":";;;;;;AAaA;;;;;;;;;iBAAwBE,cAAAA,CAAeE,KAAAA,GAAQD,mBAAmB,+BAA+BE,GAAAA,CAAIC,OAAAA;AAAAA,UACpFH,mBAAAA,SAA4BF,gBAAgB;EACzDM,QAAAA,GAAWP,SAAAA;AAAAA"}

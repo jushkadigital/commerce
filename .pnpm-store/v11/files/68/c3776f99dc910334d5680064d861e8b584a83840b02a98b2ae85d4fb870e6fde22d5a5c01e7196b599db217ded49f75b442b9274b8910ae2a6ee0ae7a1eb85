@@ -1,1 +1,0 @@
-{"version":3,"file":"menu-bar-provider.d.ts","names":["MenubarProviderProps","MenuBarProvider","MenuBarProviderProps","props","JSX","Element"],"sources":["../../src/menu/menu-bar-provider.d.ts"],"mappings":";;;;;AA4BA;;;;;;;;;AAA8G;AAC9G;;;;AAAkE;;;;;;;;;;;iBAD1CC,eAAAA,CAAgBE,KAAAA,GAAQD,oBAAoB,+BAA+BE,GAAAA,CAAIC,OAAAA;AAAAA,UACtFH,oBAAAA,SAA6BF,oBAAoB"}
