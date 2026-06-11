@@ -44,7 +44,7 @@ services:
   # ─── Redis ───────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: redis-medusa
+    container_name: redis
     restart: unless-stopped
     command:
       [
