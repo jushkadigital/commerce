@@ -79,6 +79,7 @@ WORKDIR /opt/medusa
 # .medusa/server (build output), y start.sh
 COPY --from=builder --chown=node:node /opt/medusa/node_modules node_modules
 COPY --from=builder --chown=node:node /opt/medusa/.medusa/server .medusa/server
+COPY --from=builder --chown=node:node /opt/medusa/src/scripts .medusa/server/src/scripts
 COPY --from=builder --chown=node:node /opt/medusa/start.sh start.sh
 
 EXPOSE $PORT
