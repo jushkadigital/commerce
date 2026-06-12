@@ -1,5 +1,5 @@
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { ExecArgs } from "@medusajs/framework/types"
+import type { ExecArgs } from "@medusajs/framework/types"
 
 /**
  * Script para configurar la tienda con:

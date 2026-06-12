@@ -87,6 +87,7 @@ services:
     restart: unless-stopped
     volumes:
       - backend-server-data:/data
+      - ./src/scripts:/opt/medusa/.medusa/server/src/scripts:ro
     expose:
       - "9000"
     depends_on:
@@ -99,6 +100,7 @@ services:
     environment:
       MEDUSA_WORKER_MODE: server
       DISABLE_MEDUSA_ADMIN: "false"
+      RUN_SETUP_STORE: "false"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 15s
