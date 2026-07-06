@@ -50,6 +50,7 @@ ENV JWT_SECRET=dummy
 ENV COOKIE_SECRET=dummy
 ENV SESSION_SECRET=dummy
 ENV MEDUSA_BACKEND_URL=https://commerce.patarutera.pe
+ENV BACKEND_URL=https://commerce.patarutera.pe
 
 RUN pnpm run build
 

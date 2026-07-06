@@ -39,7 +39,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       `
       SELECT status, stale_lock_until
       FROM processed_event
-      WHERE event_id = ? AND consumer_id = ?
+      WHERE event_id = ? AND consumer_id = ? AND deleted_at IS NULL
       `,
       [eventId, consumerId]
     )
@@ -65,6 +65,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
         WHERE event_id = ? AND consumer_id = ?
           AND status = 'claimed'
           AND stale_lock_until < NOW()
+          AND deleted_at IS NULL
         `,
         [staleLockMinutes, eventId, consumerId]
       )
@@ -88,7 +89,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       `
       UPDATE processed_event
       SET status = 'processed', processed_at = NOW()
-      WHERE event_id = ? AND consumer_id = ?
+      WHERE event_id = ? AND consumer_id = ? AND deleted_at IS NULL
       `,
       [eventId, consumerId]
     )
@@ -103,7 +104,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       `
       UPDATE processed_event
       SET status = 'failed', error_message = ?
-      WHERE event_id = ? AND consumer_id = ?
+      WHERE event_id = ? AND consumer_id = ? AND deleted_at IS NULL
       `,
       [error, eventId, consumerId]
     )
@@ -117,7 +118,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       `
       SELECT status
       FROM processed_event
-      WHERE event_id = ? AND consumer_id = ? AND status = 'processed'
+      WHERE event_id = ? AND consumer_id = ? AND status = 'processed' AND deleted_at IS NULL
       `,
       [eventId, consumerId]
     )
@@ -137,6 +138,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       WHERE status = 'claimed'
         AND stale_lock_until < NOW()
         AND consumer_id = ?
+        AND deleted_at IS NULL
       `,
       [staleLockMinutes, consumerId]
     )

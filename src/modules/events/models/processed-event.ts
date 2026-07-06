@@ -9,11 +9,6 @@ const ProcessedEvent = model.define("processed_event", {
   payload_hash: model.text().nullable(),
   processed_at: model.dateTime().nullable(),
   error_message: model.text().nullable(),
-}).indexes([
-  {
-    on: ["event_id", "consumer_id"],
-    unique: true,
-  },
-])
+})
 
 export default ProcessedEvent

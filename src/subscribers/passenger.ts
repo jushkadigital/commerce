@@ -1,6 +1,6 @@
 import { SubscriberConfig, SubscriberArgs } from "@medusajs/medusa"
 import { provisionCustomerFromKeycloak } from "../workflows/helpers/provision-customer-from-keycloak"
-import { EVENTS_MODULE } from "../modules/events"
+import { EVENTS_MODULE, EventModuleService } from "../modules/events"
 
 type ReceiveData = {
   sub: string
@@ -34,7 +34,7 @@ export default async function handlePassengerUserCreated({
     return
   }
 
-  const eventsModule = container.resolve(EVENTS_MODULE)
+  const eventsModule = container.resolve(EVENTS_MODULE) as EventModuleService
   const idempotencyStore = eventsModule.getIdempotencyStore()
 
   const claimed = await idempotencyStore.claim(eventId, CONSUMER_ID, STALE_LOCK_MINUTES)
