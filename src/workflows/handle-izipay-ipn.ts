@@ -206,13 +206,12 @@ export const validateAndAuthorizeStep = createStep(
         return new StepResponse({ success: false, reason: "Not authorized by Izipay" })
     }
     
-    if (amountStr) {
+if (amountStr) {
         const izipayAmount = parseFloat(amountStr)
-        if (Math.abs(izipayAmount - cart.total) > 1) { 
-             console.warn(`Izipay Amount mismatch: Cart ${cart.total} vs IziPay ${izipayAmount}`)
+        if (Math.abs(izipayAmount - cart.total) > 1) {
         }
     }
-    
+
     const paymentCollection = cart.payment_collection
     if (!paymentCollection) {
         console.error(`No payment collection for cart ${cart.id}`)

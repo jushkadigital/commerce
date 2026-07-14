@@ -65,15 +65,11 @@ export default async function handlePackageOrderPlaced({
   event,
   container,
 }: SubscriberArgs<{ id: string }>) {
-  const logger = container.resolve("logger")
   const orderId = event.data.id
 
   try {
     const existingBookings = await findExistingPackageBooking(orderId, container)
     if (existingBookings.length > 0) {
-      logger.info(
-        `[order.placed] Package bookings already exist for order ${orderId}, skipping (idempotent).`
-      )
       return
     }
 
@@ -99,7 +95,6 @@ export default async function handlePackageOrderPlaced({
     })
 
     if (!order) {
-      logger.warn(`[order.placed] Order ${orderId} not found.`)
       return
     }
 
@@ -111,9 +106,6 @@ export default async function handlePackageOrderPlaced({
     )
 
     if (packageItems.length === 0) {
-      logger.info(
-        `[order.placed] Order ${orderId} has no package items, skipping.`
-      )
       return
     }
 
@@ -163,18 +155,9 @@ export default async function handlePackageOrderPlaced({
       ? createdBookingsRaw
       : [createdBookingsRaw]
 
-    logger.info(
-      `[order.placed] Created ${createdBookings.length} package booking(s) for order ${orderId}: ${createdBookings
-        .map((b: any) => b.id)
-        .join(", ")}`
-    )
-
     const notificationRecipients = await getOrderNotificationEmails(container)
 
     if (notificationRecipients.length === 0) {
-      logger.warn(
-        "No order notification recipients configured. Will send only customer email for order.placed."
-      )
     }
 
     const customerEmailRaw =
@@ -198,9 +181,6 @@ export default async function handlePackageOrderPlaced({
       [customerFirstName, customerLastName].filter(Boolean).join(" ") || "Viajero"
 
     if (!customerEmail) {
-      logger.warn(
-        `Customer email not found for order ${orderId}. Skipping customer notification email.`
-      )
     }
 
     const fromEmail = process.env.RESEND_FROM_EMAIL || "bookings@yourdomain.com"
@@ -278,22 +258,16 @@ export default async function handlePackageOrderPlaced({
         })
 
         if (customerResult?.error) {
-          logger.error(`Failed to send customer order email for ${orderId}:`, customerResult.error)
         } else {
-          logger.info(`Customer order email sent for package order ${orderId}`)
         }
       } catch (customerSendError) {
-        logger.error(
-          `Unexpected error sending customer order email for package order ${orderId}:`,
-          customerSendError
-        )
       }
     }
 
     if (resend && !hasTourItemsInOrder && notificationRecipients.length > 0) {
       try {
         const opsSubject = "Nueva reserva de paquete"
-        
+
         const AdminBookingNotificationEmail = await getAdminBookingNotificationEmail()
         const opsRes = await resend.emails.send({
           from: fromEmail,
@@ -324,15 +298,11 @@ export default async function handlePackageOrderPlaced({
         })
 
         if (opsRes?.error) {
-          logger.error(`Failed to send ops email for order ${orderId}:`, opsRes.error)
         } else {
-          logger.info(`Ops email sent for order ${orderId}`)
         }
       } catch (opsSendError) {
-        logger.error(`Unexpected error sending ops email for order ${orderId}:`, opsSendError)
       }
     } else if (!resend) {
-      logger.warn(`Resend client not initialized, skipping ops email for order ${orderId}`)
     }
   } catch (error) {
     console.error(

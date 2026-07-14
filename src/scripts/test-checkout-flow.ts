@@ -10,11 +10,9 @@ export default async function testCheckoutFlow({ container }: ExecArgs) {
   const regionPeru = regions.find((r: any) => r.name === "Perú")
   
   if (!regionPeru) {
-    console.log("No region found")
     return
   }
 
-  console.log("Found region:", regionPeru.id)
 
   // 2. Create Cart
   const cart = await cartModule.createCarts({
@@ -22,7 +20,6 @@ export default async function testCheckoutFlow({ container }: ExecArgs) {
     currency_code: regionPeru.currency_code,
   })
   
-  console.log("Created cart:", cart.id)
 
   // 3. Initiate payment sessions
   // Usually this is done via a workflow in Medusa API

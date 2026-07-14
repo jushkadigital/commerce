@@ -38,7 +38,6 @@ export async function provisionCustomerFromKeycloak(
 
   const authModule = container.resolve(Modules.AUTH)
   const customerModule = container.resolve(Modules.CUSTOMER)
-  const logger = container.resolve("logger")
 
   // ------------------------------------------------------------------
   // 1. Find or create AuthIdentity + ProviderIdentity
@@ -55,7 +54,6 @@ export async function provisionCustomerFromKeycloak(
   if (existingPI?.auth_identity_id) {
     authIdentity = await authModule.retrieveAuthIdentity(existingPI.auth_identity_id)
     authIdentityId = authIdentity.id
-    logger.info(`[JIT] AuthIdentity already exists: ${authIdentityId}`)
   } else {
     try {
       authIdentity = await authModule.createAuthIdentities({
@@ -74,7 +72,6 @@ export async function provisionCustomerFromKeycloak(
       })
       authIdentityId = authIdentity.id
       authCreated = true
-      logger.info(`[JIT] AuthIdentity created: ${authIdentityId}`)
     } catch (authError: unknown) {
       if (isAlreadyExistsError(authError)) {
         // Race: someone else created it between our check and create
@@ -89,7 +86,6 @@ export async function provisionCustomerFromKeycloak(
         }
         authIdentity = await authModule.retrieveAuthIdentity(pi.auth_identity_id)
         authIdentityId = authIdentity.id
-        logger.info(`[JIT] AuthIdentity race — recovered: ${authIdentityId}`)
       } else {
         throw authError
       }
@@ -140,7 +136,6 @@ export async function provisionCustomerFromKeycloak(
     })
     customerId = result.id
     customerCreated = true
-    logger.info(`[JIT] Customer created: ${customerId}`)
   }
 
   // ------------------------------------------------------------------
@@ -158,7 +153,6 @@ export async function provisionCustomerFromKeycloak(
         },
       },
     ])
-    logger.info(`[JIT] app_metadata linked: ${authIdentityId} → customer ${customerId}`)
   }
 
   return {

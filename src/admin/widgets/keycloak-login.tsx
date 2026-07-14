@@ -178,7 +178,6 @@ const KeycloakLoginWidget = () => {
       )
 
       const data = await res.json()
-      console.log(data)
 
       if (data.location) {
         // Redirect to Keycloak for authentication

@@ -9,6 +9,16 @@ import { RabbitMQConnection } from "./connection"
 import type { EventEnvelope } from "../envelope"
 import { buildRoutingKey } from "../envelope"
 import { declareTopology, DEFAULT_TOPOLOGY_CONFIG } from "../topology"
+import {
+  injectTraceContextIntoEnvelope,
+  extractTraceContextFromEnvelope,
+  startEventSpan,
+  recordPublish,
+  recordConsume,
+  recordFailure,
+  recordRetry,
+  recordDeadLetter,
+} from "../tracing"
 
 const SELF_ORIGIN = "medusa-backend"
 const DEFAULT_PREFETCH = 10
@@ -44,7 +54,6 @@ export class RabbitMQEventBus implements IEventBus {
     }
     await declareTopology(channel, DEFAULT_TOPOLOGY_CONFIG, this.logger)
     this.bindChannelEvents(channel)
-    this.logger.info("[event-bus] RabbitMQ connected and topology declared")
   }
 
   async disconnect(): Promise<void> {
@@ -67,37 +76,41 @@ export class RabbitMQEventBus implements IEventBus {
       throw new Error("RabbitMQ channel not available")
     }
 
-    const exchange = this.resolveExchange(envelope)
+    const enriched = injectTraceContextIntoEnvelope(envelope)
+    const eventType = `${envelope.type}.${envelope.aggregateType}.${envelope.action}`
+    const startTime = performance.now()
+
+    const exchange = this.resolveExchange(enriched)
     const routingKey = buildRoutingKey(
-      envelope.type,
-      envelope.aggregateType,
-      envelope.action,
-      envelope.version
+      enriched.type,
+      enriched.aggregateType,
+      enriched.action,
+      enriched.version
     )
-    const buffer = Buffer.from(JSON.stringify(envelope))
+    const buffer = Buffer.from(JSON.stringify(enriched))
 
     const publishOptions: Parameters<typeof channel.publish>[3] = {
       contentType: "application/json",
       persistent: true,
       mandatory: true,
-      messageId: envelope.id,
-      correlationId: envelope.metadata?.correlationId,
+      messageId: enriched.id,
+      correlationId: enriched.metadata?.correlationId,
       type: routingKey,
       headers: {
-        "x-event-version": String(envelope.version),
-        "x-event-type": envelope.type,
-        "x-aggregate-type": envelope.aggregateType,
-        "x-action": envelope.action,
-        "x-source": envelope.source,
+        "x-event-version": String(enriched.version),
+        "x-event-type": enriched.type,
+        "x-aggregate-type": enriched.aggregateType,
+        "x-action": enriched.action,
+        "x-source": enriched.source,
         "x-origin-service": SELF_ORIGIN,
-        ...(envelope.metadata?.traceContext || {}),
+        ...(enriched.metadata?.traceContext || {}),
       },
     }
 
     await this.publishAndConfirm(channel, exchange, routingKey, buffer, publishOptions)
-    this.logger.info(
-      `[event-bus] Published: exchange=${exchange} routingKey=${routingKey} id=${envelope.id} correlationId=${envelope.metadata?.correlationId || "none"}`
-    )
+
+    const durationMs = performance.now() - startTime
+    recordPublish(eventType, durationMs)
   }
 
   async publishToExchange(
@@ -139,9 +152,6 @@ export class RabbitMQEventBus implements IEventBus {
 
     const existing = this.handlers.get(routingKey) || []
     this.handlers.set(routingKey, [...existing, handler])
-    this.logger.info(
-      `[event-bus] Handler registered: routingKey=${routingKey} (total=${existing.length + 1})`
-    )
 
     const queueName = this.resolveQueueForRoutingKey(routingKey)
 
@@ -150,9 +160,6 @@ export class RabbitMQEventBus implements IEventBus {
     this.queueRoutingKeys.set(queueName, queueKeys)
 
     if (this.consumers.has(queueName)) {
-      this.logger.info(
-        `[event-bus] Consumer already exists for queue=${queueName}, handler added to existing dispatch`
-      )
       return
     }
 
@@ -170,9 +177,6 @@ export class RabbitMQEventBus implements IEventBus {
     )
 
     this.consumers.set(queueName, consumerTag)
-    this.logger.info(
-      `[event-bus] Consumer created: queue=${queueName} consumerTag=${consumerTag} routingKeys=[${Array.from(queueKeys).join(",")}]`
-    )
   }
 
   async unsubscribe(routingKey: string): Promise<void> {
@@ -239,9 +243,6 @@ export class RabbitMQEventBus implements IEventBus {
   private bindChannelEvents(channel: Exclude<ReturnType<RabbitMQConnection["getChannel"]>, null>): void {
     channel.on("return", (msg) => {
       if (!this.returnedMessagesLogged) {
-        this.logger.warn(
-          `RabbitMQ returned an unroutable message (routingKey=${msg.fields.routingKey}). This warning will not repeat.`
-        )
         this.returnedMessagesLogged = true
       }
     })
@@ -268,14 +269,7 @@ export class RabbitMQEventBus implements IEventBus {
   private async handleConsumerMessage(msg: ConsumeMessage): Promise<void> {
     const messageRoutingKey = msg.fields.routingKey || ""
 
-    this.logger.info(
-      `[event-bus] Message received: routingKey=${messageRoutingKey} origin=${msg.properties.headers?.["x-origin-service"] || "none"} messageId=${msg.properties.messageId || "none"}`
-    )
-
     if (this.isSelfProducedMessage(msg)) {
-      this.logger.info(
-        `[event-bus] Skipping self-produced message: routingKey=${messageRoutingKey} origin=${msg.properties.headers?.["x-origin-service"]}`
-      )
       this.ack(msg)
       return
     }
@@ -285,9 +279,6 @@ export class RabbitMQEventBus implements IEventBus {
       envelope = this.normalizeToEnvelope(msg)
     } catch (error) {
       const normalized = error instanceof Error ? error : new Error(String(error))
-      this.logger.error(
-        `[event-bus] Failed to normalize message: routingKey=${messageRoutingKey} error=${normalized.message}`
-      )
       await this.routeToDeadLetter(msg, messageRoutingKey, normalized)
       return
     }
@@ -295,30 +286,32 @@ export class RabbitMQEventBus implements IEventBus {
     const handlers = this.handlers.get(messageRoutingKey) || []
 
     if (handlers.length === 0) {
-      this.logger.warn(
-        `[event-bus] No handlers registered for routingKey=${messageRoutingKey} — message will be acked without processing. Registered keys: [${Array.from(this.handlers.keys()).join(", ")}]`
-      )
       this.ack(msg)
       return
     }
 
-    this.logger.info(
-      `[event-bus] Dispatching: routingKey=${messageRoutingKey} handlers=${handlers.length} envelopeId=${envelope.id} envelopeType=${envelope.type}.${envelope.aggregateType}.${envelope.action}.v${envelope.version}`
-    )
+    const eventType = `${envelope.type}.${envelope.aggregateType}.${envelope.action}`
+    const span = startEventSpan(`event.consume.${messageRoutingKey}`, envelope)
+    const startTime = performance.now()
 
     try {
       for (const handler of handlers) {
         await handler(envelope, msg)
       }
       this.ack(msg)
-      this.logger.info(
-        `[event-bus] Processed: routingKey=${messageRoutingKey} envelopeId=${envelope.id} handlersExecuted=${handlers.length}`
-      )
+
+      const durationMs = performance.now() - startTime
+      recordConsume(eventType, durationMs)
+      span.setStatus({ code: 1 }) // OK
+      span.end()
     } catch (error) {
       const normalized = error instanceof Error ? error : new Error(String(error))
-      this.logger.error(
-        `[event-bus] Handler failed: routingKey=${messageRoutingKey} envelopeId=${envelope.id} error=${normalized.message}`
-      )
+
+      recordFailure(eventType)
+      span.setStatus({ code: 2, message: normalized.message }) // ERROR
+      span.recordException(normalized)
+      span.end()
+
       await this.handleConsumerFailure(msg, messageRoutingKey, normalized)
     }
   }
@@ -382,6 +375,7 @@ export class RabbitMQEventBus implements IEventBus {
       return
     }
 
+    recordRetry(eventName)
     await this.routeToRetry(msg, eventName, retryCount + 1, error)
   }
 
@@ -440,12 +434,8 @@ export class RabbitMQEventBus implements IEventBus {
       })
 
       this.ack(msg)
-      this.logger.warn(
-        `RabbitMQ event ${eventName} failed. Sent to retry queue (${retryCount}/${this.getMaxRetries()}).`
-      )
     } catch (publishError) {
       const normalized = publishError instanceof Error ? publishError : new Error(String(publishError))
-      this.logger.error(`Failed to publish retry for ${eventName}: ${normalized.message}`)
       this.nack(msg, true)
     }
   }
@@ -487,10 +477,9 @@ export class RabbitMQEventBus implements IEventBus {
       })
 
       this.ack(msg)
-      this.logger.error(`RabbitMQ event ${eventName} moved to DLQ: ${error.message}`)
+      recordDeadLetter(eventName)
     } catch (publishError) {
       const normalized = publishError instanceof Error ? publishError : new Error(String(publishError))
-      this.logger.error(`Failed to publish DLQ message for ${eventName}: ${normalized.message}`)
       this.nack(msg, false)
     }
   }

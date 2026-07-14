@@ -12,8 +12,6 @@ export default async function testApi({ container }: ExecArgs) {
     fields: ["id", "name", "payment_providers.*"],
   })
 
-  console.log("Query object generated:", JSON.stringify(queryObject, null, 2))
   
   const result = await remoteQuery(queryObject)
-  console.log("Result:", JSON.stringify(result, null, 2))
 }

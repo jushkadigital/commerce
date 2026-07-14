@@ -1,0 +1,65 @@
+# ==============================================================================
+# Grafana Cloud Datasources — Auto-provisioned via OTLP
+# ==============================================================================
+# In Grafana Cloud, these datasources are automatically created when you
+# configure OpenTelemetry. This file documents the expected configuration
+# for reference and manual setup.
+#
+# If using self-hosted Grafana, place this file at:
+#   /etc/grafana/provisioning/datasources/datasources.yml
+# ==============================================================================
+
+apiVersion: 1
+
+deleteDatasources: []
+
+datasources:
+  # ── Prometheus (via Grafana Cloud Metrics) ──────────────────────────────────
+  # Grafana Cloud auto-creates this when you enable OTel.
+  # Metrics sent via OTLP /v1/metrics are stored here.
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: https://prometheus-prod-XXXXX.grafana.net
+    jsonData:
+      httpMethod: POST
+      exemplarTraceIdDestinations:
+        - name: traceID
+          datasourceUid: tempo
+    isDefault: true
+
+  # ── Tempo (via Grafana Cloud Traces) ───────────────────────────────────────
+  # Grafana Cloud auto-creates this when you enable OTel.
+  # Traces sent via OTLP /v1/traces are stored here.
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: https://tempo-prod-XXXXX.grafana.net
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        filterByTraceID: true
+        filterBySpanID: true
+      tracesToMetrics:
+        datasourceUid: prometheus
+        queries:
+          - name: "Request rate"
+            query: "sum(rate(http_request_duration_milliseconds_count{$$__tags}[5m])) by (route)"
+          - name: "Error rate"
+            query: "sum(rate(http_request_duration_milliseconds_count{$$__tags, status_code=~\"5..\"}[5m])) by (route)"
+          - name: "Duration (P99)"
+            query: "histogram_quantile(0.99, sum(rate(http_request_duration_milliseconds_bucket{$$__tags}[5m])) by (le, route))"
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+
+  # ── Loki (via Grafana Cloud Logs) ──────────────────────────────────────────
+  # Optional: if you also send application logs to Grafana Cloud.
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: https://loki-prod-XXXXX.grafana.net

@@ -36,7 +36,7 @@ export function buildTourCreateInput(eventData: TourSyncEventData) {
       adult: typeof data.price === "number" ? data.price : 0,
       child: 0,
       infant: 0,
-      currency_code: "usd",
+      currency_code: "pen",
     },
     metadata: {
       payloadId: `${eventData.id}tour`,

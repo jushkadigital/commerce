@@ -7,6 +7,7 @@ export interface TourPublishedPayload {
   durationDays: number
   maxCapacity: number
   thumbnail: string | null
+  price: number
   isSpecial: boolean
   blockedDates: unknown[]
   blockedWeekDays: unknown[]
@@ -24,6 +25,7 @@ export interface TourUpdatedPayload {
   durationDays: number
   maxCapacity: number
   thumbnail: string | null
+  price: number
   isSpecial: boolean
   blockedDates: unknown[]
   blockedWeekDays: unknown[]
@@ -95,6 +97,7 @@ export interface PackageCreatedPayload {
   durationDays: number
   maxCapacity: number
   thumbnail: string | null
+  price: number
   isSpecial: boolean
   blockedDates: unknown[]
   blockedWeekDays: unknown[]
@@ -112,6 +115,7 @@ export interface PackageUpdatedPayload {
   durationDays: number
   maxCapacity: number
   thumbnail: string | null
+  price: number
   isSpecial: boolean
   blockedDates: unknown[]
   blockedWeekDays: unknown[]

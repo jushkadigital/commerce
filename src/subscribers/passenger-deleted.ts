@@ -15,12 +15,9 @@ export default async function handlePassengerUserDeleted({
   event,
   container
 }: SubscriberArgs<ReceiveData>) {
-  const logger = container.resolve("logger")
   const { sub, email, userType } = event.data
 
   const eventId = `identity.user.deleted.v1:passenger:${sub}`
-
-  logger.info(`[identity.user.deleted.v1:passenger] Event received: sub=${sub} email=${email} userType=${userType}`)
 
   if (userType !== "PASSENGER") {
     return
@@ -34,7 +31,6 @@ export default async function handlePassengerUserDeleted({
   if (!claimed) {
     const processed = await idempotencyStore.isProcessed(eventId, CONSUMER_ID)
     if (processed) {
-      logger.info(`[identity.user.deleted.v1:passenger] Event ${eventId} already processed, skipping`)
       return
     }
     throw new Error(
@@ -53,7 +49,6 @@ export default async function handlePassengerUserDeleted({
 
     if (providerIdentity?.auth_identity_id) {
       await authModule.deleteAuthIdentities([providerIdentity.auth_identity_id])
-      logger.info(`[identity.user.deleted.v1:passenger] AuthIdentity deleted: ${providerIdentity.auth_identity_id}`)
     }
 
     const [customer] = await customerModule.listCustomers({ email })
@@ -63,15 +58,11 @@ export default async function handlePassengerUserDeleted({
       await customerModule.updateCustomers(customer.id, {
         metadata: { ...metadata, deleted_from_identity: true, deleted_at: new Date().toISOString() },
       })
-      logger.info(`[identity.user.deleted.v1:passenger] Customer soft-deleted: ${customer.id}`)
-    } else {
-      logger.info(`[identity.user.deleted.v1:passenger] No customer found for email=${email}`)
     }
 
     await idempotencyStore.complete(eventId, CONSUMER_ID)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
-    logger.error(`[identity.user.deleted.v1:passenger] Failed for sub=${sub}: ${message}`)
     await idempotencyStore.fail(eventId, CONSUMER_ID, message)
     throw error
   }

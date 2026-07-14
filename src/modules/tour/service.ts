@@ -308,7 +308,6 @@ class TourModuleService extends MedusaService({
 
     // If no container provided, skip pricing update (backward compatibility)
     if (!container) {
-      console.warn("No container provided to updateVariantPrices, skipping pricing update")
       return
     }
 
@@ -323,7 +322,6 @@ class TourModuleService extends MedusaService({
       .map((v: any) => v.variant_id)
 
     if (variantIds.length === 0) {
-      console.warn("No variant IDs found for tour", tourId)
       return
     }
 
@@ -353,7 +351,6 @@ class TourModuleService extends MedusaService({
 
       const priceSetId = variantToPriceSetMap.get(existingVariant.variant_id)
       if (!priceSetId) {
-        console.warn(`No price set found for variant ${existingVariant.variant_id}`)
         continue
       }
 

@@ -20,7 +20,6 @@ export const createPackageBookingsStep = createStep(
   async (input: CreatePackageBookingsStepInput, { container }) => {
     const { order_id, cart } = input
     const packageModuleService = container.resolve(PACKAGE_MODULE)
-    const logger = container.resolve("logger")
 
     const packageBookingsToCreate: {
       order_id: string
@@ -34,8 +33,6 @@ export const createPackageBookingsStep = createStep(
       type,
       items,
     }))
-
-    logger.info(`${JSON.stringify(items)}`)
 
     for (const item of items as { type: string; items: any[] }[]) {
       const firstItem = item.items[0]

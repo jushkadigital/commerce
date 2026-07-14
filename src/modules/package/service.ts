@@ -320,7 +320,6 @@ class PackageModuleService extends MedusaService({
     const existingVariants = pkg.variants || []
 
     if (!container) {
-      console.warn("No container provided to updateVariantPrices, skipping pricing update")
       return
     }
 
@@ -333,7 +332,6 @@ class PackageModuleService extends MedusaService({
       .map((v: any) => v.variant_id)
 
     if (variantIds.length === 0) {
-      console.warn("No variant IDs found for package", packageId)
       return
     }
 
@@ -361,7 +359,6 @@ class PackageModuleService extends MedusaService({
 
       const priceSetId = variantToPriceSetMap.get(existingVariant.variant_id)
       if (!priceSetId) {
-        console.warn(`No price set found for variant ${existingVariant.variant_id}`)
         continue
       }
 

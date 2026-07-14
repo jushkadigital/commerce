@@ -25,15 +25,11 @@ const prepareTourItemsStep = createStep(
   "prepare-tour-items-step",
   async (input: { items: TourItemInput[] }, { container }) => {
 
-    const logger = container.resolve("logger")
-
     // 2. Usar el logger de Medusa
-    logger.info("--> ESTOY EN EL STEP")
 
     // 1. Generamos el ID Único de Grupo (El "Pegamento")
     // Usamos 'tour' como prefijo para que el ID sea tipo: tour_01J9...
     const groupId = generateEntityId(undefined, "tour")
-    console.log(groupId)
     const tourData = transform({ input }, (data) => {
       return data.input.items.map(item => ({
         variant_id: item.variant_id,

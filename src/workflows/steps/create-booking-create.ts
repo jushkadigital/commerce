@@ -20,7 +20,6 @@ export const createTourBookingsStep = createStep(
   async (input: CreateBookingsStepInput, { container }) => {
     const { order_id, cart } = input
     const tourModuleService = container.resolve(TOUR_MODULE)
-    const logger = container.resolve("logger")
 
     // 2. Usar el logger de Medusa
 
@@ -32,12 +31,10 @@ export const createTourBookingsStep = createStep(
       tour_date: Date
     }[] = []
 
-    const items = Object.entries(groupBy(cart.items, "metadata.group_id")).map(([type, items]) => ({
-      type,
-      items,
-    }))
-
-    logger.info(`${JSON.stringify(items)}`)
+const items = Object.entries(groupBy(cart.items, "metadata.group_id")).map(([type, items]) => ({
+        type,
+        items,
+      }))
 
     for (const item of items as { type: string; items: any[] }[]) {
       const firstItem = item.items[0]

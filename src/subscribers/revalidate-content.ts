@@ -9,7 +9,7 @@ const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET_TOKEN || 'your-secret-to
 /**
  * Función utilitaria para enviar solicitudes de revalidación a Next.js
  */
-async function sendRevalidationRequest(logger: any, paths: string[], tags: string[] = []) {
+async function sendRevalidationRequest(_logger: any, paths: string[], tags: string[] = []) {
   try {
     const response = await fetch(NEXTJS_REVALIDATE_URL, {
       method: 'POST',
@@ -25,12 +25,9 @@ async function sendRevalidationRequest(logger: any, paths: string[], tags: strin
     }
 
     const data = await response.json()
-    logger.info(`Revalidación confirmada por Next.js: ${JSON.stringify(data)}`)
     return data
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-    logger.error(`Error al solicitar revalidación a Next.js: ${errorMessage}`)
-    // No lanzamos el error para evitar interrumpir el flujo de Medusa
     return null
   }
 }
@@ -39,10 +36,8 @@ export default async function revalidateEntityHandler({
   event,
   container,
 }: SubscriberArgs<{ id: string }>) {
-  const logger = container.resolve("logger")
   const { id } = event.data
 
-  // Resolvemos el servicio de tour o package según el evento
   let entityPath = ''
   let slug = ''
   let status = ''
@@ -53,7 +48,7 @@ export default async function revalidateEntityHandler({
     if (event.name.startsWith('entityTour')) {
       const tourService = container.resolve(TOUR_MODULE)
       const tour = await tourService.retrieveTour(id, {
-        relations: ['categorias', 'destinos'] // Ajusta esto según tus relaciones en Medusa
+        relations: ['categorias', 'destinos']
       })
 
       entityPath = '/tours'
@@ -62,7 +57,7 @@ export default async function revalidateEntityHandler({
     } else if (event.name.startsWith('entityPackage')) {
       const packageService = container.resolve(PACKAGE_MODULE)
       const pkg = await packageService.retrievePackage(id, {
-        relations: ['', 'destinos'] // Ajusta esto según tus relaciones
+        relations: ['', 'destinos']
       })
 
       entityPath = '/packages'
@@ -70,16 +65,14 @@ export default async function revalidateEntityHandler({
     }
 
     const pathsToRevalidate: string[] = []
-    const tagsToRevalidate = [`${entityPath.substring(1)}-sitemap`, entityPath.substring(1)] // ej: tours-sitemap, tours
+    const tagsToRevalidate = [`${entityPath.substring(1)}-sitemap`, entityPath.substring(1)]
 
-    // Lógica similar a tu Payload CMS, adaptada a Medusa
     const isDeleted = event.name.endsWith('deleted')
 
     if (isDeleted) {
       pathsToRevalidate.push(`${entityPath}/${slug}`)
       pathsToRevalidate.push(entityPath)
     } else {
-      // Created o Updated
       if (true) {
         pathsToRevalidate.push(`${entityPath}/${slug}`)
         pathsToRevalidate.push(entityPath)
@@ -87,13 +80,11 @@ export default async function revalidateEntityHandler({
     }
 
     if (pathsToRevalidate.length > 0) {
-      // Como tu ejemplo de Payload ponía "/pe" + ele
       const prefixedPaths = pathsToRevalidate.map(ele => "/pe" + ele)
-      await sendRevalidationRequest(logger, prefixedPaths, tagsToRevalidate)
+      await sendRevalidationRequest(null, prefixedPaths, tagsToRevalidate)
     }
 
   } catch (err) {
-    logger.error(`Error procesando la revalidación para el evento ${event.name}: ${err}`)
   }
 }
 

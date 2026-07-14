@@ -55,8 +55,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       },
     })
 
-    console.log("Variants with prices from query:", JSON.stringify(variantsWithPrices, null, 2))
-
     // Map variant IDs to their prices
     const variantPricesMap = new Map<string, any[]>()
     for (const variantData of variantsWithPrices || []) {
@@ -77,7 +75,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         // NOTE: Medusa v2 stores prices in MAJOR UNITS (not cents)
         // So the amount is already the display value (e.g., 300 for $300)
         const amount = Number(price.amount)
-        console.log(`[PRICING DEBUG GET] ${variant.passenger_type} ${currency}: amount=${amount} (major units)`)
 
         switch (variant.passenger_type) {
           case "adult":
@@ -151,8 +148,6 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
-    console.log("Tour variants:", JSON.stringify(tour.variants, null, 2))
-
     // Get variant IDs
     const variantIds = tour.variants
       .filter((v: any) => v.variant_id)
@@ -167,8 +162,6 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       },
     })
 
-    console.log("Variants with price sets:", JSON.stringify(variantsWithPriceSets, null, 2))
-
     // Build a map of variant_id to price_set_id
     const variantToPriceSetMap = new Map<string, string>()
     for (const variantData of variantsWithPriceSets || []) {
@@ -177,18 +170,14 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       }
     }
 
-    console.log("Variant to price set map:", Array.from(variantToPriceSetMap.entries()))
-
     // Update prices for each variant directly using the Pricing Module
     for (const variant of tour.variants) {
       if (!variant.variant_id) {
-        console.warn("Variant missing variant_id:", variant)
         continue
       }
 
       const priceSetId = variantToPriceSetMap.get(variant.variant_id)
       if (!priceSetId) {
-        console.warn(`No price set found for variant ${variant.variant_id}`)
         continue
       }
 
@@ -202,14 +191,11 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       // So $300 is stored as 300, not 30000
       const pricesArray: any[] = []
       for (const [currency, amount] of Object.entries(passengerPrices)) {
-        console.log(`[PRICING DEBUG] ${passengerType} ${currency}: UI value=${amount} (stored as major units)`)
         pricesArray.push({
           amount: amount as number,
           currency_code: currency.toLowerCase(), // Medusa expects lowercase
         })
       }
-
-      console.log(`[PRICING DEBUG] Updating price set ${priceSetId} for ${passengerType}:`, JSON.stringify(pricesArray))
 
       // Update the price set directly
       await pricingModule.updatePriceSets(priceSetId, {

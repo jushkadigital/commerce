@@ -27,7 +27,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const customer = customers[0];
 
     if (!customer) {
-      console.log(`❌ Backend: No encontré customer con email ${payload.email}`);
       return res.status(404).json({ message: "Customer not found" });
     }
 

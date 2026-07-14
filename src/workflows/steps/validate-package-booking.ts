@@ -11,31 +11,23 @@ export const validatePackageBookingStep = createStep(
   async (input: ValidatePackageBookingStepInput, { container }) => {
     const packageService: PackageModuleService = container.resolve(PACKAGE_MODULE)
     const query = container.resolve("query")
-    const logger = container.resolve("logger")
-    
-    logger.info(`[VALIDATE] Starting validation for cart ${input.cart_id}`)
-    
+
     const { data: carts } = await query.graph({
       entity: "cart",
       fields: ["id", "items.metadata", "items.quantity"],
       filters: { id: input.cart_id },
     })
     
-    const cart = carts[0]
-    
+const cart = carts[0]
+
     if (!cart) {
-      logger.error(`[VALIDATE] Cart ${input.cart_id} not found`)
       throw new Error(`Cart ${input.cart_id} not found`)
     }
-    
-    logger.info(`[VALIDATE] Cart found with ${cart.items?.length || 0} items`)
-    
+
     const packageItems = cart.items?.filter(
       (item: any) => item.metadata?.is_package === true
     ) || []
     
-    logger.info(`[VALIDATE] Found ${packageItems.length} package items`)
-
     for (const item of packageItems) {
       if (!item) continue
       const metadata = item.metadata as {
@@ -46,11 +38,9 @@ export const validatePackageBookingStep = createStep(
       
       const packageId = metadata?.package_id
       const packageDateStr = metadata?.package_date
-      const totalPassengers = metadata?.total_passengers ?? 0
-      
-      logger.info(`[VALIDATE] Validating package ${packageId} for date ${packageDateStr} with ${totalPassengers} passengers`)
+const totalPassengers = metadata?.total_passengers ?? 0
 
-      if (!packageId) {
+    if (!packageId) {
         throw new Error("Package ID is required for package bookings")
       }
 
@@ -69,8 +59,6 @@ export const validatePackageBookingStep = createStep(
         packageDate,
         totalPassengers
       )
-      
-      logger.info(`[VALIDATE] Validation result: ${JSON.stringify(validation)}`)
 
       if (!validation.valid) {
         throw new Error(validation.reason || "Package booking validation failed")

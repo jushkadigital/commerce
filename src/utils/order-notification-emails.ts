@@ -38,10 +38,7 @@ export async function getOrderNotificationEmails(container: ResolveContainer): P
       return emails
     }
   } catch (error) {
-    const logger = container.resolve("logger")
-    logger.warn(
-      `Failed loading order notification emails from module: ${error instanceof Error ? error.message : String(error)}`
-    )
+    console.error(`Failed loading order notification emails from module: ${error instanceof Error ? error.message : String(error)}`)
   }
 
   return readEmailsFromEnv()

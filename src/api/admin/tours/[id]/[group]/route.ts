@@ -28,11 +28,8 @@ export const POST = async (
 ) => {
   const { id } = req.params
 
-  console.log(req.params)
   // 1. Validar los datos de entrada
   const validatedBody = UpdateTourSchema.parse(req.body)
-
-  console.log("ENTRO A NO PRICES")
 
   // 2. Ejecutar el workflow de actualización
   const { result, errors } = await updateTourNoPriceWorkflow(req.scope).run({

@@ -6,13 +6,7 @@ import { provisionCustomerFromKeycloak } from "../../../../workflows/helpers/pro
 const MEDUSA_JWT_COOKIE_NAME = "_medusa_jwt"
 const MEDUSA_JWT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7
 
-type LoggerLike = {
-  info: (message: string) => void
-  warn: (message: string) => void
-  error: (message: string) => void
-}
-
-type JsonRecord = Record<string, unknown>
+const JsonRecord = Record<string, unknown>
 
 function setNoStoreHeaders(res: MedusaResponse) {
   res.setHeader("Cache-Control", "no-store")
@@ -100,8 +94,7 @@ function extractTokenFromBody(body: unknown) {
 }
 
 async function resolveTokenPayload(
-  accessToken: string,
-  logger: LoggerLike
+  accessToken: string
 ): Promise<Record<string, unknown> | undefined> {
   const decoded = jwt.decode(accessToken, { complete: true })
 
@@ -113,14 +106,6 @@ async function resolveTokenPayload(
   const keycloakRealm = process.env.KEYCLOAK_REALM
 
   if (!keycloakUrl || !keycloakRealm) {
-    logger.warn(
-      buildLogLine("[store.auth.keycloak] cannot resolve token payload via userinfo", {
-        reason: "missing_keycloak_env",
-        has_keycloak_url: Boolean(keycloakUrl),
-        has_keycloak_realm: Boolean(keycloakRealm),
-      })
-    )
-
     return undefined
   }
 
@@ -134,37 +119,17 @@ async function resolveTokenPayload(
     })
 
     if (!userInfoResponse.ok) {
-      logger.warn(
-        buildLogLine("[store.auth.keycloak] userinfo rejected token", {
-          status: userInfoResponse.status,
-        })
-      )
-
       return undefined
     }
 
     const userInfo = (await userInfoResponse.json()) as unknown
 
     if (!isJsonRecord(userInfo)) {
-      logger.warn(
-        buildLogLine("[store.auth.keycloak] userinfo payload is not an object", {
-          token_length: accessToken.length,
-        })
-      )
-
       return undefined
     }
 
     return userInfo
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "unknown_error"
-
-    logger.warn(
-      buildLogLine("[store.auth.keycloak] userinfo fetch failed", {
-        error: errorMessage,
-      })
-    )
-
+  } catch {
     return undefined
   }
 }
@@ -197,12 +162,11 @@ function verifyMedusaCustomerToken(
 function respondWithCustomerSession(params: {
   req: MedusaRequest
   res: MedusaResponse
-  logger: LoggerLike
   customerId: string
   token: string
   mode: "keycloak_exchange" | "medusa_passthrough"
-}) {
-  const { req, res, logger, customerId, token, mode } = params
+}): any {
+  const { req, res, customerId, token, mode } = params
 
   req.session.customer_id = customerId
 
@@ -221,37 +185,20 @@ function respondWithCustomerSession(params: {
         : false
 
   if (!emittedCookie) {
-    params.logger.error(
-      buildLogLine("[store.auth.keycloak] Set-Cookie header missing for _medusa_jwt", {
-        route: "/store/auth/keycloak",
-        status: 500,
-        emitted_medusa_jwt: false,
-        customer_id: customerId,
-        cookie_name: MEDUSA_JWT_COOKIE_NAME,
-        mode,
-      })
-    )
+    console.error("[store.auth.keycloak] Set-Cookie header missing for _medusa_jwt", {
+      route: "/store/auth/keycloak",
+      status: 500,
+      emitted_medusa_jwt: false,
+      customer_id: customerId,
+      cookie_name: MEDUSA_JWT_COOKIE_NAME,
+      mode,
+    })
 
     return res.status(500).json({
       message: "No se pudo emitir _medusa_jwt",
       code: "MISSING_MEDUSA_JWT",
     })
   }
-
-  logger.info(
-    buildLogLine("[store.auth.keycloak] _medusa_jwt emitted", {
-      route: "/store/auth/keycloak",
-      status: 200,
-      emitted_medusa_jwt: true,
-      customer_id: customerId,
-      cookie_name: MEDUSA_JWT_COOKIE_NAME,
-      cookie_domain: cookieConfig.domain,
-      cookie_same_site: cookieConfig.sameSite,
-      cookie_secure: cookieConfig.secure,
-      cookie_path: cookieConfig.path,
-      mode,
-    })
-  )
 
   return res.json({
     message: "Login exitoso",
@@ -265,7 +212,6 @@ function buildLogLine(message: string, context: Record<string, unknown>) {
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const logger = req.scope.resolve("logger") as LoggerLike
   const tokenFromBody = extractTokenFromBody(req.body)
   const tokenFromHeader = extractBearerToken(req.headers.authorization)
   const accessToken = tokenFromBody || tokenFromHeader
@@ -273,28 +219,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   setNoStoreHeaders(res)
 
-  logger.info(
-    buildLogLine("[store.auth.keycloak] request received", {
-      route: "/store/auth/keycloak",
-      has_access_token: Boolean(accessToken),
-      access_token_length: accessToken?.length,
-      token_source: tokenFromBody ? "body" : tokenFromHeader ? "authorization" : "none",
-      body_keys: bodyKeys,
-    })
-  )
-
   try {
     if (!accessToken) {
-      logger.warn(
-        buildLogLine("[store.auth.keycloak] missing accessToken", {
-          route: "/store/auth/keycloak",
-          status: 400,
-          emitted_medusa_jwt: false,
-          token_source: "none",
-          body_keys: bodyKeys,
-        })
-      )
-
       return res.status(400).json({
         message: "Keycloak token is required",
         code: "MISSING_TOKEN",
@@ -313,20 +239,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
-    const payload = await resolveTokenPayload(accessToken, logger)
+    const payload = await resolveTokenPayload(accessToken)
 
     const { jwtSecret } = req.scope.resolve("configModule").projectConfig.http
 
     if (!payload) {
-      logger.warn(
-        buildLogLine("[store.auth.keycloak] unable to decode token and userinfo fallback failed", {
-          route: "/store/auth/keycloak",
-          status: 400,
-          emitted_medusa_jwt: false,
-          token_source: tokenFromBody ? "body" : tokenFromHeader ? "authorization" : "none",
-        })
-      )
-
       return res.status(400).json({
         message: "Invalid Keycloak token",
         code: "INVALID_TOKEN",
@@ -345,32 +262,15 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         const medusaTokenPayload = verifyMedusaCustomerToken(accessToken, jwtSecret)
 
         if (medusaTokenPayload?.customerId) {
-          logger.info(
-            buildLogLine("[store.auth.keycloak] received Medusa customer token; issuing cookie passthrough", {
-              route: "/store/auth/keycloak",
-              customer_id: medusaTokenPayload.customerId,
-            })
-          )
-
           return respondWithCustomerSession({
             req,
             res,
-            logger,
             customerId: medusaTokenPayload.customerId,
             token: accessToken,
             mode: "medusa_passthrough",
           })
         }
       }
-
-      logger.warn(
-        buildLogLine("[store.auth.keycloak] token missing sub claim", {
-          route: "/store/auth/keycloak",
-          status: 400,
-          emitted_medusa_jwt: false,
-          keycloak_email: keycloakEmail,
-        })
-      )
 
       return res.status(400).json({
         message: "Invalid token: missing 'sub' claim",
@@ -384,12 +284,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     const authModule = req.scope.resolve(Modules.AUTH)
     const customerModule = req.scope.resolve(Modules.CUSTOMER)
-
-    logger.info(
-      buildLogLine("[store.auth.keycloak] searching provider identity", {
-        keycloak_sub: keycloakSub,
-      })
-    )
 
     const [providerIdentity] = await authModule.listProviderIdentities({
       provider: "keycloak-store",
@@ -411,15 +305,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         })
       }
 
-      logger.info(
-        buildLogLine("[store.auth.keycloak] provider identity not found, starting JIT provisioning", {
-          route: "/store/auth/keycloak",
-          keycloak_sub: keycloakSub,
-          keycloak_email: keycloakEmail,
-          reason: !providerIdentity ? "provider_identity_missing" : "auth_identity_missing",
-        })
-      )
-
       const jitResult = await provisionCustomerFromKeycloak({
         container: req.scope,
         keycloakSub,
@@ -430,16 +315,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
       customerId = jitResult.customerId
       authIdentityId = jitResult.authIdentityId
-
-      logger.info(
-        buildLogLine("[store.auth.keycloak] JIT provisioning completed", {
-          route: "/store/auth/keycloak",
-          mode: "keycloak_exchange_jit",
-          customer_id: customerId,
-          auth_identity_id: authIdentityId,
-          was_created: jitResult.wasCreated,
-        })
-      )
     } else {
       const authIdentity = await authModule.retrieveAuthIdentity(
         providerIdentity.auth_identity_id
@@ -458,13 +333,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           })
         }
 
-        logger.info(
-          buildLogLine("[store.auth.keycloak] customer_id missing in app_metadata, JIT fallback", {
-            route: "/store/auth/keycloak",
-            keycloak_sub: keycloakSub,
-          })
-        )
-
         const jitResult = await provisionCustomerFromKeycloak({
           container: req.scope,
           keycloakSub,
@@ -475,26 +343,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
         customerId = jitResult.customerId
         authIdentityId = jitResult.authIdentityId
-
-        logger.info(
-          buildLogLine("[store.auth.keycloak] JIT fallback: customer linked to existing auth identity", {
-            customer_id: customerId,
-            auth_identity_id: authIdentityId,
-          })
-        )
       }
     }
 
     if (!jwtSecret || typeof jwtSecret !== "string") {
-      logger.error(
-        buildLogLine("[store.auth.keycloak] jwtSecret unavailable; cannot emit _medusa_jwt", {
-          route: "/store/auth/keycloak",
-          status: 500,
-          emitted_medusa_jwt: false,
-          customer_id: customerId,
-        })
-      )
-
       return res.status(500).json({
         message: "No se pudo emitir _medusa_jwt",
         code: "MISSING_MEDUSA_JWT",
@@ -512,15 +364,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     )
 
     if (!token || typeof token !== "string") {
-      logger.error(
-        buildLogLine("[store.auth.keycloak] token generation failed", {
-          route: "/store/auth/keycloak",
-          status: 500,
-          emitted_medusa_jwt: false,
-          customer_id: customerId,
-        })
-      )
-
       return res.status(500).json({
         message: "No se pudo emitir _medusa_jwt",
         code: "MISSING_MEDUSA_JWT",
@@ -530,7 +373,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return respondWithCustomerSession({
       req,
       res,
-      logger,
       customerId,
       token,
       mode: "keycloak_exchange",
@@ -538,14 +380,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "unknown_error"
 
-    logger.error(
-      buildLogLine("[store.auth.keycloak] unexpected error", {
-        route: "/store/auth/keycloak",
-        status: 500,
-        emitted_medusa_jwt: false,
-        error: errorMessage,
-      })
-    )
+    console.error("[store.auth.keycloak] unexpected error", {
+      route: "/store/auth/keycloak",
+      status: 500,
+      emitted_medusa_jwt: false,
+      error: errorMessage,
+    })
 
     return res.status(500).json({
       message: "Error interno del servidor",

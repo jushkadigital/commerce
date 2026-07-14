@@ -1,7 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError, Modules } from "@medusajs/framework/utils"
-import { deleteLineItemsWorkflowId } from "@medusajs/core-flows"
-import { refetchAddToCartResult } from "../refetch-cart"
+import { deleteLineItemsSlimWorkflow } from "../../../../workflows/delete-line-items-slim"
 
 const throwInvalidData = (message: string, code?: string): never => {
   throw new MedusaError(MedusaError.Types.INVALID_DATA, message, code)
@@ -36,7 +35,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const itemsToDelete = items as string[]
 
     const cartModule = req.scope.resolve(Modules.CART)
-    const workflowEngine = req.scope.resolve(Modules.WORKFLOW_ENGINE)
 
     // Verify cart exists and retrieve current items to ensure ownership
     const cart = await cartModule.retrieveCart(ensuredCartId, {
@@ -52,22 +50,23 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       throwInvalidData("No valid line items found in cart to delete")
     }
 
-    // Execute the native workflow — it handles:
+    // Execute the slim delete workflow — it handles:
     // 1. Cart locking
     // 2. Soft delete of line items
-    // 3. refreshCartItemsWorkflow (prices, promotions, taxes, shipping, payment)
-    // 4. cart.updated event emission
-    await workflowEngine.run(deleteLineItemsWorkflowId, {
+    // 3. ONE wide cart fetch reused across: shipping (if any), promotions (REPLACE), payment sync
+    // 4. cart.updated event emission + lock release
+    // (Tax/pricing recalc intentionally skipped, matching the native delete path.)
+    const { result } = await deleteLineItemsSlimWorkflow(req.scope).run({
       input: {
         cart_id: ensuredCartId,
         ids: validItemIdsToDelete,
       },
     })
 
-    // Retrieve updated cart with consistent field set
-    const updatedCart = await refetchAddToCartResult(ensuredCartId, req.scope)
+    const updatedCart = result.cart
 
     res.json({
+      message: "Successfully deleted line items",
       cart: updatedCart,
       deleted_items: validItemIdsToDelete,
     })

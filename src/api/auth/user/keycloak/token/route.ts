@@ -41,12 +41,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return res.status(400).json({ message: "Invalid token format" })
     }
 
-    console.log("[Keycloak Token] Decoded payload:", {
-      sub: decodedToken.sub,
-      email: decodedToken.email,
-      preferred_username: decodedToken.preferred_username,
-    })
-
     // Validate token with Keycloak userinfo endpoint
     const keycloakUrl = process.env.KEYCLOAK_URL
     const realm = process.env.KEYCLOAK_REALM
@@ -57,14 +51,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     const userInfoUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/userinfo`
     const userInfoRes = await fetch(userInfoUrl, {
-      headers: {
-        Authorization: `Bearer ${keycloakToken}`,
-      },
+      headers: { Authorization: `Bearer ${keycloakToken}` },
     })
 
     if (!userInfoRes.ok) {
       const errorText = await userInfoRes.text()
-      console.log("[Keycloak Token] Userinfo failed:", errorText)
       return res.status(401).json({
         message: "Invalid or expired Keycloak token",
         error: errorText,
@@ -72,8 +63,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     const userInfo = await userInfoRes.json()
-    console.log("[Keycloak Token] Userinfo:", userInfo)
-
     const email = userInfo.email || userInfo.preferred_username
     const keycloakSub = userInfo.sub
 
@@ -123,8 +112,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       jwtSecret,
       { expiresIn: "24h" }
     )
-
-    console.log("[Keycloak Token] Generated Medusa token for user:", userId)
 
     res.json({
       token: medusaToken,

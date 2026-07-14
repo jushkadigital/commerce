@@ -19,5 +19,4 @@ export default async function testStoreProviders({ container }: ExecArgs) {
   })
 
   const result1 = await remoteQuery(queryObject)
-  console.log("Full result:", JSON.stringify(result1, null, 2))
 }

@@ -33,7 +33,6 @@ export async function provisionAdminFromKeycloak(
 
   const authModule = container.resolve(Modules.AUTH)
   const userModule = container.resolve(Modules.USER)
-  const logger = container.resolve("logger")
 
   // -- 1. Find or create AuthIdentity + ProviderIdentity --
 
@@ -51,9 +50,6 @@ export async function provisionAdminFromKeycloak(
       existingPI.auth_identity_id
     )
     authIdentityId = authIdentity.id
-    logger.info(
-      `[admin.provision] AuthIdentity already exists: ${authIdentityId}`
-    )
   } else {
     try {
       authIdentity = await authModule.createAuthIdentities({
@@ -73,9 +69,6 @@ export async function provisionAdminFromKeycloak(
       })
       authIdentityId = authIdentity.id
       authCreated = true
-      logger.info(
-        `[admin.provision] AuthIdentity created: ${authIdentityId}`
-      )
     } catch (authError: unknown) {
       if (isAlreadyExistsError(authError)) {
         const [pi] = await authModule.listProviderIdentities({
@@ -91,9 +84,6 @@ export async function provisionAdminFromKeycloak(
           pi.auth_identity_id
         )
         authIdentityId = authIdentity.id
-        logger.info(
-          `[admin.provision] AuthIdentity race — recovered: ${authIdentityId}`
-        )
       } else {
         throw authError
       }
@@ -135,9 +125,6 @@ export async function provisionAdminFromKeycloak(
         last_name: lastName || existingUser.last_name || "",
         metadata: mergedMetadata,
       })
-      logger.info(
-        `[admin.provision] User enriched: ${userId}`
-      )
     }
   } else {
     const { result } = await createUserAccountWorkflow(container).run({
@@ -157,7 +144,6 @@ export async function provisionAdminFromKeycloak(
     })
     userId = result.id
     userCreated = true
-    logger.info(`[admin.provision] User created: ${userId}`)
   }
 
   // -- 3. Ensure app_metadata links AuthIdentity → User --
@@ -175,9 +161,6 @@ export async function provisionAdminFromKeycloak(
         },
       },
     ])
-    logger.info(
-      `[admin.provision] app_metadata linked: ${authIdentityId} → user ${userId}`
-    )
   }
 
   return {

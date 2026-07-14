@@ -181,12 +181,20 @@ module.exports = defineConfig({
   modules: [
     {
       key: Modules.CACHING,
-      resolve: DISABLE_REDIS
-        ? '@medusajs/medusa/cache-inmemory'
-        : CACHE_REDIS_URL
-          ? '@medusajs/medusa/cache-redis'
-          : '@medusajs/medusa/cache-inmemory',
-      options: { redisUrl: CACHE_REDIS_URL },
+      resolve: '@medusajs/caching',
+      options: {
+        in_memory: {
+          enable: DISABLE_REDIS || !CACHE_REDIS_URL,
+        },
+        providers: !DISABLE_REDIS && CACHE_REDIS_URL
+          ? [{
+              resolve: '@medusajs/caching-redis',
+              id: 'redis',
+              is_default: true,
+              options: { redisUrl: CACHE_REDIS_URL },
+            }]
+          : [],
+      },
     },
     {
       key: Modules.EVENT_BUS,
@@ -197,10 +205,10 @@ module.exports = defineConfig({
         ...(DISABLE_REDIS ? {} : { rabbitmqUrl: requireEnv('RABBITMQ_URL'), queuePrefix: 'medusa', prefetch: 100, maxRetries: 3, retryDelayMs: 30000 }),
       },
     },
-    ...(DISABLE_REDIS ? [] : [{
+    {
       resolve: './src/modules/events',
       options: {
-        rabbitmqUrl: requireEnv('RABBITMQ_URL'),
+        rabbitmqUrl: DISABLE_REDIS ? '' : requireEnv('RABBITMQ_URL'),
         exchanges: {
           integration: 'tourism.integration',
           notification: 'tourism.notification',
@@ -219,7 +227,7 @@ module.exports = defineConfig({
         ],
         workerMode: process.env.MEDUSA_WORKER_MODE || 'shared',
       },
-    }]),
+    },
     {
       key: Modules.WORKFLOW_ENGINE,
       resolve: DISABLE_REDIS

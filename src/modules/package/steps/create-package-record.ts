@@ -32,7 +32,6 @@ export const createPackageRecordStep = createStep(
     const packageModuleService: PackageModuleService = container.resolve(PACKAGE_MODULE)
     try {
       await packageModuleService.deletePackages(packageId)
-      console.log(`[Compensation] Deleted package ${packageId}`)
     } catch (error) {
       console.error(`[Compensation] Failed to delete package ${packageId}:`, error)
     }

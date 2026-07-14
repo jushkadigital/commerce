@@ -7,20 +7,15 @@ export default async function handleProductSync({
   event,
   container
 }: SubscriberArgs<any>) {
-  const logger = container.resolve("logger")
   const eventName = event.name || "product.created"
 
   if (event.metadata?.source === "rabbitmq") {
-    logger.info(`Skipping ${eventName} from RabbitMQ (already processed)`)
     return
   }
 
   const productId = event.data?.id
 
-  logger.info(`${eventName.toUpperCase()} id=${productId}`)
-
   if (!productId) {
-    logger.warn("Product ID not found in event data")
     return
   }
 
@@ -64,8 +59,6 @@ export default async function handleProductSync({
     }
   }
 
-  logger.info(`Loaded full product: id=${fullProductWithPrices.id} title=${fullProductWithPrices.title} variants=${(fullProductWithPrices.variants || []).length}`)
-
   const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
 
   const action = eventName === "product.updated" ? "updated" : "synced"
@@ -78,8 +71,6 @@ export default async function handleProductSync({
     payload: fullProductWithPrices,
     causationId: `medusa:${eventName}:${productId}`,
   })
-
-  logger.info(`Published ${eventName} to EDA module for product: ${productId}`)
 }
 
 export const config: SubscriberConfig = {

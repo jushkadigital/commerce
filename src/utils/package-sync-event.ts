@@ -29,7 +29,7 @@ export function buildPackageCreateInput(eventData: PackageSyncEventData) {
       adult: eventData.data.price,
       child: 0,
       infant: 0,
-      currency_code: "usd",
+      currency_code: "pen",
     },
     metadata: {
       payloadId: `${eventData.id}package`,

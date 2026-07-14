@@ -9,15 +9,10 @@ export default async function handlePackagePublishedSync({
   container
 }: SubscriberArgs<PackageSyncEventData>) {
 
-  const logger = container.resolve("logger")
-
-  logger.info(`[integration.package.published.v1] Event received: id=${event.data.id} slug=${event.data.slug} destination=${event.data.data.destination}`)
 
   const { result } = await createPackageWorkflow(container).run({
     input: buildPackageCreateInput(event.data)
   })
-
-  logger.info(`[integration.package.published.v1] Package created: package=${result.package.id} product=${result.package.product_id}`)
 
   try {
     const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
@@ -33,13 +28,13 @@ export default async function handlePackagePublishedSync({
         slug: pkg.slug,
         destination: pkg.destination,
         durationDays: pkg.duration_days,
+        price: event.data.data?.price ?? 0,
         difficulty: event.data.data.difficulty,
       },
       causationId: `medusa:package.published:${event.data.id}`,
     })
-    logger.info(`Published integration.package.published.v1 EDA event for package: ${pkg.id}`)
-  } catch (edaError) {
-    logger.warn(`Failed to publish package.published EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
+  }
+  catch (edaError) {
   }
 }
 

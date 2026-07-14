@@ -3,10 +3,6 @@ import { Modules } from "@medusajs/framework/utils"
 import jwt from "jsonwebtoken"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  console.log("=== Keycloak Store Callback ===")
-  console.log("Full URL:", req.url)
-  console.log("Query params:", JSON.stringify(req.query, null, 2))
-
   const authService = req.scope.resolve(Modules.AUTH)
   const customerModule = req.scope.resolve(Modules.CUSTOMER)
 
@@ -21,9 +17,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       }
     )
 
-    console.log("Auth result - Success:", success, "Error:", error)
-    console.log("Auth Identity:", authIdentity ? JSON.stringify(authIdentity, null, 2) : "Not found")
-
     if (!success || !authIdentity) {
       console.error("Auth failed:", error)
       return res.status(401).json({
@@ -33,19 +26,13 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     }
 
     let customerId = authIdentity.app_metadata?.customer_id
-    console.log("Customer ID from app_metadata:", customerId)
 
     if (!customerId) {
-      console.log("No customer_id in app_metadata, searching by email...")
-
       const [providerIdentity] = await authService.listProviderIdentities({
         auth_identity_id: authIdentity.id
       })
 
-      console.log("Provider identity found:", !!providerIdentity)
-
       const email = (authIdentity as any).user_metadata?.email || (providerIdentity as any)?.user_metadata?.email
-      console.log("Email from metadata:", email)
 
       if (!email) {
         console.error("No email found in auth_identity or provider_identity")
@@ -56,14 +43,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       }
 
       const customers = await customerModule.listCustomers({
-        email: email
+        email
       })
-
-      console.log("Found customers:", customers.length)
 
       if (customers.length > 0) {
         customerId = customers[0].id
-        console.log("Found customer:", customerId)
 
         await authService.updateAuthIdentities([{
           id: authIdentity.id,
@@ -72,12 +56,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             customer_id: customerId
           }
         }])
-        console.log("Updated auth_identity with customer_id")
       } else {
         console.error("Customer not found for email:", email)
         return res.status(403).json({
           error: "Cuenta no registrada en la tienda.",
-          email: email
+          email
         })
       }
     }
@@ -95,12 +78,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       { expiresIn: "30d" }
     )
 
-    console.log("Token generated, redirecting to storefront...")
-
     const storefrontUrl = process.env.STORE_URL || "http://localhost:8000"
     const redirectUrl = `${storefrontUrl}/account?access_token=${token}`
 
-    console.log("Redirect URL:", redirectUrl)
     return res.redirect(redirectUrl)
 
   } catch (error: any) {

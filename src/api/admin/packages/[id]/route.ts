@@ -22,7 +22,7 @@ export async function GET(
       const product = await productModule.retrieveProduct(pkg.product_id)
       thumbnail = product.thumbnail || null
     } catch (error) {
-      console.warn(`Could not fetch product ${pkg.product_id}:`, error)
+      // Product fetch failed - non-critical error
     }
   }
 
@@ -94,37 +94,17 @@ export const POST = async (
       ])
     }
 
-    if (currentPackage.product_id) {
-      const productUpdateData: Record<string, unknown> = { id: currentPackage.product_id }
-
-      if (validatedBody.destination) {
-        productUpdateData.title = `${validatedBody.destination}${validatedBody.duration_days ? ` - ${validatedBody.duration_days} Days` : ""}`
-      }
-
-      if (validatedBody.description) {
-        productUpdateData.description = validatedBody.description
-      }
-
-      if (Object.keys(productUpdateData).length > 1) {
-        await productModule.updateProducts(currentPackage.product_id, productUpdateData)
-      }
-    }
-
-    const updatedPackage = await packageModuleService.retrievePackage(id, {
-      relations: ["variants", "bookings"],
-    })
-
     let thumbnail: string | null = null
-    if (updatedPackage.product_id) {
+    if (currentPackage.product_id) {
       try {
-        const product = await productModule.retrieveProduct(updatedPackage.product_id)
+        const product = await productModule.retrieveProduct(currentPackage.product_id)
         thumbnail = product.thumbnail || null
       } catch (error) {
-        console.warn(`Could not fetch product ${updatedPackage.product_id}:`, error)
+        // Product fetch failed - non-critical error
       }
     }
 
-    res.json({ package: { ...updatedPackage, thumbnail } })
+    res.json({ package: { ...currentPackage, thumbnail } })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error"
 
@@ -155,33 +135,29 @@ export async function DELETE(
 
     if (pkg.variants && pkg.variants.length > 0) {
       const variantIds = pkg.variants.map((v: any) => v.id)
-      console.log(`Deleting ${variantIds.length} variants for package ${id}`)
       try {
         await packageModuleService.deletePackageVariants(variantIds)
       } catch (variantError) {
-        console.warn("Could not delete variants:", variantError)
+        // Variant deletion failed - non-critical
       }
     }
 
     if (pkg.bookings && pkg.bookings.length > 0) {
       const bookingIds = pkg.bookings.map((b: any) => b.id)
-      console.log(`Deleting ${bookingIds.length} bookings for package ${id}`)
       try {
         await packageModuleService.deletePackageBookings(bookingIds)
       } catch (bookingError) {
-        console.warn("Could not delete bookings:", bookingError)
+        // Booking deletion failed - non-critical
       }
     }
 
     await packageModuleService.deletePackages(id)
-    console.log(`Deleted package ${id}`)
 
     if (pkg.product_id) {
       try {
         await productModule.deleteProducts([pkg.product_id])
-        console.log(`Deleted associated product ${pkg.product_id}`)
       } catch (productError) {
-        console.warn(`Could not delete product ${pkg.product_id}:`, productError)
+        // Product deletion failed - non-critical
       }
     }
 

@@ -10,15 +10,15 @@ export const customMiddlewares: MiddlewareRoute[] = [
         (req: any, res, next) => {
         // If express.raw captured it, it will be in req.body as a Buffer
         if (Buffer.isBuffer(req.body)) {
-          req.rawBody = req.body.toString('utf8');
+req.rawBody = req.body.toString('utf8');
           // Parse it back for the rest of Medusa
           try {
              req.body = JSON.parse(req.rawBody);
-           } catch (error) {
-             console.warn("Failed to parse Izipay raw callback body", error)
-           }
-         }
-         next()
+            } catch (error) {
+              console.error("Failed to parse Izipay raw callback body", error)
+            }
+          }
+          next()
        }
     ],
   },

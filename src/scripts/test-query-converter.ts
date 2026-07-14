@@ -6,4 +6,3 @@ const obj = remoteQueryObjectFromString({
   fields: ["id", "name", "*payment_providers"]
 })
 
-console.log(JSON.stringify(obj, null, 2))

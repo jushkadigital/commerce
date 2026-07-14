@@ -64,7 +64,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   const countries = ["gb", "de", "dk", "se", "fr", "es", "it"];
 
-  logger.info("Seeding store data...");
+// removed
   const [store] = await storeModuleService.listStores();
   await updateStoresWorkflow(container).run({
     input: {
@@ -124,7 +124,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     },
   });
-  logger.info("Seeding region data...");
+// removed
   const { result: regionResult } = await createRegionsWorkflow(container).run({
     input: {
       regions: [
@@ -138,18 +138,18 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
   const region = regionResult[0];
-  logger.info("Finished seeding regions.");
+// removed
 
-  logger.info("Seeding tax regions...");
+// removed
   await createTaxRegionsWorkflow(container).run({
     input: countries.map((country_code) => ({
       country_code,
       provider_id: "tp_system",
     })),
   });
-  logger.info("Finished seeding tax regions.");
+// removed
 
-  logger.info("Seeding stock location data...");
+// removed
   const { result: stockLocationResult } = await createStockLocationsWorkflow(
     container
   ).run({
@@ -186,7 +186,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
 
-  logger.info("Seeding fulfillment data...");
+// removed
   const shippingProfiles = await fulfillmentModuleService.listShippingProfiles({
     type: "default",
   });
@@ -336,7 +336,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     ],
   });
-  logger.info("Finished seeding fulfillment data.");
+// removed
 
   await linkSalesChannelsToStockLocationWorkflow(container).run({
     input: {
@@ -344,9 +344,9 @@ export default async function seedDemoData({ container }: ExecArgs) {
       add: [defaultSalesChannel[0].id],
     },
   });
-  logger.info("Finished seeding stock location data.");
+// removed
 
-  logger.info("Seeding publishable API key data...");
+// removed
   const { result: publishableApiKeyResult } = await createApiKeysWorkflow(
     container
   ).run({
@@ -368,9 +368,9 @@ export default async function seedDemoData({ container }: ExecArgs) {
       add: [defaultSalesChannel[0].id],
     },
   });
-  logger.info("Finished seeding publishable API key data.");
+// removed
 
-  logger.info("Seeding product data...");
+// removed
 
   const { result: categoryResult } = await createProductCategoriesWorkflow(
     container
@@ -893,9 +893,9 @@ export default async function seedDemoData({ container }: ExecArgs) {
       ],
     },
   });
-  logger.info("Finished seeding product data.");
+// removed
 
-  logger.info("Seeding inventory levels.");
+// removed
 
   const { data: inventoryItems } = await query.graph({
     entity: "inventory_item",
@@ -918,5 +918,5 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
 
-  logger.info("Finished seeding inventory levels data.");
+// removed
 }

@@ -14,9 +14,6 @@ export default async function handleTourDeletedSync({
   event,
   container
 }: SubscriberArgs<TourDeletedEvent>) {
-  const logger = container.resolve("logger")
-
-  logger.info(`[integration.tour.deleted.v1] Event received: id=${event.data?.id || event.data?.payloadId}`)
 
   try {
     const tourModule = container.resolve<TourModuleService>(TOUR_MODULE)
@@ -25,22 +22,18 @@ export default async function handleTourDeletedSync({
     const externalId = event.data?.id || event.data?.payloadId
 
     if (!externalId) {
-      logger.warn("No external ID found in tour.delete event data")
       return
     }
 
     const [matchedTour] = await tourModule.getTourByMetadata(`${externalId}tour`)
 
     if (!matchedTour) {
-      logger.warn(`Tour not found for external ID: ${externalId}`)
       return
     }
 
     const tour = await tourModule.retrieveTour(matchedTour.id, {
       relations: ["variants", "bookings", "service_variants"],
     })
-
-    logger.info(`Found tour to delete: ${tour.id} (external ID: ${externalId})`)
 
     if (tour.variants?.length) {
       await tourModule.deleteTourVariants(tour.variants.map((variant) => variant.id))
@@ -61,17 +54,10 @@ export default async function handleTourDeletedSync({
     if (tour.product_id) {
       try {
         await productModule.deleteProducts([tour.product_id])
-        logger.info(`Successfully deleted linked product: ${tour.product_id}`)
       } catch (productError) {
-        logger.warn(
-          `Tour deleted but linked product ${tour.product_id} could not be deleted: ${productError}`
-        )
       }
     }
 
-    logger.info(`Successfully deleted tour: ${tour.id}`)
-
-    // Publish enriched event to EDA module
     try {
       const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
       await eventModuleService.publishEvent({
@@ -85,12 +71,9 @@ export default async function handleTourDeletedSync({
         },
         causationId: `medusa:tour.deleted:${externalId}`,
       })
-      logger.info(`Published integration.tour.deleted.v1 for tour: ${tour.id}`)
     } catch (edaError) {
-      logger.warn(`Failed to publish tour.deleted EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
     }
   } catch (error) {
-    logger.error(`Error in tourDeleted subscriber: ${error}`)
   }
 }
 

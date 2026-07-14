@@ -17,16 +17,11 @@ export default async function handleToursCreatedSync({
   container
 }: SubscriberArgs<TourSyncEventData>) {
 
-  const logger = container.resolve("logger")
-
-  logger.info(`[integration.tour.published.v1] Event received: id=${event.data.id} slug=${event.data.slug} destination=${event.data.data?.destination}`)
 
   let workflowInput
   try {
     workflowInput = buildTourCreateInput(event.data)
-    logger.info(`[integration.tour.published.v1] Workflow input built for id=${event.data.id}`)
   } catch (inputError) {
-    logger.error(`[integration.tour.published.v1] Failed to build workflow input for id=${event.data.id}: ${serializeError(inputError)}`)
     throw inputError
   }
 
@@ -38,9 +33,7 @@ export default async function handleToursCreatedSync({
     })
 
     tourResult = result
-    logger.info(`[integration.tour.published.v1] Tour created: tour=${result.tour.id} product=${result.tour.product_id}`)
   } catch (workflowError) {
-    logger.error(`[integration.tour.published.v1] Workflow failed for id=${event.data.id}: ${serializeError(workflowError)}`)
     throw workflowError
   }
 
@@ -60,13 +53,12 @@ export default async function handleToursCreatedSync({
         slug: tour.slug,
         destination: tour.destination,
         durationDays: tour.duration_days,
-        difficulty: event.data.data?.difficulty,
+        price: event.data.data?.price ?? 0,
+        difficulty: event.data.data.difficulty,
       },
       causationId: `medusa:tour.published:${event.data.id}`,
     })
-    logger.info(`Published integration.tour.published.v1 EDA event for tour: ${tour.id}`)
   } catch (edaError) {
-    logger.warn(`Failed to publish tour.published EDA event: ${serializeError(edaError)}`)
   }
 }
 

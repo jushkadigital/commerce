@@ -149,7 +149,6 @@ export async function GET(
   }
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
-  const logger = req.scope.resolve("logger")
   const fields = [...baseExternalProductFields]
 
   if (includeCalculatedPrice) {
@@ -284,9 +283,8 @@ export async function GET(
       user: {
         externalId: requestWithAuth.auth_context?.actor_id,
       },
-      logger,
     }).catch((err) => {
-      logger?.error?.("[tracking] ViewContent event failed (non-blocking)", err)
+      console.error("[tracking] ViewContent event failed (non-blocking)", err)
     })
   }
 }

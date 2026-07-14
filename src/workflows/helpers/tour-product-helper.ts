@@ -30,10 +30,6 @@ export async function createTourProductWithVariants(
   const currency = tourData.prices.currency_code || "PEN"
   const usdRate = 0.27 // Approximate PEN to USD conversion
 
-  // DEBUG: Log incoming prices
-  console.log(`[CREATE PRODUCT DEBUG] Received prices:`, JSON.stringify(tourData.prices))
-  console.log(`[CREATE PRODUCT DEBUG] Adult: ${tourData.prices.adult} (stored as major units, not cents)`)
-
   // Generate SKU prefix from destination
   const skuPrefix = tourData.destination
     .toLowerCase()
@@ -120,15 +116,11 @@ export async function createTourProductWithVariants(
 
   const product = products[0]
 
-  console.log("Created product from workflow:", JSON.stringify(product, null, 2))
-
   // Fetch the product with variants to get real IDs
   const productModule = container.resolve(Modules.PRODUCT)
   const productWithVariants = await productModule.retrieveProduct(product.id, {
     relations: ["variants"],
   })
-
-  console.log("Retrieved product with variants:", JSON.stringify(productWithVariants, null, 2))
 
   // Verify variants exist
   if (!productWithVariants.variants || productWithVariants.variants.length < 3) {
@@ -157,8 +149,6 @@ export async function createTourProductWithVariants(
       passengerType: PassengerType.INFANT,
     },
   ]
-
-  console.log("Variant mapping with real IDs:", JSON.stringify(variantMapping, null, 2))
 
   return {
     productId: product.id,
@@ -216,7 +206,6 @@ export async function updateTourProductPrices(
     const priceSetId = variantToPriceSetMap.get(variantId)
 
     if (!priceSetId) {
-      console.warn(`No price set found for variant ${variantId}`)
       continue
     }
 

@@ -1,8 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  console.log("🔍 INSPECCIONANDO SESIÓN:", req.session)
-
   res.json({
     sessionID: req.session,
     hasCustomer: !!req.session.customer_id,

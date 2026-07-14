@@ -27,7 +27,6 @@ const getColumns = (handlerUpdate: Function) => [
     header: "Imagen",
     cell: ({ getValue, row }) => {
       const url = getValue()
-      console.log(url)
       return url ? (
         <img
           src={url}
@@ -127,7 +126,6 @@ const ToursListPage = () => {
     }),
   })
 
-  console.log(data)
   // 4. Manejo de la eliminación
   // Memorizar columnas para evitar re-renders innecesarios
   const columns = useMemo(() => getColumns(handlerUpdateModal), [isModalOpen, setIsModalOpen])
@@ -164,8 +162,7 @@ const ToursListPage = () => {
     }
   }
 
-  const handleUpdateTours = async (data: any) => {
-    console.log(data)
+const handleUpdateTours = async (data: any) => {
     try {
       const response = await sdk.client.fetch(`/admin/tours/${data.id}`, {
         method: "POST",

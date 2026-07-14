@@ -7,7 +7,6 @@ export default async function testCartMetadata({ container }: ExecArgs) {
     const created = await cartModule.createCarts({ currency_code: "eur" })
     const cartId = created.id
 
-    console.log(`Created cart: ${cartId}`)
 
     const metadata = {
       is_tour: true,
@@ -31,8 +30,6 @@ export default async function testCartMetadata({ container }: ExecArgs) {
       relations: ["items", "items.product", "items.variant"],
     })
 
-    console.log("Updated cart:")
-    console.log(JSON.stringify(updated, null, 2))
   } catch (err) {
     console.error("Error in testCartMetadata:", err)
     process.exitCode = 1

@@ -3,10 +3,6 @@ import { Modules } from "@medusajs/framework/utils"
 import jwt from "jsonwebtoken"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  console.log("=== Keycloak Admin Callback Debug ===")
-  console.log("Full URL:", req.url)
-  console.log("Query params:", JSON.stringify(req.query, null, 2))
-
   const authService = req.scope.resolve(Modules.AUTH)
 
   try {
@@ -19,9 +15,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         protocol: req.protocol,
       }
     )
-
-    console.log("Auth result - Success:", success, "Error:", error)
-    console.log("Auth Identity:", authIdentity ? "Found" : "Not found")
 
     if (!success || !authIdentity) {
       console.error("Auth validation failed:", error)
@@ -41,8 +34,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const { jwtSecret } = req.scope.resolve("configModule").projectConfig.http
     const userId = authIdentity.app_metadata?.user_id
 
-    console.log("User ID from auth identity:", userId)
-
     if (!userId) {
       console.error("No user_id in app_metadata, checking authIdentity:", JSON.stringify(authIdentity, null, 2))
       return res.status(403).json({
@@ -61,8 +52,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       jwtSecret,
       { expiresIn: "24h" }
     )
-
-    console.log("Token generated successfully, redirecting...")
 
     const redirectUrl = `/app/login?access_token=${token}`
     return res.redirect(redirectUrl)

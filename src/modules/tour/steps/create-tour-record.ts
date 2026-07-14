@@ -33,7 +33,6 @@ export const createTourRecordStep = createStep(
     const tourModuleService: TourModuleService = container.resolve(TOUR_MODULE)
     try {
       await tourModuleService.deleteTours(tourId)
-      console.log(`[Compensation] Deleted tour ${tourId}`)
     } catch (error) {
       console.error(`[Compensation] Failed to delete tour ${tourId}:`, error)
     }

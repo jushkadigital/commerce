@@ -133,7 +133,6 @@ export const TourFormModal = ({
           })
         })
 
-        console.log("Precios Mapeados Correctamente:", mappedPrices) // Para depurar
         setPrices(mappedPrices)
 
       } else {

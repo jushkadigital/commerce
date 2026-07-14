@@ -6,6 +6,12 @@ export {
   recordDeadLetter,
   getEventMetrics,
   type EventMetrics,
+  recordHttpRequest,
+  recordWorkflowExecution,
+  recordCacheOperation,
+  recordOrderCreated,
+  recordBookingConfirmed,
+  recordPaymentProcessed,
 } from "./metrics"
 
 export {

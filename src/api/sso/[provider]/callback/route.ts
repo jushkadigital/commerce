@@ -5,9 +5,6 @@ import jwt from "jsonwebtoken"
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const { provider } = req.params
 
-  console.log(`[SSO Callback] Procesando callback para: ${provider}`)
-  console.log(`[SSO Callback] Params recibidos:`, req.query)
-
   try {
     const authService = req.scope.resolve(Modules.AUTH)
     const configModule = req.scope.resolve("configModule")
@@ -15,15 +12,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     // --- CORRECCIÓN CRÍTICA AQUÍ ---
     // Usamos validateCallback, que es el método que procesa el 'code'
     // y devuelve la identidad del usuario.
-  const { success, authIdentity, error } = await authService.validateCallback(
-    provider,
-    {
-      url: req.url,
-      headers: req.headers as unknown as Record<string, string>,
-      query: req.query as unknown as Record<string, string>,
-      protocol: req.protocol,
-    }
-  )
+    const { success, authIdentity, error } = await authService.validateCallback(
+      provider,
+      {
+        url: req.url,
+        headers: req.headers as unknown as Record<string, string>,
+        query: req.query as unknown as Record<string, string>,
+        protocol: req.protocol,
+      }
+    )
 
     if (!success || !authIdentity) {
       console.error("[SSO Callback] Falló validación:", error)
@@ -31,8 +28,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     }
 
     // Si llegamos aquí, ¡ya tenemos la identidad!
-    console.log(`[SSO Callback] Éxito. Identity ID: ${authIdentity.id}`)
-
 
     // Generar Token Manualmente
     const { jwtSecret } = configModule.projectConfig.http

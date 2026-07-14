@@ -11,22 +11,16 @@ export default async function handleToursUpdatedSync({
   container
 }: SubscriberArgs<TourSyncEventData>) {
 
-  const logger = container.resolve("logger")
 
   const tourModule = container.resolve<TourModuleService>(TOUR_MODULE)
-
-  logger.info(`[integration.tour.updated.v1] Event received: id=${event.data.id} slug=${event.data.slug} destination=${event.data.data.destination}`)
 
   const [matchedTour] = await tourModule.getTourByMetadata(`${event.data.id}tour`)
 
   if (!matchedTour) {
-    logger.info(`[integration.tour.updated.v1] Tour not found for id=${event.data.id}, creating instead`)
 
     const { result } = await createTourWorkflow(container).run({
       input: buildTourCreateInput(event.data)
     })
-
-    logger.info(`[integration.tour.updated.v1] Tour created: tour=${result.tour.id} product=${result.tour.product_id}`)
 
     try {
       const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
@@ -42,13 +36,12 @@ export default async function handleToursUpdatedSync({
           slug: tour.slug,
           destination: tour.destination,
           durationDays: tour.duration_days,
+          price: event.data.data?.price ?? 0,
           difficulty: event.data.data.difficulty,
         },
         causationId: `medusa:tour.updated:${event.data.id}`,
       })
-      logger.info(`Published integration.tour.updated.v1 EDA event for new tour: ${tour.id}`)
     } catch (edaError) {
-      logger.warn(`Failed to publish tour.updated EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
     }
 
     return
@@ -59,8 +52,6 @@ export default async function handleToursUpdatedSync({
     destination: event.data.data.destination,
     duration_days: event.data.data.duration_days,
   }])
-
-  logger.info(`[integration.tour.updated.v1] Tour updated: ${matchedTour.id}`)
 
   try {
     const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
@@ -76,13 +67,12 @@ export default async function handleToursUpdatedSync({
         slug: tour.slug,
         destination: tour.destination,
         durationDays: tour.duration_days,
+        price: event.data.data?.price ?? 0,
         difficulty: event.data.data.difficulty,
       },
       causationId: `medusa:tour.updated:${event.data.id}`,
     })
-    logger.info(`Published integration.tour.updated.v1 EDA event for tour: ${tour.id}`)
   } catch (edaError) {
-    logger.warn(`Failed to publish tour.updated EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
   }
 }
 

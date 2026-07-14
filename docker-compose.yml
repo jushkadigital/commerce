@@ -33,10 +33,10 @@ services:
     volumes:
       - .:/workspace:cached
       - opencode-data:/home/ubuntu/.local/share/opencode
-      # OpenCode config persistence (opencode.jsonc, oh-my-openagent.json, plugins)
-      - opencode-config:/home/ubuntu/.config/opencode
-      # OpenCode cache (models, bins - avoids re-downloading ~2MB each time)
+      # OpenCode config - bind mount from host (volumes get initialized empty and persist stale config)
+      - ${HOME}/.config/opencode:/home/ubuntu/.config/opencode
       - opencode-cache:/home/ubuntu/.cache/opencode
+
     working_dir: /workspace
     command: sleep infinity
     ports:
@@ -62,7 +62,6 @@ volumes:
   postgres-data:
   cache-backend-data:
   opencode-data:
-  opencode-config:
   opencode-cache:
 
 networks:

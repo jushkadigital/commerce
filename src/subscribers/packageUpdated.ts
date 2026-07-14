@@ -11,22 +11,15 @@ export default async function handlePackageUpdatedSync({
   container
 }: SubscriberArgs<PackageSyncEventData>) {
 
-  const logger = container.resolve("logger")
-
   const packageModule = container.resolve<PackageModuleService>(PACKAGE_MODULE)
-
-  logger.info(`[integration.package.updated.v1] Event received: id=${event.data.id} slug=${event.data.slug} destination=${event.data.data.destination}`)
 
   const [matchedPackage] = await packageModule.getPackageByMetadata(`${event.data.id}package`)
 
   if (!matchedPackage) {
-    logger.info(`[integration.package.updated.v1] Package not found for id=${event.data.id}, creating instead`)
 
     const { result } = await createPackageWorkflow(container).run({
       input: buildPackageCreateInput(event.data)
     })
-
-    logger.info(`[integration.package.updated.v1] Package created: package=${result.package.id} product=${result.package.product_id}`)
 
     try {
       const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
@@ -42,13 +35,12 @@ export default async function handlePackageUpdatedSync({
           slug: pkg.slug,
           destination: pkg.destination,
           durationDays: pkg.duration_days,
+          price: event.data.data?.price ?? 0,
           difficulty: event.data.data.difficulty,
         },
         causationId: `medusa:package.updated:${event.data.id}`,
       })
-      logger.info(`Published integration.package.updated.v1 EDA event for new package: ${pkg.id}`)
     } catch (edaError) {
-      logger.warn(`Failed to publish package.updated EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
     }
 
     return
@@ -59,8 +51,6 @@ export default async function handlePackageUpdatedSync({
     destination: event.data.data.destination,
     duration_days: event.data.data.duration_days,
   }])
-
-  logger.info(`[integration.package.updated.v1] Package updated: ${matchedPackage.id}`)
 
   try {
     const eventModuleService = container.resolve(EVENTS_MODULE) as EventModuleService
@@ -76,13 +66,12 @@ export default async function handlePackageUpdatedSync({
         slug: pkg.slug,
         destination: pkg.destination,
         durationDays: pkg.duration_days,
+        price: event.data.data?.price ?? 0,
         difficulty: event.data.data.difficulty,
       },
       causationId: `medusa:package.updated:${event.data.id}`,
     })
-    logger.info(`Published integration.package.updated.v1 EDA event for package: ${pkg.id}`)
   } catch (edaError) {
-    logger.warn(`Failed to publish package.updated EDA event: ${edaError instanceof Error ? edaError.message : String(edaError)}`)
   }
 }
 

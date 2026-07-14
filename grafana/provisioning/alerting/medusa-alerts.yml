@@ -1,0 +1,213 @@
+# ==============================================================================
+# Grafana Cloud Alert Rules — Medusa Production
+# ==============================================================================
+# Import this file via Grafana UI → Alerting → Provisioning → Upload rules file
+# or use the Grafana Cloud API to provision alert rules.
+# ==============================================================================
+
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: Medusa Production Alerts
+    folder: medusa
+    interval: 1m
+    rules:
+      # ── High Error Rate ────────────────────────────────────────────────────
+      - uid: medusa-high-error-rate
+        title: "Medusa: High HTTP Error Rate"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: "100 * (sum(rate(http_request_total{status_code=~\"5..\"}[5m])) / sum(rate(http_request_total[5m])))"
+              intervalMs: 60000
+              maxDataPoints: 1
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "HTTP error rate > 5% for 5 minutes"
+          description: "Error rate is {{ $values.A }}%. Investigate immediately."
+
+      # ── High Latency ───────────────────────────────────────────────────────
+      - uid: medusa-high-latency
+        title: "Medusa: High HTTP Latency (P95 > 2s)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: "histogram_quantile(0.95, sum(rate(http_request_duration_milliseconds_bucket[5m])) by (le))"
+              intervalMs: 60000
+              maxDataPoints: 1
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2000]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "P95 latency > 2s for 5 minutes"
+          description: "Current P95 latency is {{ $values.A }}ms."
+
+      # ── Dead Letter Queue Growth ───────────────────────────────────────────
+      - uid: medusa-dlq-growth
+        title: "Medusa: Dead Letter Queue Growing"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: "sum(increase(events_dead_lettered_total[10m]))"
+              intervalMs: 60000
+              maxDataPoints: 1
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [10]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "DLQ depth > 10 events in 10 minutes"
+          description: "{{ $values.A }} events dead-lettered. Check consumer health."
+
+      # ── Low Cache Hit Ratio ────────────────────────────────────────────────
+      - uid: medusa-low-cache-hit
+        title: "Medusa: Low Cache Hit Ratio (< 80%)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: "100 * sum(rate(cache_operation_total{hit=\"true\"}[5m])) / sum(rate(cache_operation_total[5m]))"
+              intervalMs: 60000
+              maxDataPoints: 1
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [80]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+        for: 10m
+        labels:
+          severity: info
+          team: backend
+        annotations:
+          summary: "Cache hit ratio below 80%"
+          description: "Current cache hit ratio is {{ $values.A }}%."
+
+      # ── Workflow Failure Rate ──────────────────────────────────────────────
+      - uid: medusa-workflow-failures
+        title: "Medusa: High Workflow Failure Rate"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: "100 * (sum(rate(workflow_execution_failed_total[5m])) / sum(rate(workflow_execution_total[5m])))"
+              intervalMs: 60000
+              maxDataPoints: 1
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [10]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Workflow failure rate > 10% for 5 minutes"
+          description: "Current failure rate is {{ $values.A }}%."

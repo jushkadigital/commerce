@@ -18,16 +18,16 @@ export async function GET(
 
   // Get thumbnail from product
   let thumbnail: string | null = null
-  if (tour.product_id) {
-    try {
-      const product = await productModule.retrieveProduct(tour.product_id)
-      thumbnail = product.thumbnail || null
-    } catch (error) {
-      console.warn(`Could not fetch product ${tour.product_id}:`, error)
+if (tour.product_id) {
+      try {
+        const product = await productModule.retrieveProduct(tour.product_id)
+        thumbnail = product.thumbnail || null
+      } catch (error) {
+        // Product fetch failed - non-critical error
+      }
     }
-  }
 
-  res.json({ tour: { ...tour, thumbnail } })
+    res.json({ tour: { ...tour, thumbnail } })
 }
 
 
@@ -58,21 +58,12 @@ export const POST = async (
   req: MedusaRequest<UpdateTourSchemaType>,
   res: MedusaResponse
 ) => {
-  const { id } = req.params
+const { id } = req.params
   const tourModuleService: TourModuleService = req.scope.resolve(TOUR_MODULE)
   const productModule = req.scope.resolve(Modules.PRODUCT)
 
-  console.log("========== TOUR UPDATE REQUEST ==========")
-  console.log("Tour ID:", id)
-  console.log("Request Body (RAW):", JSON.stringify(req.body, null, 2))
-  console.log("=========================================")
-  
   // 1. Validar los datos de entrada
   const validatedBody = UpdateTourSchema.parse(req.body)
-  
-  console.log("========== AFTER VALIDATION ==========")
-  console.log("Validated Body:", JSON.stringify(validatedBody, null, 2))
-  console.log("=======================================")
 
   const updateData: Record<string, unknown> = {}
 
@@ -135,7 +126,7 @@ export const POST = async (
         const product = await productModule.retrieveProduct(updatedTour.product_id)
         thumbnail = product.thumbnail || null
       } catch (error) {
-        console.warn(`Could not fetch product ${updatedTour.product_id}:`, error)
+        // Product fetch failed - non-critical error
       }
     }
 
@@ -169,40 +160,35 @@ export async function DELETE(
       return res.status(404).json({ message: "Tour not found" })
     }
 
-    // 1. Delete tour variants first (to avoid relationship errors)
+// 1. Delete tour variants first (to avoid relationship errors)
     if (tour.variants && tour.variants.length > 0) {
       const variantIds = tour.variants.map((v: any) => v.id)
-      console.log(`Deleting ${variantIds.length} variants for tour ${id}`)
       try {
         await tourModuleService.deleteTourVariants(variantIds)
       } catch (variantError) {
-        console.warn("Could not delete variants:", variantError)
+        // Variant deletion failed - non-critical
       }
     }
 
     // 2. Delete tour bookings
     if (tour.bookings && tour.bookings.length > 0) {
       const bookingIds = tour.bookings.map((b: any) => b.id)
-      console.log(`Deleting ${bookingIds.length} bookings for tour ${id}`)
       try {
         await tourModuleService.deleteTourBookings(bookingIds)
       } catch (bookingError) {
-        console.warn("Could not delete bookings:", bookingError)
+        // Booking deletion failed - non-critical
       }
     }
 
     // 3. Delete the tour itself
     await tourModuleService.deleteTours(id)
-    console.log(`Deleted tour ${id}`)
 
     // 4. Also delete the associated product if exists
     if (tour.product_id) {
       try {
         await productModule.deleteProducts([tour.product_id])
-        console.log(`Deleted associated product ${tour.product_id}`)
       } catch (productError) {
-        console.warn(`Could not delete product ${tour.product_id}:`, productError)
-        // Don't fail the request if product deletion fails
+        // Product deletion failed - non-critical, don't fail the request
       }
     }
 

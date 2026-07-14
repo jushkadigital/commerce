@@ -175,7 +175,6 @@ jest.mock("../service", () => {
     updateVariantPrices: jest.fn().mockImplementation(async (packageId: string, prices: any, container?: any) => {
       const pkg = await mockRetrievePackage(packageId)
       if (!container) {
-        console.warn("No container provided to updateVariantPrices, skipping pricing update")
         return
       }
       const pricingModule = container.resolve("pricing")
@@ -183,7 +182,6 @@ jest.mock("../service", () => {
       const existingVariants = pkg.variants || []
       const variantIds = existingVariants.filter((v: any) => v.variant_id).map((v: any) => v.variant_id)
       if (variantIds.length === 0) {
-        console.warn("No variant IDs found for package", packageId)
         return
       }
       const { data: variantsWithPriceSets } = await query.graph({
@@ -202,7 +200,6 @@ jest.mock("../service", () => {
         if (!existingVariant || !existingVariant.variant_id) continue
         const priceSetId = variantToPriceSetMap.get(existingVariant.variant_id)
         if (!priceSetId) {
-          console.warn(`No price set found for variant ${existingVariant.variant_id}`)
           continue
         }
         let priceAmount = 0
@@ -1057,7 +1054,6 @@ describe("PackageModuleService", () => {
     it("should skip update when no container provided", async () => {
       await service.updateVariantPrices("pkg_123", { adult: 200 })
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith("No container provided to updateVariantPrices, skipping pricing update")
       expect(mockPricingModule.updatePriceSets).not.toHaveBeenCalled()
     })
 
@@ -1068,7 +1064,6 @@ describe("PackageModuleService", () => {
       const mockContainer = createMockContainer()
       await service.updateVariantPrices("pkg_123", { adult: 200 }, mockContainer)
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith("No variant IDs found for package", "pkg_123")
       expect(mockPricingModule.updatePriceSets).not.toHaveBeenCalled()
     })
 
@@ -1081,7 +1076,6 @@ describe("PackageModuleService", () => {
       await service.updateVariantPrices("pkg_123", { adult: 200, child: 150, infant: 50 }, mockContainer)
 
       expect(mockPricingModule.updatePriceSets).toHaveBeenCalledTimes(1)
-      expect(consoleWarnSpy).toHaveBeenCalledWith("No price set found for variant pv_2")
     })
 
     it("should handle partial price updates", async () => {

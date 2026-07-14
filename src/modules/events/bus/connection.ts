@@ -44,17 +44,13 @@ export class RabbitMQConnection {
     }
 
     try {
-      this.logger.info("Connecting to RabbitMQ...")
-
       this.connection = await amqp.connect(this.url)
       this.channel = await this.connection.createConfirmChannel()
 
       this.isReady = true
       this.bindLifecycle()
-      this.logger.info("RabbitMQ connection established.")
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err))
-      this.logger.error(`Failed to connect to RabbitMQ: ${error.message}`)
       this.resetRuntimeState()
       this.scheduleReconnect()
       throw error
@@ -67,19 +63,16 @@ export class RabbitMQConnection {
     }
 
     this.connection.on("error", (err) => {
-      this.logger.error(`RabbitMQ connection error: ${err.message}`)
       this.resetRuntimeState()
       this.scheduleReconnect()
     })
 
     this.connection.on("close", () => {
-      this.logger.warn("RabbitMQ connection closed. Scheduling reconnect...")
       this.resetRuntimeState()
       this.scheduleReconnect()
     })
 
     this.channel.on("error", (err) => {
-      this.logger.error(`RabbitMQ channel error: ${err.message}`)
       this.channel = null
     })
 
@@ -88,7 +81,6 @@ export class RabbitMQConnection {
         return
       }
 
-      this.logger.warn("RabbitMQ channel closed. Scheduling reconnect...")
       this.resetRuntimeState()
       this.scheduleReconnect()
     })
