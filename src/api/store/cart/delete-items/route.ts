@@ -64,10 +64,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
 
     const updatedCart = result.cart
+    const safeCart = { ...updatedCart, promotions: updatedCart.promotions ?? [] }
 
     res.json({
       message: "Successfully deleted line items",
-      cart: updatedCart,
+      cart: safeCart,
       deleted_items: validItemIdsToDelete,
     })
   } catch (error) {

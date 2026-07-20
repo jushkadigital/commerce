@@ -8,8 +8,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 /**
  * Base fields always fetched — needed for the API response (addCartFields from
  * query-config.ts) and cart totals. These are lightweight: items.*, tax_lines,
- * adjustments, promotions with application_method. No product/variant/customer
- * relations → ~6 DB queries instead of ~20.
+ * adjustments. No product/variant/customer relations → ~6 DB queries instead of ~20.
  */
 export const baseFields: string[] = [
   "id",
@@ -33,20 +32,21 @@ export const baseFields: string[] = [
   "items.*",
   "items.tax_lines.*",
   "items.adjustments.*",
+]
+
+/**
+ * Extra fields only needed when the cart has promotions linked.
+ * Used by updateCartPromotionsWorkflow → computeActions for promo rule evaluation.
+ * Includes promotion display fields (value, code, etc.) and product/customer relations needed for rule evaluation.
+ * Adds ~8 DB queries (product relations, customer, groups).
+ */
+export const promoFields: string[] = [
   "promotions.id",
   "promotions.code",
   "promotions.is_automatic",
   "promotions.application_method.value",
   "promotions.application_method.type",
   "promotions.application_method.currency_code",
-]
-
-/**
- * Extra fields only needed when the cart has promotions linked.
- * Used by updateCartPromotionsWorkflow → computeActions for promo rule evaluation.
- * Adds ~8 DB queries (product relations, customer, groups).
- */
-export const promoFields: string[] = [
   "items.product.id",
   "items.product.is_giftcard",
   "items.product.collection_id",

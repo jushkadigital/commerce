@@ -180,9 +180,11 @@ const prepareBookingStep = createStep(
     let customer = customerInput
     let inputOverridesByVariant = new Map<string, { unit_price?: number; thumbnail?: string }>()
 
-    // Normalize items from metadata (if present)
+// Normalize items from metadata (if present)
+    let normalizedItems: any[] = []
+
     if (hasNativeLikeItems) {
-      let normalizedItems = items!
+      normalizedItems = items!
         .map((item: any) => ({
           variant_id: item.variant_id,
           quantity: Number(item.quantity ?? 1),
@@ -195,7 +197,7 @@ const prepareBookingStep = createStep(
           metadata: item.metadata,
         }))
 
-      let invalidItem = normalizedItems.find((item: any) => {
+      const invalidItem = normalizedItems.find((item: any) => {
         const hasInvalidQuantity = !item.variant_id || !Number.isFinite(item.quantity) || item.quantity <= 0
         const hasInvalidUnitPrice = item.unit_price !== undefined && item.unit_price < 0
         const hasInvalidThumbnail =
@@ -225,9 +227,209 @@ const prepareBookingStep = createStep(
           item.thumbnail !== undefined &&
           existingOverride.thumbnail !== item.thumbnail
         ) {
-throwInvalidData(`Conflicting thumbnail for same variant_id: ${item.variant_id}`)
+          throwInvalidData(`Conflicting thumbnail for same variant_id: ${item.variant_id}`)
         }
-      })
+
+        inputOverridesByVariant.set(item.variant_id, {
+          unit_price: item.unit_price ?? existingOverride?.unit_price,
+          thumbnail: item.thumbnail ?? existingOverride?.thumbnail,
+        })
+      }
+    }
+
+    // --- Resolve booking id, date, passengers, and entity from items or input ---
+    let resolvedId = ensuresId
+    let resolvedDate = ensuresDate
+
+    if (hasNativeLikeItems) {
+      const uniqueVariantIds = [...new Set(normalizedItems.map((item: any) => item.variant_id))]
+
+      // Fetch variant links from the tour or package module to resolve the booking
+      // entity id and passenger types for each variant.
+      const linkedVariants = moduleService
+        ? type === "tour"
+          ? await (moduleService as TourModuleService).listTourVariants({ variant_id: uniqueVariantIds })
+          : await (moduleService as PackageModuleService).listPackageVariants({ variant_id: uniqueVariantIds })
+        : []
+
+      const variantByVariantId = new Map<string, { bookingId: string; passenger_type: PassengerType }>()
+      for (const v of linkedVariants as any[]) {
+        variantByVariantId.set(v.variant_id, {
+          bookingId: type === "tour" ? v.tour_id : v.package_id,
+          passenger_type: v.passenger_type,
+        })
+      }
+
+      const missingVariantIds = uniqueVariantIds.filter((vid: string) => !variantByVariantId.has(vid))
+      if (missingVariantIds.length > 0) {
+        throwInvalidData(`Some variants are not linked to any ${type}: ${missingVariantIds.join(", ")}`)
+      }
+
+      const derivedIds = [...new Set(uniqueVariantIds.map((vid: string) => variantByVariantId.get(vid)!.bookingId))]
+      if (derivedIds.length !== 1) {
+        throwInvalidData(`All items must belong to the same ${type}`)
+      }
+
+      const derivedId = derivedIds[0]
+      if (resolvedId && resolvedId !== derivedId) {
+        throwInvalidData(`${META[type].idKey} does not match the provided variants`)
+      }
+      resolvedId = derivedId
+
+      // Derive date from item metadata if not explicitly provided
+      const itemDates = normalizedItems
+        .map((item: any) => {
+          const value = item.metadata?.[META[type].dateKey]
+          return typeof value === "string" ? value : undefined
+        })
+        .filter((value: any): value is string => Boolean(value))
+
+      if (!resolvedDate && itemDates.length > 0) {
+        resolvedDate = itemDates[0]
+      }
+      if (!resolvedDate) {
+        throwInvalidData(`Missing required field: ${META[type].dateKey}`)
+      }
+      if (itemDates.some((d: string) => d !== resolvedDate)) {
+        throwInvalidData(`All items metadata.${META[type].dateKey} must match the requested ${META[type].dateKey}`)
+      }
+
+      // Derive customer from metadata if not provided
+      if (!customer) {
+        const customerMetadata = normalizedItems
+          .map((item: any) => item.metadata || {})
+          .find((meta: any) =>
+            typeof meta.customer_name === "string" ||
+            typeof meta.customer_email === "string" ||
+            typeof meta.customer_phone === "string" ||
+            typeof meta.formId === "number"
+          )
+        if (customerMetadata) {
+          customer = {
+            name: (customerMetadata.customer_name as string) || "",
+            email: typeof customerMetadata.customer_email === "string" ? (customerMetadata.customer_email as string) : undefined,
+            phone: typeof customerMetadata.customer_phone === "string" ? (customerMetadata.customer_phone as string) : undefined,
+            formId: customerMetadata.formId,
+          }
+        }
+      }
+
+      // Recalculate passenger counts from variant passenger_types
+      adults = 0
+      children = 0
+      infants = 0
+      for (const item of normalizedItems) {
+        const linked = variantByVariantId.get(item.variant_id)!
+        if (linked.passenger_type === PassengerType.ADULT) {
+          adults += item.quantity
+        } else if (linked.passenger_type === PassengerType.CHILD) {
+          children += item.quantity
+        } else if (linked.passenger_type === PassengerType.INFANT) {
+          infants += item.quantity
+        }
+      }
+    } else {
+      if (!resolvedId || !resolvedDate) {
+        throwInvalidData(`Missing required fields: ${META[type].idKey}, ${META[type].dateKey}`)
+      }
+    }
+
+    const totalPassengers = adults + children + infants
+    if (totalPassengers === 0) {
+      throwInvalidData("At least one passenger is required")
+    }
+
+    const ensuredId = resolvedId as string
+    const ensuredDate = resolvedDate as string
+
+    // Retrieve the booking entity (tour or package) with variants if not already fetched.
+    // The early parallel fetch above only runs when items AND id are both provided;
+    // in the items-without-id path the entity is resolved here after deriving the id.
+    if (!entity) {
+      entity = moduleService
+        ? type === "tour"
+          ? await (moduleService as TourModuleService).retrieveTour(ensuredId, { relations: ["variants"] })
+          : await (moduleService as PackageModuleService).retrievePackage(ensuredId, { relations: ["variants"] })
+        : null
+    }
+
+    // Validate booking availability (date, capacity, blocked dates)
+    if (moduleService) {
+      const validation = await (moduleService as any).validateBooking(
+        ensuredId,
+        new Date(ensuredDate),
+        totalPassengers,
+        entity
+      )
+      if (!validation.valid) {
+        throwInvalidData(validation.reason || `${type} not available`)
+      }
+    }
+
+    // Map variants by passenger type and collect needed variant IDs
+    const variantMap = new Map<PassengerType, any>()
+    const variantIdsNeeded: string[] = []
+    for (const variant of entity?.variants || []) {
+      if (variant.variant_id) {
+        variantMap.set(variant.passenger_type, variant)
+      }
+    }
+
+    const adultVariant = variantMap.get(PassengerType.ADULT)
+    const childVariant = variantMap.get(PassengerType.CHILD)
+    const infantVariant = variantMap.get(PassengerType.INFANT)
+
+    if (adults > 0) {
+      if (!adultVariant?.variant_id) {
+        throwInvalidData("Adult variant not found")
+      }
+      variantIdsNeeded.push(adultVariant.variant_id)
+    }
+    if (children > 0) {
+      if (!childVariant?.variant_id) {
+        throwInvalidData("Child variant not found")
+      }
+      variantIdsNeeded.push(childVariant.variant_id)
+    }
+    if (infants > 0) {
+      if (!infantVariant?.variant_id) {
+        throwInvalidData("Infant variant not found")
+      }
+      variantIdsNeeded.push(infantVariant.variant_id)
+    }
+
+    // Build pricing context from request context + cart
+    const pricingContext = {
+      ...((input as any).pricing_context || {}),
+      currency_code: (cart.currency_code || "usd").toLowerCase(),
+      region_id: cart.region_id,
+    }
+
+    const priceMap = new Map<string, number>()
+
+    // Seed price map from item overrides
+    if (hasNativeLikeItems) {
+      for (const [variantId, override] of inputOverridesByVariant.entries()) {
+        if (override.unit_price !== undefined) {
+          priceMap.set(variantId, override.unit_price)
+        }
+      }
+    }
+
+    // Pre-calculate prices via pricing module
+    try {
+      const calculatedPrices = await pricingModule.calculatePrices(
+        { id: variantIdsNeeded },
+        { context: pricingContext }
+      )
+      for (const cp of calculatedPrices) {
+        const amount = Number(cp.calculated_amount)
+        if (Number.isFinite(amount) && amount >= 0) {
+          priceMap.set(cp.id, amount)
+        }
+      }
+    } catch (pricingError) {
+      console.warn("Could not pre-calculate variant prices for metadata", pricingError)
     }
 
     const unresolvedVariantIds = variantIdsNeeded.filter((vid: string) => !priceMap.has(vid))
@@ -362,7 +564,7 @@ throwInvalidData(`Conflicting thumbnail for same variant_id: ${item.variant_id}`
         metadata: {
           [META[type].flag]: true,
           [META[type].idKey]: entity?.id,
-          [META[type].dateKey]: ensuresDate,
+          [META[type].dateKey]: ensuredDate,
           [META[type].destKey]: entity?.destination,
           [META[type].durKey]: entity?.duration_days,
           passenger_type: entry.type,
@@ -405,7 +607,7 @@ throwInvalidData(`Conflicting thumbnail for same variant_id: ${item.variant_id}`
       total_passengers: adults + children + infants,
       destination: entity?.destination,
       entity_id: entity?.id,
-      entity_date: ensuresDate,
+      entity_date: ensuredDate,
     })
   }
 )
