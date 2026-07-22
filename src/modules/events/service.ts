@@ -4,6 +4,8 @@ import type { Knex } from "@mikro-orm/knex"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import ProcessedEvent from "./models/processed-event"
 import { RabbitMQEventBus } from "./bus/RabbitMQEventBus"
+import { NoOpEventBus } from "./bus/NoOpEventBus"
+import type { IEventBus } from "./bus/IEventBus"
 import { PostgresIdempotencyStore } from "./idempotency/PostgresIdempotencyStore"
 import { EventRegistry, eventRegistry } from "./registry/EventRegistry"
 import type { EventEnvelope, CreateEventInput } from "./envelope"
@@ -44,7 +46,7 @@ class EventModuleService extends MedusaService({
 }) {
   protected logger_: Logger
   protected options_: EventsModuleOptions
-  protected eventBus_: RabbitMQEventBus
+  protected eventBus_: IEventBus
   protected idempotencyStore_: PostgresIdempotencyStore
   protected eventRegistry_: EventRegistry
   protected cleanupTimer_: NodeJS.Timeout | null = null
@@ -76,12 +78,14 @@ class EventModuleService extends MedusaService({
     this.options_ = moduleOptions
     this.eventRegistry_ = eventRegistry
 
-    this.eventBus_ = new RabbitMQEventBus(this.logger_, {
-      url: moduleOptions.rabbitmqUrl,
-      prefetch: moduleOptions.prefetch,
-      maxRetries: moduleOptions.maxRetries,
-      workerMode: moduleOptions.workerMode,
-    })
+    this.eventBus_ = moduleOptions.rabbitmqUrl
+      ? new RabbitMQEventBus(this.logger_, {
+          url: moduleOptions.rabbitmqUrl,
+          prefetch: moduleOptions.prefetch,
+          maxRetries: moduleOptions.maxRetries,
+          workerMode: moduleOptions.workerMode,
+        })
+      : new NoOpEventBus()
 
     const knex = dependencies[ContainerRegistrationKeys.PG_CONNECTION]
     const containerProxy: MedusaContainer = {
@@ -102,6 +106,9 @@ class EventModuleService extends MedusaService({
 
   async publishEvent<T>(input: CreateEventInput<T>): Promise<void> {
     const envelope = createEvent(input)
+    this.logger_.info(
+      `[events] Dispatching ${envelope.type}.${envelope.aggregateType}.${envelope.action}.v${envelope.version} (id=${envelope.id}, causationId=${envelope.metadata.causationId})`
+    )
     await this.publish(envelope)
   }
 

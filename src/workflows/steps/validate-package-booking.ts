@@ -1,6 +1,7 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import PackageModuleService from "../../modules/package/service"
 import { PACKAGE_MODULE } from "../../modules/package"
+import { MedusaError } from "@medusajs/framework/utils"
 
 export type ValidatePackageBookingStepInput = {
   cart_id: string
@@ -21,7 +22,7 @@ export const validatePackageBookingStep = createStep(
 const cart = carts[0]
 
     if (!cart) {
-      throw new Error(`Cart ${input.cart_id} not found`)
+      throw new MedusaError(MedusaError.Types.NOT_FOUND, `Cart ${input.cart_id} not found`)
     }
 
     const packageItems = cart.items?.filter(
@@ -41,15 +42,15 @@ const cart = carts[0]
 const totalPassengers = metadata?.total_passengers ?? 0
 
     if (!packageId) {
-        throw new Error("Package ID is required for package bookings")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, "Package ID is required for package bookings")
       }
 
       if (!packageDateStr) {
-        throw new Error("Package date is required for package bookings")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, "Package date is required for package bookings")
       }
 
       if (totalPassengers <= 0) {
-        throw new Error("Total passengers must be greater than 0 for package bookings")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, "Total passengers must be greater than 0 for package bookings")
       }
 
       const packageDate = new Date(packageDateStr)
@@ -61,7 +62,7 @@ const totalPassengers = metadata?.total_passengers ?? 0
       )
 
       if (!validation.valid) {
-        throw new Error(validation.reason || "Package booking validation failed")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, validation.reason || "Package booking validation failed")
       }
     }
 

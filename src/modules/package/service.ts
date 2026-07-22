@@ -48,6 +48,44 @@ class PackageModuleService extends MedusaService({
   PackageBooking,
   PackageServiceVariant,
 }) {
+  // --- Entity cache (10s TTL) ---
+  // Packages change rarely (admin edits). Caching retrievePackage avoids a
+  // ~150ms DB query on every booking request. 10s TTL bounds staleness.
+  private packageCache_ = new Map<string, { value: any; expires: number }>()
+  private static readonly PACKAGE_CACHE_TTL_MS = 10_000
+
+  /**
+   * Cached wrapper around retrievePackage. Returns a clone so callers can't
+   * mutate the cached entry. Cache key includes relations to avoid collisions.
+   */
+  async retrievePackageCached(id: string, config?: { relations?: string[] }): Promise<any> {
+    const relationsKey = config?.relations ? JSON.stringify(config.relations) : "none"
+    const key = `${id}:${relationsKey}`
+    const now = Date.now()
+    const hit = this.packageCache_.get(key)
+    if (hit && hit.expires > now) {
+      return JSON.parse(JSON.stringify(hit.value))
+    }
+    const value = await this.retrievePackage(id, config)
+    this.packageCache_.set(key, { value, expires: now + PackageModuleService.PACKAGE_CACHE_TTL_MS })
+    if (this.packageCache_.size > 100) {
+      for (const [k, v] of this.packageCache_) {
+        if (v.expires <= now) this.packageCache_.delete(k)
+      }
+    }
+    return value
+  }
+
+  /** Invalidate cached package entries (call on admin package updates if needed). */
+  invalidatePackageCache(id?: string): void {
+    if (id) {
+      for (const k of this.packageCache_.keys()) {
+        if (k.startsWith(`${id}:`)) this.packageCache_.delete(k)
+      }
+    } else {
+      this.packageCache_.clear()
+    }
+  }
   async getAvailableCapacity(
     packageId: string,
     packageDate: Date,
@@ -61,15 +99,21 @@ class PackageModuleService extends MedusaService({
     const endOfDay = new Date(packageDate)
     endOfDay.setUTCHours(23, 59, 59, 999)
 
-    // Primary: filter by date at DB level for efficiency
-    let bookings = await this.listPackageBookings({
-      package_id: packageId,
-      package_date: {
-        $gte: startOfDay.toISOString(),
-        $lte: endOfDay.toISOString(),
+    // Fetch only reserved_passengers (not full line_items JSON).
+    // reserved_passengers is computed at booking creation time = adults + children
+    // (infants excluded from capacity). Much faster than hydrating + parsing JSON.
+    // package_date kept in select for the JS fallback filter below.
+    let bookings = await this.listPackageBookings(
+      {
+        package_id: packageId,
+        package_date: {
+          $gte: startOfDay.toISOString(),
+          $lte: endOfDay.toISOString(),
+        },
+        status: ["confirmed", "pending"],
       },
-      status: ["confirmed", "pending"],
-    }) as any[]
+      { select: ["id", "reserved_passengers", "package_date"] }
+    ) as any[]
 
     // Fallback: ensure exact date matching in case MikroORM date queries are unreliable
     bookings = bookings.filter((booking: any) => {
@@ -77,27 +121,12 @@ class PackageModuleService extends MedusaService({
       return bookingDate >= startOfDay && bookingDate <= endOfDay
     })
 
-    const reservedPassengers = bookings.reduce((total, booking) => {
-      // Handle potential missing line_items defensively
-      const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
-      const items = lineItemsData?.items || []
+    const reservedPassengers = bookings.reduce(
+      (sum, b) => sum + (Number(b.reserved_passengers) || 0),
+      0
+    )
 
-      const bookingPassengers = items.reduce((bookingTotal, item) => {
-        // The items array contains the metadata objects directly (not nested under .metadata)
-        const itemData = item as any
-        const passengers = itemData.passengers || {}
-        const adults = Number(passengers.adults) || 0
-        const children = Number(passengers.children) || 0
-        // Infants are EXCLUDED from capacity
-        return bookingTotal + adults + children
-      }, 0)
-
-      return total + bookingPassengers
-    }, 0)
-
-    const availableCapacity = packageEntity.max_capacity - reservedPassengers
-
-    return availableCapacity
+    return packageEntity.max_capacity - reservedPassengers
   }
   async getPackageByMetadata(value: string) {
     const newFormat = await this.listPackages({

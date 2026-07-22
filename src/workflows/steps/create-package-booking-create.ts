@@ -27,6 +27,7 @@ export const createPackageBookingsStep = createStep(
       line_items: Record<string, unknown>
       metadata?: Record<string, unknown>
       package_date: Date
+      reserved_passengers: number
     }[] = []
 
 const items = Object.entries(groupBy(cart.items, "metadata.group_id")).map(([type, items]) => ({
@@ -51,12 +52,19 @@ const items = Object.entries(groupBy(cart.items, "metadata.group_id")).map(([typ
       
       if (!packageId || !packageDate) continue
       
+      // Compute reserved passengers = adults + children (infants excluded from capacity)
+      const reservedPassengers = item.items.reduce((sum, ele) => {
+        const p = ele.metadata?.passengers || {}
+        return sum + (Number(p.adults) || 0) + (Number(p.children) || 0)
+      }, 0)
+
       packageBookingsToCreate.push({
         order_id,
         package_id: packageId,
         line_items: { items: item.items.map(ele => ele.metadata) },
         metadata: groupId ? { group_id: groupId } : undefined,
         package_date: new Date(packageDate),
+        reserved_passengers: reservedPassengers,
       })
     }
 

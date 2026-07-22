@@ -1,6 +1,7 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import TourModuleService from "../../modules/tour/service"
 import { TOUR_MODULE } from "../../modules/tour"
+import { MedusaError } from "@medusajs/framework/utils"
 
 export type ValidateTourBookingStepInput = {
   cart_id: string
@@ -21,7 +22,7 @@ export const validateTourBookingStep = createStep(
 const cart = carts[0]
 
     if (!cart) {
-      throw new Error(`Cart ${input.cart_id} not found`)
+      throw new MedusaError(MedusaError.Types.NOT_FOUND, `Cart ${input.cart_id} not found`)
     }
 
     const tourItems = (cart.items || []).filter(
@@ -42,15 +43,15 @@ const cart = carts[0]
 const totalPassengers = metadata?.total_passengers ?? 0
 
     if (!tourId) {
-        throw new Error("Tour ID is required for tour bookings")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, "Tour ID is required for tour bookings")
       }
 
       if (!tourDateStr) {
-        throw new Error("Tour date is required for tour bookings")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, "Tour date is required for tour bookings")
       }
 
       if (totalPassengers <= 0) {
-        throw new Error("Total passengers must be greater than 0 for tour bookings")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, "Total passengers must be greater than 0 for tour bookings")
       }
 
       const tourDate = new Date(tourDateStr)
@@ -62,7 +63,7 @@ const totalPassengers = metadata?.total_passengers ?? 0
       )
 
       if (!validation.valid) {
-        throw new Error(validation.reason || "Tour booking validation failed")
+        throw new MedusaError(MedusaError.Types.INVALID_DATA, validation.reason || "Tour booking validation failed")
       }
     }
 

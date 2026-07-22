@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import TourModuleService from "../../../../../modules/tour/service"
 import { TOUR_MODULE } from "../../../../../modules/tour"
+import { publishProductEvent } from "../../../../../workflows/helpers/publish-product-event"
 
 /**
  * GET /admin/tours/:id/pricing
@@ -209,11 +210,15 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
         name: "entityTour.updated",
         data: { id },
       },
-      ...(tour.product_id ? [{
-        name: "product.updated",
-        data: { id: tour.product_id },
-      }] : []),
     ])
+
+    if (tour.product_id) {
+      try {
+        await publishProductEvent(req.scope, tour.product_id, "updated")
+      } catch (error) {
+        console.error("Failed to publish product integration event:", error)
+      }
+    }
 
     res.json({
       tour: {

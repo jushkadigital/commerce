@@ -6,7 +6,7 @@ import { provisionCustomerFromKeycloak } from "../../../../workflows/helpers/pro
 const MEDUSA_JWT_COOKIE_NAME = "_medusa_jwt"
 const MEDUSA_JWT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7
 
-const JsonRecord = Record<string, unknown>
+type JsonRecord = Record<string, unknown>
 
 function setNoStoreHeaders(res: MedusaResponse) {
   res.setHeader("Cache-Control", "no-store")

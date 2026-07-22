@@ -41,10 +41,12 @@ export const updateTourStep = createStep(
     // Revert changes (pass array for consistency)
     await tourModuleService.updateTours([{
       id: previousTour.id,
+      slug: previousTour.slug,
       destination: previousTour.destination,
       description: previousTour.description,
       duration_days: previousTour.duration_days,
       max_capacity: previousTour.max_capacity,
+      thumbnail: previousTour.thumbnail,
       is_special: previousTour.is_special,
       booking_min_days_ahead: previousTour.booking_min_days_ahead,
       blocked_dates: previousTour.blocked_dates,

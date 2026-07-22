@@ -111,6 +111,10 @@ export class RabbitMQEventBus implements IEventBus {
 
     const durationMs = performance.now() - startTime
     recordPublish(eventType, durationMs)
+
+    this.logger.info(
+      `[rabbitmq] Published to exchange="${exchange}" routingKey="${routingKey}" messageId="${enriched.id}" (${durationMs.toFixed(0)}ms)`
+    )
   }
 
   async publishToExchange(

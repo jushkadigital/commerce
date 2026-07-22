@@ -207,7 +207,7 @@ medusaIntegrationTestRunner({
             },
           })
 
-          expect(updatedResult.package.id).toBe(result.package.id)
+          expect(updatedResult.id).toBe(result.package.id)
           
           const retrieved = await packageModuleService.retrievePackage(result.package.id)
           expect(retrieved.slug).toBe(customSlug)

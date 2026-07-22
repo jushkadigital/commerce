@@ -10,6 +10,7 @@ export const TourBooking = model.define("tour_booking", {
   metadata: model.json().nullable(),
   tour_date: model.dateTime(),
   status: model.enum(["pending", "confirmed", "cancelled", "completed"]).default("pending"),
+  reserved_passengers: model.number().default(0),
 }).indexes([
   {
     on: ["order_id"],

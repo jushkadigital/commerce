@@ -201,6 +201,9 @@ export default async function handleOrderPlaced({
           bookingMetadata.preData = structuredClone(orderPreData)
         }
 
+        const passengers = item.metadata?.passengers || {}
+        const reservedPassengers = (Number(passengers.adults) || 0) + (Number(passengers.children) || 0)
+
         return {
           order_id: orderId,
           tour_id: item.metadata.tour_id,
@@ -214,6 +217,7 @@ export default async function handleOrderPlaced({
             quantity: item.quantity,
             passengers: item.metadata.passengers || [],
           },
+          reserved_passengers: reservedPassengers,
         }
       })
 

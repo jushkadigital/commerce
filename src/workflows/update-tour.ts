@@ -20,84 +20,78 @@ export type UpdateTourWorkflowInput = {
   duration_days?: number
   max_capacity?: number
   thumbnail?: string
+  is_special?: boolean
+  booking_min_days_ahead?: number
+  blocked_dates?: string[]
+  blocked_week_days?: string[]
+  cancellation_deadline_hours?: number
   prices?: {
     adult?: number
     child?: number
     infant?: number
     currency_code?: string
   }
-  is_special?: boolean
-  booking_min_days_ahead?: number
-  blocked_dates?: string[]
-  blocked_week_days?: string[]
-  cancellation_deadline_hours?: number
-}
-
-type ProductUpdate = {
-  id: string
-  title?: string
-  description?: string
 }
 
 export const updateTourWorkflow = createWorkflow(
   "update-tour",
-  (input: UpdateTourWorkflowInput) => {
-
-    // --- Step 1: Obtener el Tour actual (para saber su product_id) ---
+  function (input: UpdateTourWorkflowInput) {
+    // Step 1: Get current tour (for product_id link)
     const { data: tours } = useQueryGraphStep({
       entity: "tour",
       fields: ["id", "product_id"],
       filters: { id: input.id }
     })
 
-    // Transformamos el array a objeto simple
-    const tour = transform({ tours }, (data) => data.tours[0])
-
-    const tourSlugUpdate = transform({ input }, (data) => {
-      if (!data.input.slug) {
-        return {}
-      }
-
-      return { slug: data.input.slug }
+    const tour = transform({ tours }, function (data: any) {
+      return data.tours[0]
     })
 
-    // --- Step 2: Actualizar la entidad Tour (Custom Module) ---
-    const updatedTour = updateTourStep({
+    // Step 2+3: Build the full update data object in a single transform.
+    // CRITICAL: cannot spread a transform proxy into an object literal — the SDK's
+    // __type/__resolver keys contaminate the literal and cause all other fields to be
+    // ignored. Building the entire object inside one transform avoids this.
+    // Undefined fields are stripped by the SDK's parseStringifyIfNecessary, so only
+    // fields actually provided in the input reach MikroORM (preserving partial updates).
+    const tourUpdateData = transform({ input }, function (data: any) {
+      const i = data.input
+      return {
+        slug: i.slug,
+        destination: i.destination,
+        description: i.description,
+        duration_days: i.duration_days,
+        max_capacity: i.max_capacity,
+        thumbnail: i.thumbnail,
+        is_special: i.is_special,
+        booking_min_days_ahead: i.booking_min_days_ahead,
+        blocked_dates: i.blocked_dates,
+        blocked_week_days: i.blocked_week_days,
+        cancellation_deadline_hours: i.cancellation_deadline_hours,
+      }
+    })
+
+    updateTourStep({
       id: input.id,
-      data: {
-        ...tourSlugUpdate,
-        destination: input.destination,
-        description: input.description,
-        duration_days: input.duration_days,
-        max_capacity: input.max_capacity,
-        thumbnail: input.thumbnail
-        ,is_special: input.is_special
-        ,booking_min_days_ahead: input.booking_min_days_ahead
-        ,blocked_dates: input.blocked_dates
-        ,blocked_week_days: input.blocked_week_days
-        ,cancellation_deadline_hours: input.cancellation_deadline_hours
-      }
+      data: tourUpdateData
     })
 
-    // --- Step 3: Sincronizar Producto de Medusa ---
-    // Si cambia el destino, duración o descripción, actualizamos el producto
+    // Step 4: Sync Medusa product (title/description) if destination/description changed.
+    // updateProductsWorkflow is a no-op when the products array is empty.
     const productUpdateInput = transform(
       { input, tour } as any,
-      (data: { input: UpdateTourWorkflowInput; tour: any }): ProductUpdate[] => {
-        // Si el tour no tiene producto linkeado o no hay cambios visuales, no hacemos nada
+      function (data: { input: UpdateTourWorkflowInput; tour: any }): any[] {
         if (!data.tour.product_id) return []
 
-        const updateData: ProductUpdate = { id: data.tour.product_id }
+        const updateData: any = { id: data.tour.product_id }
         let hasUpdates = false
 
-        if (data.input.destination || data.input.duration_days) {
-          // Nota: Si es un PATCH parcial y solo viene destination, duration_days puede ser undefined.
-          // Idealmente deberíamos leer el dato actual del tour si quisiéramos ser perfectos, 
-          // pero aquí actualizamos solo si vienen los datos.
-          if (data.input.destination) {
-            updateData.title = `${data.input.destination} ${data.input.duration_days ? `- ${data.input.duration_days} Days` : ''}`
-            hasUpdates = true
+        if (data.input.destination) {
+          const parts: string[] = [data.input.destination]
+          if (data.input.duration_days) {
+            parts.push(`- ${data.input.duration_days} Days`)
           }
+          updateData.title = parts.join(" ")
+          hasUpdates = true
         }
 
         if (data.input.description) {
@@ -105,46 +99,38 @@ export const updateTourWorkflow = createWorkflow(
           hasUpdates = true
         }
 
-
         return hasUpdates ? [updateData] : []
       }
     )
 
-    // Ejecutamos el workflow core de Medusa solo si hay array
     updateProductsWorkflow.runAsStep({
       input: {
         products: productUpdateInput
       }
     })
 
-    updateTourPricesStep({
-      tourId: input.id,
-      prices: input.prices || {}
-    })
-    // --- Step 4: Actualizar Precios (Usando tu lógica custom) ---
-
-    const productUpdatedEventData = transform(
-      { input, tours },
-      (data: { input: UpdateTourWorkflowInput; tours: Array<{ product_id?: string | null }> }) => ({
-        id: data.input.prices && data.tours[0]?.product_id ? data.tours[0].product_id : "",
-      })
-    )
-
-    when(productUpdatedEventData, (data) => Boolean(data.id))
+    // Step 5: Update prices ONLY when prices are provided.
+    // (Fixes the critical bug: previously ran unconditionally and zeroed all prices.)
+    when(input, (data) => Boolean(data.prices))
       .then(() => {
-        emitEventStep({
-          eventName: "product.updated",
-          data: productUpdatedEventData
-        }).config({ name: "emit-tour-product-updated" })
+        updateTourPricesStep({
+          tourId: input.id,
+          prices: input.prices as any
+        })
       })
 
+    // Step 6: Emit internal entityTour.updated event (for revalidate-content subscriber).
+    // Emitted on every update so the storefront revalidates after any change.
     emitEventStep({
       eventName: "entityTour.updated",
       data: { id: input.id }
     })
 
+    // Return minimal data. The route handles presentation (retrieve with
+    // relations + thumbnail) and RabbitMQ integration event publishing.
     return new WorkflowResponse({
-      tour: updatedTour
+      id: input.id,
+      product_id: tour.product_id,
     })
   }
 )

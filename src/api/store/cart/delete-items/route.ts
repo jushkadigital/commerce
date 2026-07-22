@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { MedusaError, Modules } from "@medusajs/framework/utils"
+import { MedusaError, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { deleteLineItemsSlimWorkflow } from "../../../../workflows/delete-line-items-slim"
 
 const throwInvalidData = (message: string, code?: string): never => {
@@ -34,16 +34,27 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const ensuredCartId = cart_id as string
     const itemsToDelete = items as string[]
 
-    const cartModule = req.scope.resolve(Modules.CART)
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
-    // Verify cart exists and retrieve current items to ensure ownership
-    const cart = await cartModule.retrieveCart(ensuredCartId, {
-      relations: ["items"],
+    // Verify cart exists and retrieve ONLY item IDs for ownership check.
+    // retrieveCart with relations:["items"] fetched ~30 cart fields + ~20 item
+    // fields (~600ms). We only need items.id to filter which IDs belong to this
+    // cart — query.graph with ["id","items.id"] cuts that to a 2-field join.
+    const { data: carts } = await query.graph({
+      entity: "cart",
+      fields: ["id", "items.id"],
+      filters: { id: ensuredCartId },
     })
+
+    const cart = carts[0]
+
+    if (!cart) {
+      throwInvalidData("Cart not found")
+    }
 
     // Filter items to delete that actually belong to this cart
     const validItemIdsToDelete = itemsToDelete.filter((id) =>
-      cart.items?.some((item) => item.id === id)
+      cart.items?.some((item: any) => item.id === id)
     )
 
     if (validItemIdsToDelete.length === 0) {

@@ -3,6 +3,8 @@ import { Modules } from "@medusajs/framework/utils"
 import TourModuleService from "../../../../modules/tour/service"
 import { TOUR_MODULE } from "../../../../modules/tour"
 import { z } from "@medusajs/framework/zod"
+import { publishProductEvent } from "../../../../workflows/helpers/publish-product-event"
+import updateTourWorkflow from "../../../../workflows/update-tour"
 
 export async function GET(
   req: MedusaRequest,
@@ -58,63 +60,29 @@ export const POST = async (
   req: MedusaRequest<UpdateTourSchemaType>,
   res: MedusaResponse
 ) => {
-const { id } = req.params
-  const tourModuleService: TourModuleService = req.scope.resolve(TOUR_MODULE)
-  const productModule = req.scope.resolve(Modules.PRODUCT)
-
-  // 1. Validar los datos de entrada
+  const { id } = req.params
   const validatedBody = UpdateTourSchema.parse(req.body)
 
-  const updateData: Record<string, unknown> = {}
-
-  if ("slug" in validatedBody) updateData.slug = (validatedBody as any).slug
-  if ("destination" in validatedBody) updateData.destination = validatedBody.destination
-  if ("description" in validatedBody) updateData.description = validatedBody.description
-  if ("duration_days" in validatedBody) updateData.duration_days = validatedBody.duration_days
-  if ("max_capacity" in validatedBody) updateData.max_capacity = validatedBody.max_capacity
-  if ("thumbnail" in validatedBody) updateData.thumbnail = validatedBody.thumbnail
-  if ("is_special" in validatedBody) updateData.is_special = validatedBody.is_special
-  if ("booking_min_days_ahead" in validatedBody) updateData.booking_min_days_ahead = validatedBody.booking_min_days_ahead
-  if ("blocked_dates" in validatedBody) updateData.blocked_dates = validatedBody.blocked_dates
-  if ("blocked_week_days" in validatedBody) updateData.blocked_week_days = validatedBody.blocked_week_days
-  if ("cancellation_deadline_hours" in validatedBody) updateData.cancellation_deadline_hours = validatedBody.cancellation_deadline_hours
-
   try {
-    await tourModuleService.updateTours([{ id, ...updateData }])
+    const { result } = await updateTourWorkflow(req.scope).run({
+      input: { id, ...validatedBody },
+      throwOnError: true,
+    })
 
-    const currentTour = await tourModuleService.retrieveTour(id)
-
-    if (validatedBody.prices) {
-      await tourModuleService.updateVariantPrices(id, validatedBody.prices, req.scope)
-
-      const eventBus = req.scope.resolve(Modules.EVENT_BUS)
-      await eventBus.emit([
-        {
-          name: "entityTour.updated",
-          data: { id },
-        },
-        ...(currentTour.product_id ? [{
-          name: "product.updated",
-          data: { id: currentTour.product_id },
-        }] : []),
-      ])
-    }
-
-    if (currentTour.product_id) {
-      const productUpdateData: Record<string, unknown> = { id: currentTour.product_id }
-
-      if (validatedBody.destination) {
-        productUpdateData.title = `${validatedBody.destination}${validatedBody.duration_days ? ` - ${validatedBody.duration_days} Days` : ""}`
-      }
-
-      if (validatedBody.description) {
-        productUpdateData.description = validatedBody.description
-      }
-
-      if (Object.keys(productUpdateData).length > 1) {
-        await productModule.updateProducts(currentTour.product_id, productUpdateData)
+    // Publish RabbitMQ integration event ONLY when prices were updated.
+    // Done in the route (not the workflow) so a failed publish never rolls back a committed mutation,
+    // and a rolled-back mutation never publishes an event.
+    if (validatedBody.prices && result?.product_id) {
+      try {
+        await publishProductEvent(req.scope, result.product_id, "updated")
+      } catch (error) {
+        console.error("Failed to publish product integration event:", error)
       }
     }
+
+    // Presentation: retrieve the tour with relations + thumbnail (logic stays in the route, not the workflow)
+    const tourModuleService: TourModuleService = req.scope.resolve(TOUR_MODULE)
+    const productModule = req.scope.resolve(Modules.PRODUCT)
 
     const updatedTour = await tourModuleService.retrieveTour(id, {
       relations: ["variants", "bookings"],

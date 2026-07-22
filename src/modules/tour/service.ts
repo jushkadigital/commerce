@@ -48,6 +48,48 @@ class TourModuleService extends MedusaService({
   TourBooking,
   TourServiceVariant,
 }) {
+  // --- Entity cache (10s TTL) ---
+  // Tours change rarely (admin edits). Caching retrieveTour avoids a ~150ms DB
+  // query on every booking request. 10s TTL bounds staleness: worst case a
+  // capacity reduction takes 10s to propagate. Acceptable for booking flows.
+  private tourCache_ = new Map<string, { value: any; expires: number }>()
+  private static readonly TOUR_CACHE_TTL_MS = 10_000
+
+  /**
+   * Cached wrapper around retrieveTour. Returns a clone so callers can't
+   * mutate the cached entry. Cache key includes relations to avoid collisions
+   * between "with variants" and "without variants" fetches.
+   */
+  async retrieveTourCached(id: string, config?: { relations?: string[] }): Promise<any> {
+    const relationsKey = config?.relations ? JSON.stringify(config.relations) : "none"
+    const key = `${id}:${relationsKey}`
+    const now = Date.now()
+    const hit = this.tourCache_.get(key)
+    if (hit && hit.expires > now) {
+      // Return a clone so callers can't corrupt the cached object
+      return JSON.parse(JSON.stringify(hit.value))
+    }
+    const value = await this.retrieveTour(id, config)
+    this.tourCache_.set(key, { value, expires: now + TourModuleService.TOUR_CACHE_TTL_MS })
+    // Opportunistic cleanup: drop expired entries to bound memory
+    if (this.tourCache_.size > 100) {
+      for (const [k, v] of this.tourCache_) {
+        if (v.expires <= now) this.tourCache_.delete(k)
+      }
+    }
+    return value
+  }
+
+  /** Invalidate cached tour entries (call on admin tour updates if needed). */
+  invalidateTourCache(id?: string): void {
+    if (id) {
+      for (const k of this.tourCache_.keys()) {
+        if (k.startsWith(`${id}:`)) this.tourCache_.delete(k)
+      }
+    } else {
+      this.tourCache_.clear()
+    }
+  }
   async getAvailableCapacity(
     tourId: string,
     tourDate: Date,
@@ -55,27 +97,18 @@ class TourModuleService extends MedusaService({
   ): Promise<number> {
     const tourEntity = tour ?? await this.retrieveTour(tourId)
 
-    const bookings = await this.listTourBookings({
-      tour_id: tourId,
-      tour_date: tourDate,
-      status: ["confirmed", "pending"],
-    })
+    // Fetch only the reserved_passengers column (not the full line_items JSON).
+    // reserved_passengers is computed at booking creation time = adults + children
+    // (infants excluded from capacity). Much faster than hydrating + parsing JSON.
+    const bookings = await this.listTourBookings(
+      { tour_id: tourId, tour_date: tourDate, status: ["confirmed", "pending"] },
+      { select: ["id", "reserved_passengers"] }
+    )
 
-    const reservedPassengers = bookings.reduce((total, booking) => {
-      // Handle potential missing line_items defensively
-      const lineItemsData = booking.line_items as { items?: Array<{ variant_id: string, metadata?: { passengers?: { adults?: number, children?: number, infants?: number } } }> } | null | undefined
-      const items = lineItemsData?.items || []
-
-      const bookingPassengers = items.reduce((bookingTotal, item) => {
-        const passengers = item.metadata?.passengers || {}
-        const adults = Number(passengers.adults) || 0
-        const children = Number(passengers.children) || 0
-        // Infants are EXCLUDED from capacity
-        return bookingTotal + adults + children
-      }, 0)
-
-      return total + bookingPassengers
-    }, 0)
+    const reservedPassengers = bookings.reduce(
+      (sum, b) => sum + (Number(b.reserved_passengers) || 0),
+      0
+    )
 
     return tourEntity.max_capacity - reservedPassengers
   }

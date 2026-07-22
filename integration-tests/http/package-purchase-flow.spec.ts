@@ -46,7 +46,7 @@ medusaIntegrationTestRunner({
       let region: any
       let salesChannel: any
       let productVariants: any[] = []
-      const testDate = "2026-06-15"
+      const testDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
       const packageCapacity = 10
 
       beforeAll(async () => {
@@ -657,7 +657,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("not available")
+          expect(errors[0].error.message).toContain("disponible")
 
           await packageModuleService.updatePackages({
             id: pkg.id,
@@ -685,7 +685,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("not available")
+          expect(errors[0].error.message).toContain("disponible")
 
           await packageModuleService.updatePackages({
             id: pkg.id,
@@ -717,13 +717,14 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("spots available")
+          expect(errors[0].error.message).toContain("espacios disponibles")
         })
 
         it("should reject booking when min months ahead not met", async () => {
+          // testDate is +365 days; set booking_min_days_ahead to 400 so it fails.
           await packageModuleService.updatePackages({
             id: pkg.id,
-        booking_min_days_ahead: 12
+        booking_min_days_ahead: 400
           })
 
           const { cart } = await createCartWithPackage(
@@ -737,7 +738,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-      expect(errors[0].error.message).toContain("days in advance")
+      expect(errors[0].error.message).toContain("dias en adelante")
 
           await packageModuleService.updatePackages({
             id: pkg.id,
@@ -808,7 +809,7 @@ medusaIntegrationTestRunner({
           })
 
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("past dates")
+          expect(errors[0].error.message).toContain("pasadas")
         })
       })
 
@@ -916,7 +917,7 @@ medusaIntegrationTestRunner({
           )
 
           expect(validation.valid).toBe(false)
-          expect(validation.reason).toContain("past")
+          expect(validation.reason).toContain("pasadas")
         })
       })
 

@@ -129,25 +129,29 @@ export default async function handlePackageOrderPlaced({
         bookingMetadata.group_id = item.metadata.group_id
       }
 
-      if (orderPreData !== undefined) {
-        bookingMetadata.preData = structuredClone(orderPreData)
-      }
+if (orderPreData !== undefined) {
+          bookingMetadata.preData = structuredClone(orderPreData)
+        }
 
-      return {
-        order_id: orderId,
-        package_id: item.metadata.package_id,
-        package_date: new Date(item.metadata.package_date),
-        status: bookingStatus,
-        metadata: Object.keys(bookingMetadata).length > 0 ? bookingMetadata : undefined,
-        line_items: {
-          item_id: item.id,
-          variant_id: item.variant_id,
-          title: item.title,
-          quantity: item.quantity,
-          passengers: item.metadata.passengers || [],
-        },
-      }
-    })
+        const passengers = item.metadata?.passengers || {}
+        const reservedPassengers = (Number(passengers.adults) || 0) + (Number(passengers.children) || 0)
+
+        return {
+          order_id: orderId,
+          package_id: item.metadata.package_id,
+          package_date: new Date(item.metadata.package_date),
+          status: bookingStatus,
+          metadata: Object.keys(bookingMetadata).length > 0 ? bookingMetadata : undefined,
+          line_items: {
+            item_id: item.id,
+            variant_id: item.variant_id,
+            title: item.title,
+            quantity: item.quantity,
+            passengers: item.metadata.passengers || [],
+          },
+          reserved_passengers: reservedPassengers,
+        }
+      })
 
     const createdBookingsRaw =
       await packageModuleService.createPackageBookings(bookingsToCreate)

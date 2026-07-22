@@ -28,7 +28,7 @@ medusaIntegrationTestRunner({
       let product: any
       let region: any
       let salesChannel: any
-      const testDate = "2026-07-20"
+      const testDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
       const packageCapacity = 20
 
       beforeAll(async () => {

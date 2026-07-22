@@ -205,7 +205,7 @@ medusaIntegrationTestRunner({
             },
           })
 
-          expect(updatedResult.tour.id).toBe(result.tour.id)
+          expect(updatedResult.id).toBe(result.tour.id)
           
           const retrieved = await tourModuleService.retrieveTour(result.tour.id)
           expect(retrieved.slug).toBe(customSlug)
@@ -236,8 +236,7 @@ medusaIntegrationTestRunner({
             },
           })
 
-          expect(updatedResult.tour.blocked_dates).toEqual(["2026-04-08"])
-          expect(updatedResult.tour.blocked_week_days).toEqual(["1", "2"])
+          expect(updatedResult.id).toBe(result.tour.id)
 
           const retrieved = await tourModuleService.retrieveTour(result.tour.id)
           expect(retrieved.blocked_dates).toEqual(["2026-04-08"])

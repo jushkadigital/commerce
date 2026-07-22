@@ -151,7 +151,6 @@ const prepareBookingStep = createStep(
     const ensuresId = id as string | undefined
     const ensuresDate = date as string | undefined
 
-    // FETCH: Parallel retrieve cart and booking entity
     const cartModule = container.resolve(Modules.CART)
     const pricingModule = container.resolve(Modules.PRICING)
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
@@ -159,19 +158,43 @@ const prepareBookingStep = createStep(
     // Check if items are provided (items list is available from input)
     const hasNativeLikeItems = Array.isArray(items) && items!.length > 0
 
-    const [bookingEntity, cart] = await Promise.all([
-      hasNativeLikeItems && ensuresId
+    // uniqueVariantIds is needed for listTourVariants; compute early from raw items.
+    const uniqueVariantIds: string[] = hasNativeLikeItems
+      ? [...new Set((items as any[]).map((item: any) => item.variant_id))]
+      : []
+
+    // PHASE 1: Fetch cart, entity, and variant links IN PARALLEL.
+    // - When items AND id are both provided, entity (with variants) is fetched here
+    //   and reused for validateBooking + variantMap (skips later listVariants).
+    // - When items are provided WITHOUT id, listVariants resolves the entity id;
+    //   entity is fetched in the resolution block below.
+    // - When no items, neither listVariants nor entity runs here.
+    const [earlyEntity, cart, preLinkedVariants] = await Promise.all([
+      hasNativeLikeItems && ensuresId && moduleService
         ? (type === "tour"
-            ? (moduleService as TourModuleService).retrieveTour(ensuresId, { relations: ["variants"] })
-            : (moduleService as PackageModuleService).retrievePackage(ensuresId, { relations: ["variants"] }))
-        : null,
-      cartModule.retrieveCart(ensuresCartId)
+            ? (moduleService as TourModuleService).retrieveTourCached(ensuresId, { relations: ["variants"] })
+            : (moduleService as PackageModuleService).retrievePackageCached(ensuresId, { relations: ["variants"] }))
+        : Promise.resolve(null),
+      cartModule.retrieveCart(ensuresCartId),
+      (hasNativeLikeItems && moduleService)
+        ? (type === "tour"
+            ? (moduleService as TourModuleService).listTourVariants({ variant_id: uniqueVariantIds })
+            : (moduleService as PackageModuleService).listPackageVariants({ variant_id: uniqueVariantIds }))
+        : Promise.resolve([]),
     ])
+
+    // OPTIMIZATION #1: when earlyEntity already has variants (path items+id), reuse
+    // them instead of the listVariants result — the fetch was still needed to run in
+    // parallel but we prefer the richer entity.variants (has full tour context).
+    const earlyEntityVariants = (earlyEntity as any)?.variants
+    const linkedVariants = (earlyEntityVariants && earlyEntityVariants.length > 0)
+      ? earlyEntityVariants
+      : preLinkedVariants
 
     // bookingEntity is null when items path derives the entity from variants.
     // It is set later after listTourVariants/listPackageVariants resolves the tour/package.
     // Use non-null assertion at usage sites — the code flow guarantees it is set by then.
-    let entity: any = bookingEntity
+    let entity: any = earlyEntity
 
     // Local variables for module-specific reasoning
     let adults = Number(adultsInput || 0)
@@ -242,16 +265,7 @@ const prepareBookingStep = createStep(
     let resolvedDate = ensuresDate
 
     if (hasNativeLikeItems) {
-      const uniqueVariantIds = [...new Set(normalizedItems.map((item: any) => item.variant_id))]
-
-      // Fetch variant links from the tour or package module to resolve the booking
-      // entity id and passenger types for each variant.
-      const linkedVariants = moduleService
-        ? type === "tour"
-          ? await (moduleService as TourModuleService).listTourVariants({ variant_id: uniqueVariantIds })
-          : await (moduleService as PackageModuleService).listPackageVariants({ variant_id: uniqueVariantIds })
-        : []
-
+      // Reuse linkedVariants fetched in Phase 1 (already in parallel with retrieveCart).
       const variantByVariantId = new Map<string, { bookingId: string; passenger_type: PassengerType }>()
       for (const v of linkedVariants as any[]) {
         variantByVariantId.set(v.variant_id, {
@@ -342,34 +356,26 @@ const prepareBookingStep = createStep(
     const ensuredId = resolvedId as string
     const ensuredDate = resolvedDate as string
 
-    // Retrieve the booking entity (tour or package) with variants if not already fetched.
-    // The early parallel fetch above only runs when items AND id are both provided;
-    // in the items-without-id path the entity is resolved here after deriving the id.
+    // Resolve the booking entity. Prefer earlyEntity (fetched in Phase 1 with variants).
+    // Otherwise fetch it now. When we have linkedVariants (items path), fetch WITHOUT
+    // relations — variantMap is built from linkedVariants, saving 1 DB query. When we
+    // don't (no-items path), fetch WITH relations so entity.variants populates variantMap.
     if (!entity) {
-      entity = moduleService
+      const needRelations = !(linkedVariants as any[])?.length
+      entity = earlyEntity ?? (moduleService
         ? type === "tour"
-          ? await (moduleService as TourModuleService).retrieveTour(ensuredId, { relations: ["variants"] })
-          : await (moduleService as PackageModuleService).retrievePackage(ensuredId, { relations: ["variants"] })
-        : null
+          ? await (moduleService as TourModuleService).retrieveTourCached(ensuredId, needRelations ? { relations: ["variants"] } : {})
+          : await (moduleService as PackageModuleService).retrievePackageCached(ensuredId, needRelations ? { relations: ["variants"] } : {})
+        : null)
     }
 
-    // Validate booking availability (date, capacity, blocked dates)
-    if (moduleService) {
-      const validation = await (moduleService as any).validateBooking(
-        ensuredId,
-        new Date(ensuredDate),
-        totalPassengers,
-        entity
-      )
-      if (!validation.valid) {
-        throwInvalidData(validation.reason || `${type} not available`)
-      }
-    }
-
-    // Map variants by passenger type and collect needed variant IDs
+    // Map variants by passenger type and collect needed variant IDs.
+    // Prefer entity.variants (full records); fall back to linkedVariants from Phase 1
+    // (both have variant_id + passenger_type, so variantMap can be built from either).
+    const variantSource = (entity?.variants && entity.variants.length > 0) ? entity.variants : (linkedVariants as any[])
     const variantMap = new Map<PassengerType, any>()
     const variantIdsNeeded: string[] = []
-    for (const variant of entity?.variants || []) {
+    for (const variant of variantSource || []) {
       if (variant.variant_id) {
         variantMap.set(variant.passenger_type, variant)
       }
@@ -416,20 +422,40 @@ const prepareBookingStep = createStep(
       }
     }
 
-    // Pre-calculate prices via pricing module
-    try {
-      const calculatedPrices = await pricingModule.calculatePrices(
-        { id: variantIdsNeeded },
-        { context: pricingContext }
-      )
-      for (const cp of calculatedPrices) {
-        const amount = Number(cp.calculated_amount)
-        if (Number.isFinite(amount) && amount >= 0) {
-          priceMap.set(cp.id, amount)
+    // PHASE 3: Run validateBooking and calculatePrices IN PARALLEL.
+    // Both only depend on data available now (entity for validateBooking;
+    // variantIdsNeeded + pricingContext for calculatePrices).
+    const [validationResult, calculatedPrices] = await Promise.all([
+      moduleService
+        ? (moduleService as any).validateBooking(
+            ensuredId,
+            new Date(ensuredDate),
+            totalPassengers,
+            entity
+          )
+        : Promise.resolve({ valid: true }),
+      (async () => {
+        try {
+          return await pricingModule.calculatePrices(
+            { id: variantIdsNeeded },
+            { context: pricingContext }
+          )
+        } catch (pricingError) {
+          console.warn("Could not pre-calculate variant prices for metadata", pricingError)
+          return [] as any[]
         }
+      })(),
+    ])
+
+    if (!validationResult.valid) {
+      throwInvalidData(validationResult.reason || `${type} not available`)
+    }
+
+    for (const cp of (calculatedPrices as any[]) || []) {
+      const amount = Number(cp.calculated_amount)
+      if (Number.isFinite(amount) && amount >= 0) {
+        priceMap.set(cp.id, amount)
       }
-    } catch (pricingError) {
-      console.warn("Could not pre-calculate variant prices for metadata", pricingError)
     }
 
     const unresolvedVariantIds = variantIdsNeeded.filter((vid: string) => !priceMap.has(vid))

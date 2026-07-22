@@ -40,10 +40,12 @@ export const updatePackageStep = createStep(
     // Revert changes (pass array for consistency)
     await packageModuleService.updatePackages([{ 
       id: previousPackage.id,
+      slug: previousPackage.slug,
       destination: previousPackage.destination,
       description: previousPackage.description,
       duration_days: previousPackage.duration_days,
       max_capacity: previousPackage.max_capacity,
+      thumbnail: previousPackage.thumbnail,
       is_special: previousPackage.is_special,
       booking_min_days_ahead: previousPackage.booking_min_days_ahead,
       blocked_dates: previousPackage.blocked_dates,

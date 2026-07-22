@@ -29,6 +29,7 @@ export const createTourBookingsStep = createStep(
       line_items: Record<string, unknown>
       metadata?: Record<string, unknown>
       tour_date: Date
+      reserved_passengers: number
     }[] = []
 
 const items = Object.entries(groupBy(cart.items, "metadata.group_id")).map(([type, items]) => ({
@@ -67,12 +68,19 @@ const items = Object.entries(groupBy(cart.items, "metadata.group_id")).map(([typ
         continue
       }
       
+      // Compute reserved passengers = adults + children (infants excluded from capacity)
+      const reservedPassengers = item.items.reduce((sum, ele) => {
+        const p = ele.metadata?.passengers || {}
+        return sum + (Number(p.adults) || 0) + (Number(p.children) || 0)
+      }, 0)
+
       tourBookingsToCreate.push({
         order_id,
         tour_id: tourId,
         line_items: { items: item.items.map(ele => ({ variant_id: ele.variant_id, metadata: ele.metadata })) },
         metadata: groupId ? { group_id: groupId } : undefined,
         tour_date: new Date(tourDate),
+        reserved_passengers: reservedPassengers,
       })
     }
 
