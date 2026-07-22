@@ -14,6 +14,7 @@ services:
       POSTGRES_DB: medusa-starter
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./postgres.conf:/var/lib/postgresql/data/postgresql.conf:ro
     tmpfs:
       - /var/run/postgresql
       - /tmp:size=100M
@@ -27,9 +28,9 @@ services:
       - medusa-network
     security_opt:
       - no-new-privileges:true
-    shm_size: "1g"
+    shm_size: "512m"
     mem_reservation: 1g
-    mem_limit: 2g
+    mem_limit: 1.5g
     pids_limit: 500
     ulimits:
       nofile:
@@ -101,6 +102,8 @@ services:
       MEDUSA_WORKER_MODE: server
       DISABLE_MEDUSA_ADMIN: "false"
       RUN_SETUP_STORE: "false"
+      UV_THREADPOOL_SIZE: "8"
+      NODE_OPTIONS: "--max-old-space-size=1024"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 15s
@@ -113,8 +116,8 @@ services:
       - proxiable
     security_opt:
       - no-new-privileges:true
-    mem_reservation: 1g
-    mem_limit: 2g
+    mem_reservation: 768m
+    mem_limit: 1.5g
     pids_limit: 1000
     stop_grace_period: 30s
     logging:
@@ -142,6 +145,8 @@ services:
     environment:
       MEDUSA_WORKER_MODE: worker
       DISABLE_MEDUSA_ADMIN: "true"
+      UV_THREADPOOL_SIZE: "8"
+      NODE_OPTIONS: "--max-old-space-size=768"
     healthcheck:
       # El worker no expone HTTP; verificamos que el proceso node está vivo
       test: ["CMD-SHELL", "pgrep -f 'medusa start' || exit 1"]
@@ -154,8 +159,8 @@ services:
       - red-compartida
     security_opt:
       - no-new-privileges:true
-    mem_reservation: 768m
-    mem_limit: 1536m
+    mem_reservation: 512m
+    mem_limit: 1g
     pids_limit: 1000
     stop_grace_period: 30s
     logging:

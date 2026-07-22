@@ -124,48 +124,52 @@ export const conditionalCartFetchStep = createStep(
   async (input: { cart_id: string }, { container }) => {
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
-    // Phase 1: light pre-fetch — check what relations exist.
-    // Cache is safe here: the relations (promotions, shipping_methods,
-    // payment_collection) are not affected by line-item mutations
-    // (add/delete) that happened in previous steps. Cache hit = <10ms vs ~150ms miss.
-    const { data: meta } = await query.graph(
-      {
-        entity: "cart",
-        fields: metaFields,
-        filters: { id: input.cart_id },
-      },
-      {
-        cache: { enable: true },
-      }
-    )
+    // Single query: baseFields + meta IDs (promotions.id, shipping_methods.id,
+    // payment_collection.id). The 3 ID-level joins are cheap and let us decide
+    // whether extra fields are needed — all in 1 query instead of 2.
+    //
+    // Common case (tours without promos/shipping/payment): 1 query total.
+    // Rare case (with promos/shipping): 2 queries (this + a second for extra fields).
+    const fields = [...baseFields, "promotions.id", "shipping_methods.id", "payment_collection.id"]
 
-    const cartMeta = meta[0]
-
-    // Phase 2: build field list based on what the cart actually has
-    const fields = [...baseFields]
-
-    if (cartMeta?.promotions?.length) {
-      fields.push(...promoFields)
-    }
-
-    if (cartMeta?.shipping_methods?.length) {
-      fields.push(...shippingFields)
-    }
-
-    if (cartMeta?.payment_collection) {
-      fields.push(...paymentFields)
-    }
-
-    // Main fetch with only the needed fields.
-    // NO cache — line items were mutated (added/deleted) in a previous step and
-    // we must see the fresh state (items, totals). Cache would risk returning stale data.
     const { data: carts } = await query.graph({
       entity: "cart",
       fields,
       filters: { id: input.cart_id },
     })
 
-    return new StepResponse(carts[0])
+    const cart = carts[0]
+
+    // Check which extra fields are needed based on what the cart actually has.
+    const extraFields: string[] = []
+
+    if (cart?.promotions?.length) {
+      extraFields.push(...promoFields)
+    }
+
+    if (cart?.shipping_methods?.length) {
+      extraFields.push(...shippingFields)
+    }
+
+    if (cart?.payment_collection) {
+      extraFields.push(...paymentFields)
+    }
+
+    // No extra fields needed — return immediately (common case: 1 query).
+    if (extraFields.length === 0) {
+      return new StepResponse(cart)
+    }
+
+    // Extra fields needed — second query with baseFields + extra fields.
+    // NO cache — line items were mutated (added/deleted) in a previous step and
+    // we must see the fresh state (items, totals).
+    const { data: cartsWithExtra } = await query.graph({
+      entity: "cart",
+      fields: [...fields, ...extraFields],
+      filters: { id: input.cart_id },
+    })
+
+    return new StepResponse(cartsWithExtra[0])
   }
 )
 

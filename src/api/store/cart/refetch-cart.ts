@@ -60,17 +60,14 @@ export async function refetchAddToCartResultOptimized(
 ) {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
 
-  // Phase 1: light pre-fetch — check if cart has promotions (cached)
-  const { data: meta } = await query.graph(
-    {
-      entity: "cart",
-      fields: ["id", "promotions.id"],
-      filters: { id: cartId },
-    },
-    {
-      cache: { enable: true },
-    }
-  )
+  // Phase 1: light pre-fetch — check if cart has promotions
+  // NO cache: cached partial fields (id, promotions.id) contaminate the
+  // GET /store/carts/:id endpoint which fetches different fields (items.*, etc.).
+  const { data: meta } = await query.graph({
+    entity: "cart",
+    fields: ["id", "promotions.id"],
+    filters: { id: cartId },
+  })
 
   const cartMeta = meta[0]
 

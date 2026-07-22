@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys, MedusaError, Modules } from "@medusajs/framework/utils"
+import { MedusaError } from "@medusajs/framework/utils"
 import addBookingToCartWorkflow from "../../../../workflows/add-booking-to-cart"
 import { trackCommerceEvent, type TrackingItem } from "../../../../utils/conversion-tracking"
 
@@ -68,9 +68,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       },
     })
 
+    // The workflow's conditionalCartFetchStep returns cart with items.* (all item
+    // fields) via baseFields. No refetch needed — just default promotions to []
+    // (baseFields omits promotions when cart has none, per the optimization).
+    const cart = { ...result.cart, promotions: result.cart?.promotions ?? [] }
+
     // Respond with cart and summary
     res.json({
-      cart: result.cart,
+      cart,
       summary: result.summary,
     })
 
