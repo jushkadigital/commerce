@@ -12,7 +12,6 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
  */
 export const baseFields: string[] = [
   "id",
-  "quantity",
   "currency_code",
   "region_id",
   "total",

@@ -3,72 +3,6 @@
 # ==============================================================================
 
 services:
-  # ─── PostgreSQL ──────────────────────────────────────────────────────────────
-  postgres:
-    image: postgres:16-alpine
-    container_name: postgres-medusa
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: medusa-starter
-      POSTGRES_PASSWORD: medusa-password
-      POSTGRES_DB: medusa-starter
-    command:
-      - "postgres"
-      - "-c"
-      - "shared_buffers=384MB"
-      - "-c"
-      - "effective_cache_size=1152MB"
-      - "-c"
-      - "work_mem=8MB"
-      - "-c"
-      - "maintenance_work_mem=128MB"
-      - "-c"
-      - "random_page_cost=1.1"
-      - "-c"
-      - "effective_io_concurrency=200"
-      - "-c"
-      - "max_parallel_workers=2"
-      - "-c"
-      - "max_parallel_workers_per_gather=1"
-      - "-c"
-      - "max_worker_processes=4"
-      - "-c"
-      - "max_connections=100"
-      - "-c"
-      - "checkpoint_completion_target=0.9"
-      - "-c"
-      - "default_statistics_target=100"
-      - "-c"
-      - "jit=off"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    tmpfs:
-      - /var/run/postgresql
-      - /tmp:size=100M
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medusa-starter -d medusa-starter"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - medusa-network
-    security_opt:
-      - no-new-privileges:true
-    shm_size: "512m"
-    mem_reservation: 1g
-    mem_limit: 2g
-    pids_limit: 500
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   # ─── Redis ───────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
@@ -119,8 +53,6 @@ services:
     expose:
       - "9000"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     env_file:
@@ -161,8 +93,6 @@ services:
     volumes:
       - backend-server-data:/data # compartido: uploads/archivos locales
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       backend-server:
@@ -197,7 +127,6 @@ services:
         max-file: "5"
 
 volumes:
-  postgres-data:
   backend-server-data:
   cache-backend-data:
 
