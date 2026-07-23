@@ -12,10 +12,36 @@ services:
       POSTGRES_USER: medusa-starter
       POSTGRES_PASSWORD: medusa-password
       POSTGRES_DB: medusa-starter
-    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=384MB"
+      - "-c"
+      - "effective_cache_size=1152MB"
+      - "-c"
+      - "work_mem=8MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "max_parallel_workers=2"
+      - "-c"
+      - "max_parallel_workers_per_gather=1"
+      - "-c"
+      - "max_worker_processes=4"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "jit=off"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
     tmpfs:
       - /var/run/postgresql
       - /tmp:size=100M
@@ -31,7 +57,7 @@ services:
       - no-new-privileges:true
     shm_size: "512m"
     mem_reservation: 1g
-    mem_limit: 1.5g
+    mem_limit: 2g
     pids_limit: 500
     ulimits:
       nofile:
