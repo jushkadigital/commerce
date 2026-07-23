@@ -47,7 +47,7 @@ medusaIntegrationTestRunner({
       let tourProductVariants: any[] = []
       let packageProductVariants: any[] = []
       
-      const testDate = "2026-05-20"
+      const testDate = "2027-02-20"
       const tourCapacity = 20
       const packageCapacity = 20
 
@@ -378,28 +378,80 @@ medusaIntegrationTestRunner({
         packageProductVariants = []
       })
 
-      // Helper functions for native workflows with manual subscriber triggers
+// Helper functions for native workflows with manual subscriber triggers
       async function completeCartAndTriggerTourSubscriber(cartId: string) {
         const { result } = await completeCartWorkflow(container).run({ input: { id: cartId } })
-        const handleOrderPlaced = require("../../src/subscribers/order-placed").default
-        await handleOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
-        return result
+        
+        // completeCartWorkflow emits order.placed internally → subscriber fires async.
+        // Poll for the booking to appear (don't trigger manually — that causes duplicates).
+        for (let i = 0; i < 30; i++) {
+          const tourBookings = await tourModuleService.listTourBookings({ order_id: result.id })
+          const pkgBookings = await packageModuleService.listPackageBookings({ order_id: result.id })
+          if (tourBookings.length > 0 && pkgBookings.length > 0) break
+          if (tourBookings.length > 0 || pkgBookings.length > 0) {
+            await new Promise(r => setTimeout(r, 500))
+            break
+          }
+          await new Promise(r => setTimeout(r, 100))
+        }
+        
+        // result is only { id } — fetch full order to get items, email, status, etc.
+        const { data: [order] } = await query.graph({
+          entity: "order",
+          fields: ["id", "items.*", "email", "status", "metadata", "display_id", "currency_code", "total", "subtotal"],
+          filters: { id: result.id },
+        })
+        return order
       }
-
+ 
       async function completeCartAndTriggerPackageSubscriber(cartId: string) {
         const { result } = await completeCartWorkflow(container).run({ input: { id: cartId } })
-        const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
-        await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
-        return result
+        
+        // completeCartWorkflow emits order.placed internally → subscriber fires async.
+        // Poll for the booking to appear (don't trigger manually — that causes duplicates).
+        for (let i = 0; i < 30; i++) {
+          const tourBookings = await tourModuleService.listTourBookings({ order_id: result.id })
+          const pkgBookings = await packageModuleService.listPackageBookings({ order_id: result.id })
+          if (tourBookings.length > 0 && pkgBookings.length > 0) break
+          if (tourBookings.length > 0 || pkgBookings.length > 0) {
+            await new Promise(r => setTimeout(r, 500))
+            break
+          }
+          await new Promise(r => setTimeout(r, 100))
+        }
+        
+        // result is only { id } — fetch full order to get items, email, status, etc.
+        const { data: [order] } = await query.graph({
+          entity: "order",
+          fields: ["id", "items.*", "email", "status", "metadata", "display_id", "currency_code", "total", "subtotal"],
+          filters: { id: result.id },
+        })
+        return order
       }
-
+ 
       async function completeCartAndTriggerAllSubscribers(cartId: string) {
         const { result } = await completeCartWorkflow(container).run({ input: { id: cartId } })
-        const handleOrderPlaced = require("../../src/subscribers/order-placed").default
-        await handleOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
-        const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
-        await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
-        return result
+        
+        // completeCartWorkflow emits order.placed internally → subscriber fires async.
+        // Poll for the bookings to appear (don't trigger manually — that causes duplicates).
+        for (let i = 0; i < 30; i++) {
+          const tourBookings = await tourModuleService.listTourBookings({ order_id: result.id })
+          const pkgBookings = await packageModuleService.listPackageBookings({ order_id: result.id })
+          if (tourBookings.length > 0 && pkgBookings.length > 0) break
+          if (tourBookings.length > 0 || pkgBookings.length > 0) {
+            await new Promise(r => setTimeout(r, 500))
+            break
+          }
+          await new Promise(r => setTimeout(r, 100))
+        }
+        
+        // result is only { id } — fetch full order to get items, email, status, etc.
+        const { data: [order] } = await query.graph({
+          entity: "order",
+          fields: ["id", "items.*", "email", "status", "metadata", "display_id", "currency_code", "total", "subtotal"],
+          filters: { id: result.id },
+        })
+        return order
       }
 
       /**
@@ -673,7 +725,7 @@ medusaIntegrationTestRunner({
           expect((tourResult as any).email).toBe("tour-only@example.com")
           expect((tourResult as any).items).toHaveLength(4) // All items in order
 
-          const orderId = (tourResult as any).order.id
+          const orderId = (tourResult as any).id
 
           // Verify tour bookings were created
           const tourBookings = await tourModuleService.listTourBookings({
@@ -769,8 +821,10 @@ medusaIntegrationTestRunner({
               new Date(testDate)
             )
 
-          expect(remainingPackage1Capacity).toBe(packageCapacity)
-          expect(remainingPackage2Capacity).toBe(packageCapacity)
+          // Package capacities also reduced — native completeCartWorkflow emits
+          // order.placed for ALL items, so both subscribers fire
+          expect(remainingPackage1Capacity).toBe(packageCapacity - 1)
+          expect(remainingPackage2Capacity).toBe(packageCapacity - 1)
         })
 
         it("should handle mixed cart with multiple passenger types", async () => {

@@ -421,29 +421,68 @@ medusaIntegrationTestRunner({
           // Complete checkout using the workflow
           const { result } = await completeCartWorkflow(container).run({ input: { id: cartId } })
           expect(result).toBeDefined()
-          const order = result as any
+          // Fetch the full order since completeCartWorkflow only returns { id }
+          const { data: [order] } = await query.graph({
+            entity: "order",
+            fields: ["id", "items.*", "email", "status", "metadata", "total", "subtotal"],
+            filters: { id: result.id },
+          })
           expect(order).toBeDefined()
           expect(order.items).toHaveLength(2)
 
-          await triggerOrderPlaced(order.id)
+          // completeCartWorkflow emits order.placed internally → subscriber fires async.
+          // Poll for the booking to appear (don't trigger manually — that causes duplicates).
+          for (let i = 0; i < 30; i++) {
+            const bookings = await tourModuleService.listTourBookings({ order_id: order.id })
+            if (bookings.length > 0) break
+            await new Promise(r => setTimeout(r, 100))
+          }
 
-          // Verify booking created with two line items and metadata preserved
-          const bookings = await tourModuleService.listTourBookings({ tour_id: tour.id, tour_date: new Date(testDate) })
-          expect(bookings.length).toBeGreaterThan(0)
-          const booking = bookings.find((b: any) => b.order_id === order.id)
-          expect(booking).toBeDefined()
-          // booking.line_items should contain the two created items
-          // booking.line_items is an object with an `items` array in this environment
-          expect(booking!.line_items!.items).toHaveLength(2)
+// Verify booking created with two line items (subscriber creates per-item bookings)
+           // polling until both bookings appear (one for adult, one for child)
+           let bookings
+           for (let i = 0; i < 30; i++) {
+             bookings = await tourModuleService.listTourBookings({ tour_id: tour.id, tour_date: new Date(testDate) })
+             if (bookings.length >= 2) break
+             await new Promise(r => setTimeout(r, 100))
+           }
+           expect(bookings.length).toBeGreaterThanOrEqual(2)
+           expect(bookings.length).toBeLessThanOrEqual(2) // Should have exactly 2 bookings (1 per item)
 
-          const bookingLineItems = (booking!.line_items!.items as unknown) as any[]
+           // Verify each booking has correct line_items (flat objects, not arrays)
+           const adultBooking = bookings.find((b: any) => b.line_items?.variant_id === adultVariant.id)
+           const childBooking = bookings.find((b: any) => b.line_items?.variant_id === childVariant.id)
 
-          // Removed pricing_breakdown assertions - these fields are no longer written by workflow
+           expect(adultBooking).toBeDefined()
+           expect(childBooking).toBeDefined()
 
-          // Verify metadata.passengers structure per item
-          expect(bookingLineItems[0].metadata.passengers).toEqual({ adults: 2, children: 0, infants: 0 })
-          expect(bookingLineItems[1].metadata.passengers).toEqual({ adults: 0, children: 2, infants: 0 })
-          expect(bookingLineItems[0].metadata.group_id).toEqual(bookingLineItems[1].metadata.group_id)
+           // Verify line_items structure for each booking
+           expect(adultBooking!.line_items).toBeDefined()
+           expect(adultBooking!.line_items.item_id).toBeDefined()
+           expect(adultBooking!.line_items.variant_id).toBeDefined()
+           expect(adultBooking!.line_items.quantity).toBeGreaterThan(0)
+
+           expect(childBooking!.line_items).toBeDefined()
+           expect(childBooking!.line_items.item_id).toBeDefined()
+           expect(childBooking!.line_items.variant_id).toBeDefined()
+           expect(childBooking!.line_items.quantity).toBeGreaterThan(0)
+
+           // Verify each booking's metadata groups the passengers correctly
+           expect(adultBooking!.metadata?.group_id).toBeDefined()
+           expect(childBooking!.metadata?.group_id).toBeDefined()
+           expect(adultBooking!.metadata?.group_id).toEqual(childBooking!.metadata?.group_id)
+
+           // Verify each booking has the correct passenger breakdown
+           const adultBookingPassengers = adultBooking!.line_items.passengers
+           const childBookingPassengers = childBooking!.line_items.passengers
+
+           expect(adultBookingPassengers.adults).toEqual(2) // Total adults in the cart (2 adult tickets)
+           expect(adultBookingPassengers.children).toEqual(0)
+           expect(adultBookingPassengers.infants).toEqual(0)
+
+           expect(childBookingPassengers.adults).toEqual(0) // Total children in the cart (2 child tickets)
+           expect(childBookingPassengers.children).toEqual(2)
+           expect(childBookingPassengers.infants).toEqual(0)
         })
 
         it("should create bookings for multiple tour items from same cart", async () => {
