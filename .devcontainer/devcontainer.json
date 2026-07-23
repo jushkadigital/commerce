@@ -32,7 +32,9 @@
       "packages": "git,wget,curl,ripgrep,xclip,sudo,iputils-ping,procps"
     },
     "ghcr.io/danzilberdan/devcontainers/opencode:0": {},
-     "ghcr.io/devcontainer-community/devcontainer-features/neovim.io:1": {}
+    "ghcr.io/duduribeiro/devcontainer-features/neovim:1": {
+            "version": "stable"
+        }
   },
   "mounts": [
     {
