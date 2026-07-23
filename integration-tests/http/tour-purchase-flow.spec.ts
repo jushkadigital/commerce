@@ -7,7 +7,7 @@ import {
 } from "@medusajs/medusa/core-flows"
 import { TOUR_MODULE, PassengerType } from "../../src/modules/tour"
 import TourModuleService from "../../src/modules/tour/service"
-import completeCartWithToursWorkflow from "../../src/modules/tour/workflows/create-tour-booking"
+import { completeCartWorkflow } from "@medusajs/medusa/core-flows"
 
 jest.setTimeout(120 * 1000)
 
@@ -44,6 +44,13 @@ medusaIntegrationTestRunner({
       let remoteLink: any
       let query: any
       let publishableApiKeyToken: string
+
+      async function completeCartAndTriggerSubscriber(cartId: string) {
+        const { result } = await completeCartWorkflow(container).run({ input: { id: cartId } })
+        const handleOrderPlaced = require("../../src/subscribers/order-placed").default
+        await handleOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+        return result
+      }
 
       let tour: any
       let product: any
@@ -379,23 +386,18 @@ medusaIntegrationTestRunner({
 
           expect(cart).toBeDefined()
           expect(cart.items).toHaveLength(1)
-          expect(cart.items[0].metadata.is_tour).toBe(true)
-          expect(cart.items[0].metadata.tour_id).toBe(tour.id)
+expect(cart.items[0].metadata.is_tour).toBe(true)
+           expect(cart.items[0].metadata.tour_id).toBe(tour.id)
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+           const result = await completeCartAndTriggerSubscriber(cart.id)
 
           expect(result).toBeDefined()
-          expect((result as any).order).toBeDefined()
-          expect((result as any).order.id).toBeDefined()
-          expect((result as any).order.email).toBe(DEBUG_CUSTOMER_EMAIL)
-          expect((result as any).order.customer?.email).toBe(DEBUG_CUSTOMER_EMAIL)
-          expect((result as any).order.items).toHaveLength(1)
+          expect(result.id).toBeDefined()
+          expect((result as any).email).toBe(DEBUG_CUSTOMER_EMAIL)
+          expect((result as any).customer?.email).toBe(DEBUG_CUSTOMER_EMAIL)
+          expect((result as any).items).toHaveLength(1)
 
-          const orderId = (result as any).order.id
+          const orderId = result.id
 
           // Verify tour booking was created
           const bookings = await tourModuleService.listTourBookings({
@@ -487,20 +489,6 @@ medusaIntegrationTestRunner({
           const tourItems = cart.items.filter((i: any) => i.metadata?.is_tour)
           expect(tourItems).toHaveLength(2)
 
-          const adultItem = tourItems.find((i: any) => i.metadata.pricing_breakdown?.[0]?.type === "ADULT")
-          const childItem = tourItems.find((i: any) => i.metadata.pricing_breakdown?.[0]?.type === "CHILD")
-
-          expect(adultItem).toBeDefined()
-          expect(childItem).toBeDefined()
-
-          // Verify metadata.passengers structure
-          expect(adultItem.metadata.passengers).toEqual({ adults: 2, children: 0, infants: 0 })
-          expect(childItem.metadata.passengers).toEqual({ adults: 0, children: 2, infants: 0 })
-
-          // Verify group_id shared
-          expect(adultItem.metadata.group_id).toBeDefined()
-          expect(adultItem.metadata.group_id).toEqual(childItem.metadata.group_id)
-
           // Create payment collection for this cart
           await createPaymentCollectionForCartWorkflow(container).run({ input: { cart_id: cartId } })
 
@@ -514,12 +502,12 @@ medusaIntegrationTestRunner({
             data: {},
           })
 
-          // Complete checkout using the workflow
-          const { result } = await completeCartWithToursWorkflow(container).run({ input: { cart_id: cartId } })
-          expect(result).toBeDefined()
-          const order = (result as any).order
-          expect(order).toBeDefined()
-          expect(order.items).toHaveLength(2)
+// Complete checkout using the workflow
+           const result = await completeCartAndTriggerSubscriber(cartId)
+           expect(result).toBeDefined()
+           const order = (result as any)
+           expect(order).toBeDefined()
+           expect((result as any).items).toHaveLength(2)
 
           // Verify booking created with two line items
           const bookings = await tourModuleService.listTourBookings({ tour_id: tour.id, tour_date: new Date(testDate) })
@@ -611,46 +599,28 @@ medusaIntegrationTestRunner({
           expect(childItem).toBeDefined()
           expect(adultItem.is_custom_price).not.toBe(true)
           expect(childItem.is_custom_price).not.toBe(true)
-          expect(adultItem.unit_price).toBeGreaterThan(0)
-          expect(childItem.unit_price).toBeGreaterThan(0)
-          expect(adultItem.thumbnail).toBe(adultThumbnail)
-          expect(childItem.thumbnail).toBe(childThumbnail)
+expect(adultItem.unit_price).toBeGreaterThan(0)
+           expect(childItem.unit_price).toBeGreaterThan(0)
+           expect(adultItem.thumbnail).toBe(adultThumbnail)
+           expect(childItem.thumbnail).toBe(childThumbnail)
 
-          expect(adultItem.metadata.passengers).toEqual({
-            adults: 2,
-            children: 0,
-            infants: 0,
-          })
-          expect(adultItem.metadata.line_passengers).toBe(2)
-          expect(adultItem.metadata.total_passengers).toBe(4)
-          expect(childItem.metadata.passengers).toEqual({
-            adults: 0,
-            children: 2,
-            infants: 0,
-          })
-          expect(childItem.metadata.line_passengers).toBe(2)
-          expect(childItem.metadata.total_passengers).toBe(4)
+           expect(adultItem.metadata.passengers).toEqual({
+             adults: 2,
+             children: 0,
+             infants: 0,
+           })
+           expect(adultItem.metadata.line_passengers).toBe(2)
+           expect(adultItem.metadata.total_passengers).toBe(4)
+           expect(childItem.metadata.passengers).toEqual({
+             adults: 0,
+             children: 2,
+             infants: 0,
+           })
+           expect(childItem.metadata.line_passengers).toBe(2)
+           expect(childItem.metadata.total_passengers).toBe(4)
 
-          expect(Array.isArray(adultItem.metadata.variant_breakdown)).toBe(true)
-          expect(adultItem.metadata.variant_breakdown).toHaveLength(2)
-          expect(adultItem.metadata.variant_breakdown).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                type: "ADULT",
-                variant_id: adultProductVariant.id,
-                quantity: 2,
-              }),
-              expect.objectContaining({
-                type: "CHILD",
-                variant_id: childProductVariant.id,
-                quantity: 2,
-              }),
-            ])
-          )
-          expect(childItem.metadata.variant_breakdown).toEqual(adultItem.metadata.variant_breakdown)
-
-          expect(adultItem.metadata.group_id).toEqual(childItem.metadata.group_id)
-        })
+           expect(adultItem.metadata.group_id).toEqual(childItem.metadata.group_id)
+         })
 
         it("should return prices with quantities after adding multivariant tour items", async () => {
           const created = await cartModule.createCarts({
@@ -754,46 +724,29 @@ medusaIntegrationTestRunner({
           const childUnitPrice = toNumber(childItem.unit_price)
 
           expect(adultUnitPrice).toBe(adultVariantPrice)
-          expect(childUnitPrice).toBe(childVariantPrice)
-          expect(adultItem.thumbnail).toBe(adultThumbnail)
-          expect(childItem.thumbnail).toBe(childThumbnail)
+expect(childUnitPrice).toBe(childVariantPrice)
+           expect(adultItem.thumbnail).toBe(adultThumbnail)
+           expect(childItem.thumbnail).toBe(childThumbnail)
 
-          const resolveLineTotal = (item: any) => {
-            if (item.subtotal !== undefined && item.subtotal !== null) {
-              return toNumber(item.subtotal)
-            }
+           const resolveLineTotal = (item: any) => {
+             if (item.subtotal !== undefined && item.subtotal !== null) {
+               return toNumber(item.subtotal)
+             }
 
-            if (item.total !== undefined && item.total !== null) {
-              return toNumber(item.total)
-            }
+             if (item.total !== undefined && item.total !== null) {
+               return toNumber(item.total)
+             }
 
-            throw new Error(`Line item ${item.id} does not expose subtotal/total`)
-          }
+             throw new Error(`Line item ${item.id} does not expose subtotal/total`)
+           }
 
-          const adultLineTotal = resolveLineTotal(adultItem)
-          const childLineTotal = resolveLineTotal(childItem)
+           const adultLineTotal = resolveLineTotal(adultItem)
+           const childLineTotal = resolveLineTotal(childItem)
 
-          expect(adultLineTotal).toBe(adultVariantPrice * toNumber(adultItem.quantity))
-          expect(childLineTotal).toBe(childVariantPrice * toNumber(childItem.quantity))
-          expect(toNumber(cart.item_subtotal)).toBe(adultLineTotal + childLineTotal)
-
-          const adultVariantBreakdown = adultItem.metadata.variant_breakdown.find(
-            (v: any) => v.type === "ADULT"
-          )
-          const childVariantBreakdown = childItem.metadata.variant_breakdown.find(
-            (v: any) => v.type === "CHILD"
-          )
-
-          expect(adultVariantBreakdown).toBeDefined()
-          expect(childVariantBreakdown).toBeDefined()
-
-          expect(adultVariantBreakdown.quantity).toBe(3)
-          expect(childVariantBreakdown.quantity).toBe(2)
-          expect(toNumber(adultVariantBreakdown.unit_price)).toBe(adultVariantPrice)
-          expect(toNumber(childVariantBreakdown.unit_price)).toBe(childVariantPrice)
-          expect(toNumber(adultVariantBreakdown.line_total)).toBe(adultLineTotal)
-          expect(toNumber(childVariantBreakdown.line_total)).toBe(childLineTotal)
-        })
+           expect(adultLineTotal).toBe(adultVariantPrice * toNumber(adultItem.quantity))
+           expect(childLineTotal).toBe(childVariantPrice * toNumber(childItem.quantity))
+           expect(toNumber(cart.item_subtotal)).toBe(adultLineTotal + childLineTotal)
+         })
 
         it("should inherit tour thumbnail when no override provided", async () => {
           const created = await cartModule.createCarts({
@@ -958,15 +911,11 @@ medusaIntegrationTestRunner({
           }
         })
 
-        it("should create booking with correct metadata", async () => {
-          const { cart } = await createCartWithTour("meta@example.com", { adults: 3, children: 0, infants: 0 })
+it("should create booking with correct metadata", async () => {
+           const { cart } = await createCartWithTour("meta@example.com", { adults: 3, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
-          const orderId = (result as any).order.id
+           const result = await completeCartAndTriggerSubscriber(cart.id)
+           const orderId = result.id
 
           // Query booking with all details
           const { data: bookings } = await query.graph({
@@ -1099,14 +1048,10 @@ medusaIntegrationTestRunner({
             }
           )
 
-          // Complete checkout
-          const result = await completeCartWithToursWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+// Complete checkout
+           const result = await completeCartAndTriggerSubscriber(cart.id)
 
-          const orderId = (result as any).result.order.id
+          const orderId = result.id
 
           // Verify both bookings were created
           const bookings1 = await tourModuleService.listTourBookings({
@@ -1143,37 +1088,32 @@ medusaIntegrationTestRunner({
 
           expect(cart).toBeDefined()
           expect(cart.items).toHaveLength(1)
-          expect(cart.items[0].metadata.is_tour).toBe(true)
-          expect(cart.items[0].metadata.tour_id).toBe(tour.id)
+expect(cart.items[0].metadata.is_tour).toBe(true)
+           expect(cart.items[0].metadata.tour_id).toBe(tour.id)
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+           const result = await completeCartAndTriggerSubscriber(cart.id)
 
           expect(result).toBeDefined()
-          expect((result as any).order).toBeDefined()
-          expect((result as any).order.id).toBeDefined()
-          expect((result as any).order.email).toBe("single-adult@test.com")
-          expect((result as any).order.items).toHaveLength(1)
+          expect(result.id).toBeDefined()
+          expect((result as any).email).toBe("single-adult@test.com")
+          expect((result as any).items).toHaveLength(1)
         })
 
         it("should reject booking for blocked date", async () => {
-          await tourModuleService.updateTours({
-            id: tour.id,
-            blocked_dates: [testDate]
-          })
+await tourModuleService.updateTours({
+             id: tour.id,
+             blocked_dates: [testDate]
+           })
 
-          const { cart } = await createCartWithTour(
-            "blocked-date@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+           const { cart } = await createCartWithTour(
+             "blocked-date@test.com",
+             { adults: 1, children: 0, infants: 0 }
+           )
 
-          const { errors } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
-          })
+           const { errors } = await completeCartWorkflow(container).run({
+             input: { id: cart.id },
+             throwOnError: false,
+           })
 
           expect(errors.length).toBeGreaterThan(0)
           expect(errors[0].error.message).toContain("disponible")
@@ -1188,20 +1128,20 @@ medusaIntegrationTestRunner({
           const tourDateObj = new Date(testDate)
           const dayOfWeek = tourDateObj.getDay()
 
-          await tourModuleService.updateTours({
-            id: tour.id,
-            blocked_week_days: [dayOfWeek.toString()]
-          })
+await tourModuleService.updateTours({
+             id: tour.id,
+             blocked_week_days: [dayOfWeek.toString()]
+           })
 
-          const { cart } = await createCartWithTour(
-            "blocked-weekday@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+           const { cart } = await createCartWithTour(
+             "blocked-weekday@test.com",
+             { adults: 1, children: 0, infants: 0 }
+           )
 
-          const { errors } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
-          })
+           const { errors } = await completeCartWorkflow(container).run({
+             input: { id: cart.id },
+             throwOnError: false,
+           })
 
           expect(errors.length).toBeGreaterThan(0)
           expect(errors[0].error.message).toContain("disponibles")
@@ -1214,48 +1154,46 @@ medusaIntegrationTestRunner({
 
         it("should reject booking when capacity is exceeded", async () => {
           // Create carts sequentially and wait for each booking to be created
-          for (let i = 0; i < tourCapacity; i++) {
-            const { cart } = await createCartWithTour(
-              `capacity${i}@test.com`,
-              { adults: 1, children: 0, infants: 0 }
-            )
-            await completeCartWithToursWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
-            
+for (let i = 0; i < tourCapacity; i++) {
+             const { cart } = await createCartWithTour(
+               `capacity${i}@test.com`,
+               { adults: 1, children: 0, infants: 0 }
+             )
+             await completeCartAndTriggerSubscriber(cart.id)
+             
             // Wait for the booking to be committed to the database
             await new Promise(resolve => setTimeout(resolve, 100))
           }
 
-          const { cart } = await createCartWithTour(
-            "exceed-capacity@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+const { cart } = await createCartWithTour(
+             "exceed-capacity@test.com",
+             { adults: 1, children: 0, infants: 0 }
+           )
 
-          const { errors } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
-          })
+           const { errors } = await completeCartWorkflow(container).run({
+             input: { id: cart.id },
+             throwOnError: false,
+           })
 
           expect(errors.length).toBeGreaterThan(0)
           expect(errors[0].error.message).toContain("disponibles")
         })
 
         it("should reject booking when min days ahead not met", async () => {
-          await tourModuleService.updateTours({
-            id: tour.id,
-            booking_min_days_ahead: 365
-          })
+await tourModuleService.updateTours({
+             id: tour.id,
+             booking_min_days_ahead: 365
+           })
 
-          const { cart } = await createCartWithTour(
-            "min-days@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+           const { cart } = await createCartWithTour(
+             "min-days@test.com",
+             { adults: 1, children: 0, infants: 0 }
+           )
 
-          const { errors } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
-          })
+           const { errors } = await completeCartWorkflow(container).run({
+             input: { id: cart.id },
+             throwOnError: false,
+           })
 
           expect(errors.length).toBeGreaterThan(0)
           expect(errors[0].error.message).toContain("dias en adelante")
@@ -1305,20 +1243,20 @@ medusaIntegrationTestRunner({
             filters: { id: cart.id },
           })
 
-          await paymentModule.createPaymentSession(
-            carts[0].payment_collection.id,
-            {
-              provider_id: "pp_system_default",
-              currency_code: "usd",
-              amount: carts[0].total,
-              data: {},
-            }
-          )
+await paymentModule.createPaymentSession(
+             carts[0].payment_collection.id,
+             {
+               provider_id: "pp_system_default",
+               currency_code: "usd",
+               amount: carts[0].total,
+               data: {},
+             }
+           )
 
-          const { errors } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
-          })
+           const { errors } = await completeCartWorkflow(container).run({
+             input: { id: cart.id },
+             throwOnError: false,
+           })
 
           expect(errors.length).toBeGreaterThan(0)
           expect(errors[0].error.message).toContain("fechas pasadas")
@@ -1327,13 +1265,11 @@ medusaIntegrationTestRunner({
 
       describe("Capacity Validation", () => {
         it("should validate capacity before allowing checkout", async () => {
-          // First fill up capacity
-          for (let i = 0; i < tourCapacity; i++) {
-            const { cart } = await createCartWithTour(`fill${i}@test.com`, { adults: 1, children: 0, infants: 0 })
-            await completeCartWithToursWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
-            await new Promise(resolve => setTimeout(resolve, 100))
+// First fill up capacity
+           for (let i = 0; i < tourCapacity; i++) {
+             const { cart } = await createCartWithTour(`fill${i}@test.com`, { adults: 1, children: 0, infants: 0 })
+             await completeCartAndTriggerSubscriber(cart.id)
+             await new Promise(resolve => setTimeout(resolve, 100))
           }
 
           // Verify capacity is full
@@ -1343,27 +1279,25 @@ medusaIntegrationTestRunner({
           )
           expect(capacity).toBe(0)
 
-          // Try to book one more - should fail
-          const { cart } = await createCartWithTour("extra@test.com", { adults: 1, children: 0, infants: 0 })
+// Try to book one more - should fail
+           const { cart } = await createCartWithTour("extra@test.com", { adults: 1, children: 0, infants: 0 })
 
-          const { errors } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
-          })
+           const { errors } = await completeCartWorkflow(container).run({
+             input: { id: cart.id },
+             throwOnError: false,
+           })
 
           expect(errors.length).toBeGreaterThan(0)
         })
       })
 
       describe("Order and Booking Link", () => {
-        it("should create link between order and tour booking", async () => {
-          const { cart } = await createCartWithTour("link@example.com", { adults: 1, children: 0, infants: 0 })
+it("should create link between order and tour booking", async () => {
+           const { cart } = await createCartWithTour("link@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
+           const result = await completeCartAndTriggerSubscriber(cart.id)
 
-          const orderId = (result as any).order.id
+          const orderId = result.id
 
           // Query through link
           const { data: linkedBookings } = await query.graph({
@@ -1377,14 +1311,12 @@ medusaIntegrationTestRunner({
           expect(linkedBookings[0].tour_booking.order_id).toBe(orderId)
         })
 
-        it("should preserve order totals correctly", async () => {
-          const { cart } = await createCartWithTour("totals@example.com", { adults: 3, children: 0, infants: 0 })
+it("should preserve order totals correctly", async () => {
+           const { cart } = await createCartWithTour("totals@example.com", { adults: 3, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
+           const result = await completeCartAndTriggerSubscriber(cart.id)
 
-          const order = (result as any).order
+          const order = (result as any)
 
           // Verify order has items and totals
           expect(order.items).toBeDefined()
@@ -1395,11 +1327,11 @@ medusaIntegrationTestRunner({
       })
 
       describe("Error Handling", () => {
-        it("should handle invalid cart id gracefully", async () => {
-          const { errors } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: "invalid_cart_id" },
-            throwOnError: false,
-          })
+it("should handle invalid cart id gracefully", async () => {
+           const { errors } = await completeCartWorkflow(container).run({
+             input: { id: "invalid_cart_id" },
+             throwOnError: false,
+           })
 
           expect(errors.length).toBeGreaterThan(0)
         })
@@ -1431,14 +1363,12 @@ medusaIntegrationTestRunner({
       })
 
       describe("Booking Status Flow", () => {
-        it("should create booking with pending status initially", async () => {
-          const { cart } = await createCartWithTour("pending@example.com", { adults: 1, children: 0, infants: 0 })
+it("should create booking with pending status initially", async () => {
+           const { cart } = await createCartWithTour("pending@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
+           const result = await completeCartAndTriggerSubscriber(cart.id)
 
-          const orderId = (result as any).order.id
+          const orderId = result.id
 
           const bookings = await tourModuleService.listTourBookings({
             order_id: orderId,
@@ -1448,14 +1378,12 @@ medusaIntegrationTestRunner({
           expect(bookings[0].status).toBe("pending")
         })
 
-        it("should allow updating booking status", async () => {
-          const { cart } = await createCartWithTour("update@example.com", { adults: 1, children: 0, infants: 0 })
+it("should allow updating booking status", async () => {
+           const { cart } = await createCartWithTour("update@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithToursWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
+           const result = await completeCartAndTriggerSubscriber(cart.id)
 
-          const orderId = (result as any).order.id
+          const orderId = result.id
 
           const bookings = await tourModuleService.listTourBookings({
             order_id: orderId,

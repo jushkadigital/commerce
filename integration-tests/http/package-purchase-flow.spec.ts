@@ -1,9 +1,8 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { createPaymentCollectionForCartWorkflow, createApiKeysWorkflow, linkSalesChannelsToApiKeyWorkflow } from "@medusajs/medusa/core-flows"
+import { createPaymentCollectionForCartWorkflow, createApiKeysWorkflow, linkSalesChannelsToApiKeyWorkflow, completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import { PACKAGE_MODULE } from "../../src/modules/package"
 import PackageModuleService from "../../src/modules/package/service"
-import completeCartWithPackagesWorkflow from "../../src/workflows/create-package-booking"
 import { PassengerType } from "../../src/modules/package/models/package-variant"
 
 jest.setTimeout(120 * 1000)
@@ -156,11 +155,12 @@ medusaIntegrationTestRunner({
         const publishableApiKey = publishableApiKeyResult[0]
         publishableApiKeyToken = publishableApiKey.token
 
-        await linkSalesChannelsToApiKeyWorkflow(container).run({
-          input: {
-            id: publishableApiKey.id,
-            add: [salesChannel.id],
-          },
+await linkSalesChannelsToApiKeyWorkflow(container).run({
+            input: {
+              id: publishableApiKey.id,
+              add: [salesChannel.id],
+            },
+          })
         })
       })
 
@@ -197,8 +197,17 @@ medusaIntegrationTestRunner({
         }
 
         productVariants = []
-      })
+})
+ 
+      // Helper functions for native workflows with manual subscriber triggers
+      async function completeCartAndTriggerPackageSubscriber(cartId: string) {
+        const { result } = await completeCartWorkflow(container).run({ input: { id: cartId } })
+        const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+        await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+        return result
+      }
 
+      describe("Complete Purchase Flow - Success Cases", () => {
       /**
        * Helper function to create a cart with package items
        */
@@ -396,29 +405,24 @@ medusaIntegrationTestRunner({
           expect(cart.items[0].metadata.is_package).toBe(true)
           expect(cart.items[0].metadata.package_id).toBe(pkg.id)
 
-          const { result } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
-          expect(result).toBeDefined()
-          expect((result as any).order).toBeDefined()
-          expect((result as any).order.id).toBeDefined()
-          expect((result as any).order.email).toBe("test@example.com")
-          expect((result as any).order.items).toHaveLength(1)
+            expect(result).toBeDefined()
+            expect((result as any).id).toBeDefined()
+            expect((result as any).email).toBe("test@example.com")
+            expect((result as any).items).toHaveLength(1)
 
-          const orderId = (result as any).order.id
+            const orderId = (result as any).id
 
-          const bookings = await packageModuleService.listPackageBookings({
-            package_id: pkg.id,
-            package_date: new Date(testDate),
-          })
+            const bookings = await packageModuleService.listPackageBookings({
+              package_id: pkg.id,
+              package_date: new Date(testDate),
+            })
 
-          expect(bookings).toHaveLength(1)
-          const booking = bookings[0]
-          expect(booking.order_id).toBe(orderId)
-          expect(booking.status).toBe("pending")
+            expect(bookings).toHaveLength(1)
+            const booking = bookings[0]
+            expect(booking.order_id).toBe(orderId)
+            expect(booking.status).toBe("pending")
 
           const remainingCapacity = await packageModuleService.getAvailableCapacity(
             pkg.id,
@@ -430,13 +434,9 @@ medusaIntegrationTestRunner({
         it("should create booking with correct metadata", async () => {
           const { cart } = await createCartWithPackage("meta@example.com", { adults: 3, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+          const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
-          const orderId = (result as any).order.id
+          const orderId = (result as any).id
 
           const { data: bookings } = await query.graph({
             entity: "package_booking",
@@ -448,7 +448,7 @@ medusaIntegrationTestRunner({
 
           expect(bookings).toHaveLength(1)
           const booking = bookings[0]
-          const orderGroupId = (result as any).order.items?.[0]?.metadata?.group_id
+          const orderGroupId = (result as any).items?.[0]?.metadata?.group_id
           expect(booking.order_id).toBe(orderId)
           expect(booking.status).toBe("pending")
           expect(new Date(booking.package_date).toISOString().split("T")[0]).toBe(testDate)
@@ -581,13 +581,9 @@ medusaIntegrationTestRunner({
           )
 
           // Complete checkout
-          const result = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+          const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
-          const orderId = result.result.order.id
+          const orderId = (result as any).id
 
           // Verify both bookings were created
           const bookings1 = await packageModuleService.listPackageBookings({
@@ -627,37 +623,38 @@ medusaIntegrationTestRunner({
           expect(cart.items[0].metadata.is_package).toBe(true)
           expect(cart.items[0].metadata.package_id).toBe(pkg.id)
 
-          const { result } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+          const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
           expect(result).toBeDefined()
-          expect((result as any).order).toBeDefined()
-          expect((result as any).order.id).toBeDefined()
-          expect((result as any).order.email).toBe("single-adult@test.com")
-          expect((result as any).order.items).toHaveLength(1)
+          expect((result as any).id).toBeDefined()
+          expect((result as any).email).toBe("single-adult@test.com")
+          expect((result as any).items).toHaveLength(1)
         })
 
         it("should reject booking for blocked date", async () => {
-          await packageModuleService.updatePackages({
-            id: pkg.id,
-            blocked_dates: [testDate]
-          })
+await packageModuleService.updatePackages({
+             id: pkg.id,
+             blocked_dates: [testDate]
+           })
 
           const { cart } = await createCartWithPackage(
-            "blocked-date@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+             "blocked-date@test.com",
+             { adults: 1, children: 0, infants: 0 }
+           )
 
-          const { errors } = await completeCartWithPackagesWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
+          const { result, errors } = await completeCartWorkflow(container).run({
+            input: { id: cart.id },
           })
 
+          // Trigger subscriber manually
+          if (result) {
+            const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+            await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+          }
+
+          expect(errors).toBeDefined()
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("disponible")
+          expect(errors[0].message).toContain("disponible")
 
           await packageModuleService.updatePackages({
             id: pkg.id,
@@ -679,13 +676,19 @@ medusaIntegrationTestRunner({
             { adults: 1, children: 0, infants: 0 }
           )
 
-          const { errors } = await completeCartWithPackagesWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
+          const { result, errors } = await completeCartWorkflow(container).run({
+            input: { id: cart.id },
           })
 
+          // Trigger subscriber manually if successful
+          if (result) {
+            const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+            await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+          }
+
+          expect(errors).toBeDefined()
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("disponible")
+          expect(errors[0].message).toContain("disponible")
 
           await packageModuleService.updatePackages({
             id: pkg.id,
@@ -699,25 +702,29 @@ medusaIntegrationTestRunner({
               `capacity${i}@test.com`,
               { adults: 1, children: 0, infants: 0 }
             )
-            await completeCartWithPackagesWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
-            
+await completeCartAndTriggerPackageSubscriber(cart.id)
+
             await new Promise(resolve => setTimeout(resolve, 100))
           }
 
-          const { cart } = await createCartWithPackage(
-            "exceed-capacity@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+const { cart } = await createCartWithPackage(
+             "exceed-capacity@test.com",
+             { adults: 1, children: 0, infants: 0 }
+           )
 
-          const { errors } = await completeCartWithPackagesWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
+          const { result, errors } = await completeCartWorkflow(container).run({
+            input: { id: cart.id },
           })
 
+          // Trigger subscriber manually if successful
+          if (result) {
+            const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+            await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+          }
+
+          expect(errors).toBeDefined()
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("espacios disponibles")
+          expect(errors[0].message).toContain("espacios disponibles")
         })
 
         it("should reject booking when min months ahead not met", async () => {
@@ -727,18 +734,24 @@ medusaIntegrationTestRunner({
         booking_min_days_ahead: 400
           })
 
-          const { cart } = await createCartWithPackage(
-            "min-months@test.com",
-            { adults: 1, children: 0, infants: 0 }
-          )
+const { cart } = await createCartWithPackage(
+             "min-months@test.com",
+             { adults: 1, children: 0, infants: 0 }
+           )
 
-          const { errors } = await completeCartWithPackagesWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
+          const { result, errors } = await completeCartWorkflow(container).run({
+            input: { id: cart.id },
           })
 
+          // Trigger subscriber manually if successful
+          if (result) {
+            const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+            await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+          }
+
+          expect(errors).toBeDefined()
           expect(errors.length).toBeGreaterThan(0)
-      expect(errors[0].error.message).toContain("dias en adelante")
+          expect(errors[0].message).toContain("dias en adelante")
 
           await packageModuleService.updatePackages({
             id: pkg.id,
@@ -803,13 +816,19 @@ medusaIntegrationTestRunner({
             }
           )
 
-          const { errors } = await completeCartWithPackagesWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
+          const { result, errors } = await completeCartWorkflow(container).run({
+            input: { id: cart.id },
           })
 
+          // Trigger subscriber manually if successful
+          if (result) {
+            const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+            await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+          }
+
+          expect(errors).toBeDefined()
           expect(errors.length).toBeGreaterThan(0)
-          expect(errors[0].error.message).toContain("pasadas")
+          expect(errors[0].message).toContain("pasadas")
         })
       })
 
@@ -817,9 +836,7 @@ medusaIntegrationTestRunner({
         it("should validate capacity before allowing checkout", async () => {
           for (let i = 0; i < packageCapacity; i++) {
             const { cart } = await createCartWithPackage(`fill${i}@test.com`, { adults: 1, children: 0, infants: 0 })
-            await completeCartWithPackagesWorkflow(container).run({
-              input: { cart_id: cart.id },
-            })
+            await completeCartAndTriggerPackageSubscriber(cart.id)
             await new Promise(resolve => setTimeout(resolve, 100))
           }
 
@@ -831,11 +848,17 @@ medusaIntegrationTestRunner({
 
           const { cart } = await createCartWithPackage("extra@test.com", { adults: 1, children: 0, infants: 0 })
 
-          const { errors } = await completeCartWithPackagesWorkflow(container).run({
-            input: { cart_id: cart.id },
-            throwOnError: false,
+          const { result, errors } = await completeCartWorkflow(container).run({
+            input: { id: cart.id },
           })
 
+          // Trigger subscriber manually if successful
+          if (result) {
+            const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+            await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+          }
+
+          expect(errors).toBeDefined()
           expect(errors.length).toBeGreaterThan(0)
         })
       })
@@ -844,13 +867,9 @@ medusaIntegrationTestRunner({
         it("should create link between order and package booking", async () => {
           const { cart } = await createCartWithPackage("link@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+          const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
-          const orderId = (result as any).order.id
+          const orderId = (result as any).id
 
           const { data: linkedBookings } = await query.graph({
             entity: "package_booking_order",
@@ -868,13 +887,9 @@ medusaIntegrationTestRunner({
         it("should preserve order totals correctly", async () => {
           const { cart } = await createCartWithPackage("totals@example.com", { adults: 3, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+          const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
-          const order = (result as any).order
+          const order = (result as any)
 
           expect(order.items).toBeDefined()
           expect(order.items!.length).toBeGreaterThan(0)
@@ -885,13 +900,19 @@ medusaIntegrationTestRunner({
 
       describe("Error Handling", () => {
         it("should handle invalid cart id gracefully", async () => {
-          const { errors } = await completeCartWithPackagesWorkflow(container).run({
+          const { result, errors } = await completeCartWorkflow(container).run({
             input: {
-              cart_id: "invalid_cart_id",
+              id: "invalid_cart_id",
             },
-            throwOnError: false,
           })
 
+          // Trigger subscriber manually if successful
+          if (result) {
+            const handlePackageOrderPlaced = require("../../src/subscribers/package-order-placed").default
+            await handlePackageOrderPlaced({ event: { data: { id: result.id }, name: "order.placed" }, container } as any)
+          }
+
+          expect(errors).toBeDefined()
           expect(errors.length).toBeGreaterThan(0)
         })
 
@@ -925,13 +946,9 @@ medusaIntegrationTestRunner({
         it("should create booking with pending status initially", async () => {
           const { cart } = await createCartWithPackage("pending@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+          const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
-          const orderId = (result as any).order.id
+          const orderId = (result as any).id
 
           const bookings = await packageModuleService.listPackageBookings({
             order_id: orderId,
@@ -944,13 +961,9 @@ medusaIntegrationTestRunner({
         it("should allow updating booking status", async () => {
           const { cart } = await createCartWithPackage("update@example.com", { adults: 1, children: 0, infants: 0 })
 
-          const { result } = await completeCartWithPackagesWorkflow(container).run({
-            input: {
-              cart_id: cart.id,
-            },
-          })
+          const result = await completeCartAndTriggerPackageSubscriber(cart.id)
 
-          const orderId = (result as any).order.id
+          const orderId = (result as any).id
 
           const bookings = await packageModuleService.listPackageBookings({
             order_id: orderId,

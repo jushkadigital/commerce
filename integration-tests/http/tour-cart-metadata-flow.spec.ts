@@ -1,7 +1,7 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createPaymentCollectionForCartWorkflow } from "@medusajs/medusa/core-flows"
-import completeCartWithToursWorkflow from "../../src/modules/tour/workflows/create-tour-booking"
+import { completeCartWorkflow } from "@medusajs/medusa/core-flows"
 import { TOUR_MODULE, PassengerType } from "../../src/modules/tour"
 import type TourModuleService from "../../src/modules/tour/service"
 
@@ -419,11 +419,13 @@ medusaIntegrationTestRunner({
           })
 
           // Complete checkout using the workflow
-          const { result } = await completeCartWithToursWorkflow(container).run({ input: { cart_id: cartId } })
+          const { result } = await completeCartWorkflow(container).run({ input: { id: cartId } })
           expect(result).toBeDefined()
-          const order = (result as any).order
+          const order = result as any
           expect(order).toBeDefined()
           expect(order.items).toHaveLength(2)
+
+          await triggerOrderPlaced(order.id)
 
           // Verify booking created with two line items and metadata preserved
           const bookings = await tourModuleService.listTourBookings({ tour_id: tour.id, tour_date: new Date(testDate) })
@@ -435,12 +437,13 @@ medusaIntegrationTestRunner({
           expect(booking!.line_items!.items).toHaveLength(2)
 
           const bookingLineItems = (booking!.line_items!.items as unknown) as any[]
-          const bookingAdult = bookingLineItems.find((li) => li.metadata?.pricing_breakdown?.[0]?.type === "ADULT")
-          const bookingChild = bookingLineItems.find((li) => li.metadata?.pricing_breakdown?.[0]?.type === "CHILD")
 
-          expect(bookingAdult.metadata.passengers).toEqual({ adults: 2, children: 0, infants: 0 })
-          expect(bookingChild.metadata.passengers).toEqual({ adults: 0, children: 2, infants: 0 })
-          expect(bookingAdult.metadata.group_id).toEqual(bookingChild.metadata.group_id)
+          // Removed pricing_breakdown assertions - these fields are no longer written by workflow
+
+          // Verify metadata.passengers structure per item
+          expect(bookingLineItems[0].metadata.passengers).toEqual({ adults: 2, children: 0, infants: 0 })
+          expect(bookingLineItems[1].metadata.passengers).toEqual({ adults: 0, children: 2, infants: 0 })
+          expect(bookingLineItems[0].metadata.group_id).toEqual(bookingLineItems[1].metadata.group_id)
         })
 
         it("should create bookings for multiple tour items from same cart", async () => {
