@@ -155,9 +155,9 @@ const KEYCLOAK_STORE_CLIENT_SECRET = process.env.KEYCLOAK_STORE_CLIENT_SECRET
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: DATABASE_URL,
-    databaseDriverOptions: DEPLOYMENT_TYPE === 'local'
-      ? { ssl: false, sslmode: 'disable', pool: { min: 2, max: 5 } }
-      : { ssl: { rejectUnauthorized: false }, pool: { min: 2, max: 15, idleTimeoutMillis: 30000 } },
+    ...(DEPLOYMENT_TYPE === 'local'
+      ? { databaseDriverOptions: { ssl: false, sslmode: 'disable' } }
+      : { databaseDriverOptions: { ssl: { rejectUnauthorized: false } } }),
     redisUrl: DISABLE_REDIS ? undefined : REDIS_URL,
     workerMode: (process.env.MEDUSA_WORKER_MODE as 'server' | 'worker' | 'shared' | undefined) || 'shared',
     http: {
