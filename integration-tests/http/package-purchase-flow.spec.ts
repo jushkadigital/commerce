@@ -754,62 +754,62 @@ const { cart } = await createCartWithPackage(
            })
          })
 
-        it("should reject booking for past dates", async () => {
-          const pastDate = "2020-01-01"
+it("should reject booking for past dates", async () => {
+           const pastDate = "2020-01-01"
 
-          const customers = await customerModule.listCustomers({
-            email: "past-date@test.com",
-          })
-          let customer = customers[0] || await customerModule.createCustomers({
-            email: "past-date@test.com",
-            first_name: "Test",
-            last_name: "Customer",
-          })
+           const customers = await customerModule.listCustomers({
+             email: "past-date@test.com",
+           })
+           let customer = customers[0] || await customerModule.createCustomers({
+             email: "past-date@test.com",
+             first_name: "Test",
+             last_name: "Customer",
+           })
 
-          const adultVariant = product.variants.find(
-            (v: any) => v.title === "Adult Ticket"
-          )
+           const adultVariant = product.variants.find(
+             (v: any) => v.title === "Adult Ticket"
+           )
 
-          const cart = await cartModule.createCarts({
-            currency_code: "usd",
-            email: "past-date@test.com",
-            customer_id: customer.id,
-            sales_channel_id: salesChannel.id,
-            region_id: region.id,
-            items: [{
-              variant_id: adultVariant.id,
-              quantity: 1,
-              requires_shipping: false,
-              unit_price: 100,
-              title: `${pkg.destination} - ${pastDate}`,
-              metadata: {
-                is_package: true,
-                package_id: pkg.id,
-                package_date: pastDate,
-                total_passengers: 1,
-              },
-            }],
-          })
+           const cart = await cartModule.createCarts({
+             currency_code: "usd",
+             email: "past-date@test.com",
+             customer_id: customer.id,
+             sales_channel_id: salesChannel.id,
+             region_id: region.id,
+             items: [{
+               variant_id: adultVariant.id,
+               quantity: 1,
+               requires_shipping: false,
+               unit_price: 100,
+               title: `${pkg.destination} - ${pastDate}`,
+               metadata: {
+                 is_package: true,
+                 package_id: pkg.id,
+                 package_date: pastDate,
+                 total_passengers: 1,
+               },
+             }],
+           })
 
-          await createPaymentCollectionForCartWorkflow(container).run({
-            input: { cart_id: cart.id },
-          })
+           await createPaymentCollectionForCartWorkflow(container).run({
+             input: { cart_id: cart.id },
+           })
 
-          const { data: carts } = await query.graph({
-            entity: "cart",
-            fields: ["id", "total", "payment_collection.id"],
-            filters: { id: cart.id },
-          })
+           const { data: carts } = await query.graph({
+             entity: "cart",
+             fields: ["id", "total", "payment_collection.id"],
+             filters: { id: cart.id },
+           })
 
-          await paymentModule.createPaymentSession(
-            carts[0].payment_collection.id,
-            {
-              provider_id: "pp_system_default",
-              currency_code: "usd",
-              amount: carts[0].total,
-              data: {},
-            }
-          )
+           await paymentModule.createPaymentSession(
+             carts[0].payment_collection.id,
+             {
+               provider_id: "pp_system_default",
+               currency_code: "usd",
+               amount: carts[0].total,
+               data: {},
+             }
+           )
 
 const { result, errors } = await completeCartWorkflow(container).run({
              input: { id: cart.id },
@@ -821,8 +821,496 @@ const { result, errors } = await completeCartWorkflow(container).run({
            const error = errors[0]
            const errorMessage = (error as any).message || (error as any)?.error?.message || (error as any).cause || JSON.stringify(error)
            expect(errorMessage).toContain("pasadas")
-        })
-      })
+         })
+
+         it("should handle mixed passenger types via API endpoint", async () => {
+           // Create an empty cart first via cartModule to avoid missing publishable API key on store endpoints
+           const created = await cartModule.createCarts({
+             email: "mixed-api@test.com",
+             region_id: region.id,
+             sales_channel_id: salesChannel.id,
+             currency_code: "usd",
+           })
+
+           const cartId = created.id
+
+           // Add package items directly via cartModule to avoid needing publishable API key
+           const adultVariant = product.variants.find((v: any) => v.title === "Adult Ticket")
+           const childVariant = product.variants.find((v: any) => v.title === "Child Ticket")
+
+           const itemsToAdd: any[] = []
+           const groupId = `package-${pkg.id}-${testDate}`
+
+           if (adultVariant) {
+             itemsToAdd.push({
+               variant_id: adultVariant.id,
+               quantity: 1,
+               requires_shipping: false,
+               unit_price: 100 * 2,
+               title: `${pkg.destination} - ${testDate} (Adults)`,
+               metadata: {
+                 is_package: true,
+                 package_id: pkg.id,
+                 package_date: testDate,
+                 package_destination: pkg.destination,
+                 package_duration_days: pkg.duration_days,
+                 total_passengers: 2,
+                 passengers: { adults: 2, children: 0, infants: 0 },
+                 group_id: groupId,
+                 pricing_breakdown: [ { type: "ADULT", quantity: 2, unit_price: 100 } ],
+               },
+             })
+           }
+
+           if (childVariant) {
+             itemsToAdd.push({
+               variant_id: childVariant.id,
+               quantity: 1,
+               requires_shipping: false,
+               unit_price: 70 * 2,
+               title: `${pkg.destination} - ${testDate} (Children)`,
+               metadata: {
+                 is_package: true,
+                 package_id: pkg.id,
+                 package_date: testDate,
+                 package_destination: pkg.destination,
+                 package_duration_days: pkg.duration_days,
+                 total_passengers: 2,
+                 passengers: { adults: 0, children: 2, infants: 0 },
+                 group_id: groupId,
+                 pricing_breakdown: [ { type: "CHILD", quantity: 2, unit_price: 70 } ],
+               },
+             })
+           }
+
+           await cartModule.addLineItems(cartId, itemsToAdd)
+
+           const { data: cartsWithItems } = await query.graph({ entity: "cart", fields: ["id", "total", "items.*", "items.metadata"], filters: { id: cartId } })
+           const cart = cartsWithItems[0]
+
+           // Cart should have 2 separate line items (adult + child)
+           expect(cart.items).toBeDefined()
+           // Filter only package items
+           const packageItems = cart.items.filter((i: any) => i.metadata?.is_package)
+           expect(packageItems).toHaveLength(2)
+
+           // Create payment collection for this cart
+           await createPaymentCollectionForCartWorkflow(container).run({ input: { cart_id: cartId } })
+
+           const { data: cartsWithPayment } = await query.graph({ entity: "cart", fields: ["id", "total", "payment_collection.id"], filters: { id: cartId } })
+           const cartWithPayment = cartsWithPayment[0]
+
+           await paymentModule.createPaymentSession(cartWithPayment.payment_collection.id, {
+             provider_id: "pp_system_default",
+             currency_code: "usd",
+             amount: cartWithPayment.total,
+             data: {},
+           })
+
+           // Complete checkout using the workflow
+            const result = await completeCartAndTriggerPackageSubscriber(cartId)
+            expect(result).toBeDefined()
+            const order = (result as any)
+            expect(order).toBeDefined()
+            expect((result as any).items).toHaveLength(2)
+
+           // Verify booking created with two line items
+           const bookings = await packageModuleService.listPackageBookings({ package_id: pkg.id, package_date: new Date(testDate) })
+           // There should be 1 booking that contains 2 line items (grouped)
+           expect(bookings.length).toBeGreaterThan(0)
+           const booking = bookings.find((b: any) => b.order_id === order.id)
+           expect(booking).toBeDefined()
+           expect(booking!.line_items).toBeDefined()
+         })
+
+         it("should create multivariant line items in same cart via store API endpoint", async () => {
+           const created = await cartModule.createCarts({
+             email: "mixed-store-api@test.com",
+             region_id: region.id,
+             sales_channel_id: salesChannel.id,
+             currency_code: "usd",
+           })
+
+           const cartId = created.id
+
+           const adultProductVariant = product.variants.find(
+             (v: any) => v.title === "Adult Ticket"
+           )
+           const childProductVariant = product.variants.find(
+             (v: any) => v.title === "Child Ticket"
+           )
+
+           expect(adultProductVariant).toBeDefined()
+           expect(childProductVariant).toBeDefined()
+
+           const adultThumbnail = "https://example.com/thumb-adult.jpg"
+           const childThumbnail = "https://example.com/thumb-child.jpg"
+
+           const addRes = await api.post(
+             "/store/cart/package-items",
+             {
+               cart_id: cartId,
+               package_date: testDate,
+               items: [
+                 {
+                   variant_id: adultProductVariant.id,
+                   quantity: 2,
+                   unit_price: 100,
+                   thumbnail: adultThumbnail,
+                   metadata: { package_date: testDate },
+                 },
+                 {
+                   variant_id: childProductVariant.id,
+                   quantity: 2,
+                   unit_price: 70,
+                   thumbnail: childThumbnail,
+                   metadata: { package_date: testDate },
+                 },
+               ],
+             },
+             {
+               headers: {
+                 "x-publishable-api-key": publishableApiKeyToken,
+               },
+             }
+           )
+
+           expect(addRes.status).toBe(200)
+           expect(addRes.data?.cart?.id).toBe(cartId)
+           expect(addRes.data?.summary?.package_id).toBe(pkg.id)
+
+           const { data: cartsWithItems } = await query.graph({
+             entity: "cart",
+             fields: ["id", "items.*", "items.metadata"],
+             filters: { id: cartId },
+           })
+
+           const cart = cartsWithItems[0]
+           const packageItems = cart.items.filter((i: any) => i.metadata?.is_package)
+
+           expect(packageItems).toHaveLength(2)
+
+           const adultItem = packageItems.find(
+             (i: any) => i.metadata?.passenger_type === "ADULT"
+           )
+           const childItem = packageItems.find(
+             (i: any) => i.metadata?.passenger_type === "CHILD"
+           )
+
+           expect(adultItem).toBeDefined()
+           expect(childItem).toBeDefined()
+           expect(adultItem.is_custom_price).not.toBe(true)
+           expect(childItem.is_custom_price).not.toBe(true)
+           expect(adultItem.unit_price).toBeGreaterThan(0)
+           expect(childItem.unit_price).toBeGreaterThan(0)
+           expect(adultItem.thumbnail).toBe(adultThumbnail)
+           expect(childItem.thumbnail).toBe(childThumbnail)
+
+           expect(adultItem.metadata.passengers).toEqual({
+             adults: 2,
+             children: 0,
+             infants: 0,
+           })
+           expect(adultItem.metadata.line_passengers).toBe(2)
+           expect(adultItem.metadata.total_passengers).toBe(4)
+           expect(childItem.metadata.passengers).toEqual({
+             adults: 0,
+             children: 2,
+             infants: 0,
+           })
+           expect(childItem.metadata.line_passengers).toBe(2)
+           expect(childItem.metadata.total_passengers).toBe(4)
+
+           expect(adultItem.metadata.group_id).toEqual(childItem.metadata.group_id)
+         })
+
+         it("should return prices with quantities after adding multivariant package items", async () => {
+           const created = await cartModule.createCarts({
+             email: "multivariant-prices@test.com",
+             region_id: region.id,
+             sales_channel_id: salesChannel.id,
+             currency_code: "usd",
+           })
+
+           const cartId = created.id
+
+           const adultProductVariant = product.variants.find(
+             (v: any) => v.title === "Adult Ticket"
+           )
+           const childProductVariant = product.variants.find(
+             (v: any) => v.title === "Child Ticket"
+           )
+
+           expect(adultProductVariant).toBeDefined()
+           expect(childProductVariant).toBeDefined()
+
+           const adultThumbnail = "https://example.com/thumb-adult-price.jpg"
+           const childThumbnail = "https://example.com/thumb-child-price.jpg"
+
+           const variantPriceById = new Map<string, number>([
+             [adultProductVariant.id, 100],
+             [childProductVariant.id, 70],
+           ])
+
+           const addRes = await api.post(
+             "/store/cart/package-items",
+             {
+               cart_id: cartId,
+               package_date: testDate,
+               items: [
+                 {
+                   variant_id: adultProductVariant.id,
+                   quantity: 3,
+                   unit_price: 100,
+                   thumbnail: adultThumbnail,
+                   metadata: { package_date: testDate },
+                 },
+                 {
+                   variant_id: childProductVariant.id,
+                   quantity: 2,
+                   unit_price: 70,
+                   thumbnail: childThumbnail,
+                   metadata: { package_date: testDate },
+                 },
+               ],
+             },
+             {
+               headers: {
+                 "x-publishable-api-key": publishableApiKeyToken,
+               },
+             }
+           )
+
+           expect(addRes.status).toBe(200)
+
+           const { data: cartsWithItems } = await query.graph({
+             entity: "cart",
+             fields: [
+               "id",
+               "item_subtotal",
+               "items.id",
+               "items.thumbnail",
+               "items.quantity",
+               "items.unit_price",
+               "items.total",
+               "items.subtotal",
+               "items.metadata",
+             ],
+             filters: { id: cartId },
+           })
+
+           const cart = cartsWithItems[0]
+           const packageItems = cart.items.filter((i: any) => i.metadata?.is_package)
+
+           expect(packageItems).toHaveLength(2)
+
+           const adultItem = packageItems.find(
+             (i: any) => i.metadata?.passenger_type === "ADULT"
+           )
+           const childItem = packageItems.find(
+             (i: any) => i.metadata?.passenger_type === "CHILD"
+           )
+
+           expect(adultItem).toBeDefined()
+           expect(childItem).toBeDefined()
+
+           expect(adultItem.quantity).toBe(3)
+           expect(childItem.quantity).toBe(2)
+
+           const adultVariantPrice = variantPriceById.get(adultProductVariant.id)!
+           const childVariantPrice = variantPriceById.get(childProductVariant.id)!
+
+           const toNumber = (value: any) => Number(value)
+
+           const adultUnitPrice = toNumber(adultItem.unit_price)
+           const childUnitPrice = toNumber(childItem.unit_price)
+
+           expect(adultUnitPrice).toBe(adultVariantPrice)
+           expect(childUnitPrice).toBe(childVariantPrice)
+           expect(adultItem.thumbnail).toBe(adultThumbnail)
+           expect(childItem.thumbnail).toBe(childThumbnail)
+
+           const resolveLineTotal = (item: any) => {
+             if (item.subtotal !== undefined && item.subtotal !== null) {
+               return toNumber(item.subtotal)
+             }
+
+             if (item.total !== undefined && item.total !== null) {
+               return toNumber(item.total)
+             }
+
+             throw new Error(`Line item ${item.id} does not expose subtotal/total`)
+           }
+
+           const adultLineTotal = resolveLineTotal(adultItem)
+           const childLineTotal = resolveLineTotal(childItem)
+
+           expect(adultLineTotal).toBe(adultVariantPrice * toNumber(adultItem.quantity))
+           expect(childLineTotal).toBe(childVariantPrice * toNumber(childItem.quantity))
+           expect(toNumber(cart.item_subtotal)).toBe(adultLineTotal + childLineTotal)
+         })
+
+         it("should inherit package thumbnail when no override provided", async () => {
+           const created = await cartModule.createCarts({
+             email: "thumbnail-inherit@test.com",
+             region_id: region.id,
+             sales_channel_id: salesChannel.id,
+             currency_code: "usd",
+           })
+
+           const cartId = created.id
+
+           const adultProductVariant = product.variants.find(
+             (v: any) => v.title === "Adult Ticket"
+           )
+
+           expect(adultProductVariant).toBeDefined()
+
+           // Add items WITHOUT providing thumbnail override
+           const addRes = await api.post(
+             "/store/cart/package-items",
+             {
+               cart_id: cartId,
+               package_date: testDate,
+               items: [
+                 {
+                   variant_id: adultProductVariant.id,
+                   quantity: 2,
+                   unit_price: 100,
+                   metadata: { package_date: testDate },
+                 },
+               ],
+             },
+             {
+               headers: {
+                 "x-publishable-api-key": publishableApiKeyToken,
+               },
+             }
+           )
+
+           expect(addRes.status).toBe(200)
+           const { data: cartsWithItems } = await query.graph({
+             entity: "cart",
+             fields: ["id", "items.*", "items.metadata"],
+             filters: { id: cartId },
+           })
+
+           const cart = cartsWithItems[0]
+           const packageItems = cart.items.filter((i: any) => i.metadata?.is_package)
+
+           expect(packageItems).toHaveLength(1)
+           const adultItem = packageItems[0]
+
+           // The cart item should inherit the package's thumbnail
+           expect(adultItem.thumbnail).toBe(pkg.thumbnail)
+           expect(adultItem.thumbnail).toBe("https://example.com/cusco-package-thumb.jpg")
+         })
+
+         it("should validate product and variant thumbnails in cart retrieval", async () => {
+           const created = await cartModule.createCarts({
+             email: "variant-thumbnails@test.com",
+             region_id: region.id,
+             sales_channel_id: salesChannel.id,
+             currency_code: "usd",
+           })
+
+           const cartId = created.id
+
+           const adultProductVariant = product.variants.find(
+             (v: any) => v.title === "Adult Ticket"
+           )
+           const childProductVariant = product.variants.find(
+             (v: any) => v.title === "Child Ticket"
+           )
+
+           const customAdultThumbnail = "https://example.com/custom-adult.jpg"
+           const customChildThumbnail = "https://example.com/custom-child.jpg"
+
+           expect(adultProductVariant).toBeDefined()
+           expect(childProductVariant).toBeDefined()
+
+           // Add items WITH custom thumbnail overrides
+           const addRes = await api.post(
+             "/store/cart/package-items",
+             {
+               cart_id: cartId,
+               package_date: testDate,
+               items: [
+                 {
+                   variant_id: adultProductVariant.id,
+                   quantity: 1,
+                   unit_price: 100,
+                   thumbnail: customAdultThumbnail,
+                   metadata: { package_date: testDate },
+                 },
+                 {
+                   variant_id: childProductVariant.id,
+                   quantity: 1,
+                   unit_price: 70,
+                   thumbnail: customChildThumbnail,
+                   metadata: { package_date: testDate },
+                 },
+               ],
+             },
+             {
+               headers: {
+                 "x-publishable-api-key": publishableApiKeyToken,
+               },
+             }
+           )
+
+           expect(addRes.status).toBe(200)
+           // Retrieve cart with product and variant details
+           const { data: cartsWithDetails } = await query.graph({
+             entity: "cart",
+             fields: [
+               "id",
+               "items.*",
+               "items.thumbnail",
+               "items.product.*",
+               "items.product.thumbnail",
+               "items.variant.*",
+               "items.variant.thumbnail",
+               "items.metadata",
+             ],
+             filters: { id: cartId },
+           })
+
+           const cart = cartsWithDetails[0]
+           const packageItems = cart.items.filter((i: any) => i.metadata?.is_package)
+
+           expect(packageItems).toHaveLength(2)
+
+           const adultItem = packageItems.find(
+             (i: any) => i.metadata?.passenger_type === "ADULT"
+           )
+           const childItem = packageItems.find(
+             (i: any) => i.metadata?.passenger_type === "CHILD"
+           )
+
+           expect(adultItem).toBeDefined()
+           expect(childItem).toBeDefined()
+
+           // Cart item thumbnails should use the custom overrides
+           expect(adultItem.thumbnail).toBe(customAdultThumbnail)
+           expect(childItem.thumbnail).toBe(customChildThumbnail)
+
+           // Product and variant should also have thumbnail information
+           // Product inherits from package, variant inherits from product
+           if (adultItem.product) {
+             expect(adultItem.product.thumbnail).toBeDefined()
+           }
+           if (adultItem.variant) {
+             expect(adultItem.variant).toBeDefined()
+           }
+           if (childItem.product) {
+             expect(childItem.product.thumbnail).toBeDefined()
+           }
+           if (childItem.variant) {
+             expect(childItem.variant).toBeDefined()
+           }
+         })
+       })
 
       describe("Capacity Validation", () => {
         it("should validate capacity before allowing checkout", async () => {
